@@ -1,282 +1,441 @@
-# Cahier des charges — Plateforme de groupages d'achat (Togo)
+# Group Achat — cahier des charges
 
-> Nom du projet : **À définir**
-> Version : 0.3 (brouillon)
-> Légende : les sections marquées **À définir** sont volontairement vides et seront complétées plus tard. Les éléments marqués *(proposition)* sont à valider.
+> Version : 1.0 — refonte complète à partir de l'entretien de cadrage
+> Lomé, Togo · interface en français · application mobile
+> Légende : **À définir** = volontairement vide. *(proposition)* = à valider par toi.
+> Document lié : [contenu des écrans pour Figma](SPEC_ECRANS_FIGMA.md)
 
 ---
 
-## 1. Contexte et problématique
+## 1. Contexte et problème
 
-Au Togo, acheter au détail coûte jusqu'à 40 % plus cher qu'en gros. Les gens ont déjà l'habitude de s'unir pour acheter ensemble, mais ces **groupages vivent dans des groupes WhatsApp dispersés** : difficiles à trouver, mal organisés (qui a payé ? qui a reçu ?), sans garantie sur l'argent versé et sans moyen de savoir quel organisateur est fiable.
+Au Togo, les achats groupés existent déjà, mais ils vivent dans des **groupes WhatsApp** qui posent deux problèmes distincts :
 
-> Source du chiffre de 40 % : **À définir** (à sourcer avant toute présentation officielle).
+**Pour l'acheteur, un problème de fiabilité.** Il verse de l'argent à quelqu'un qu'il ne connaît pas, sans garantie, sans recours, et sans moyen de savoir si cette personne a déjà livré ou disparu avec une caisse.
+
+**Pour l'acheteur, un problème de choix.** Un groupe WhatsApp ne montre que ce que son animateur publie. L'offre est limitée à un organisateur, un cercle, un moment. Rien ne permet de voir tout ce qui est en groupage à un instant donné.
+
+**Pour le groupeur, un problème de visibilité.** Il ne vend qu'à son carnet d'adresses. Son marché s'arrête aux membres de son groupe, alors que sa capacité à négocier, elle, ne s'arrête pas là.
 
 ## 2. Solution
 
-Une **plateforme web** qui réunit les organisateurs de groupages d'achat (les « groupeurs ») au même endroit. Elle reproduit le fonctionnement des groupes WhatsApp, en mieux organisé et en plus sûr :
+**Group Achat réunit au même endroit les campagnes de groupage et les groupeurs que nous avons nous-mêmes sélectionnés.**
 
-- les acheteurs trouvent tous les groupages au même endroit ;
-- les groupeurs gèrent leurs participants et leurs commandes plus simplement ;
-- **la plateforme est tiers de séquestre** : elle bloque le paiement de l'acheteur et ne le verse au groupeur qu'après validation de la remise ;
-- la remise est prouvée par un **code unique ou QR code** remis à l'acheteur, et non par une simple déclaration ;
-- chaque groupeur a une réputation visible et peut être **certifié**.
+- L'acheteur **gagne en fiabilité** : il ne traite plus avec un inconnu, il commande sur une plateforme qui a choisi ses groupeurs et qui détient l'argent.
+- Le groupeur **gagne un marché** : il n'est plus limité à son groupe WhatsApp, il est exposé à toute la demande de Lomé.
+- La plateforme **prélève une commission** sur chaque campagne aboutie.
 
-La plateforme **ne vend pas et ne livre pas** : les groupeurs gèrent eux-mêmes leurs fournisseurs et la remise des produits.
+La plateforme n'achète pas, ne stocke pas et ne négocie pas. Elle **rassemble l'offre, encaisse, sécurise et organise la livraison**.
 
-## 3. Positionnement et différence avec l'existant
+## 3. Ce qui nous distingue
 
-| Existant | Ce qu'il fait | Ce qui manque |
+| L'existant | Ce qu'il fait | Ce qui manque |
 |---|---|---|
-| Groupes WhatsApp | Groupages informels | Dispersés, non trouvables, sans garantie, sans réputation, suivi manuel |
-| Tushop (Kenya), Grup, Pricepally, Floc, BuyPool (Nigeria) | Achats groupés avec achat direct chez le fournisseur | Pas de présence connue au Togo ; modèle centré sur la plateforme, pas sur les groupeurs indépendants |
-| Annuaires (Annuaires Togo, DataBiz) | Listent des entreprises | Ne couvrent pas les groupages |
+| Groupes WhatsApp | Groupages informels | Offre limitée à un animateur, aucune fiabilité, aucun recours |
+| Pages et comptes de vente sur les réseaux | Vente au détail | Pas de groupage, pas de prix de gros |
+| Sites de e-commerce | Catalogue et livraison | Prix au détail, pas de mécanique de groupage |
 
-**Différence :** une plateforme qui rassemble les groupeurs indépendants existants, sécurise l'argent des acheteurs par séquestre et affiche la fiabilité de chaque groupeur, centrée sur le Togo.
-
-> Cette comparaison provient d'une recherche rapide ; elle doit être vérifiée avant présentation.
+**Notre force n'est pas un algorithme, c'est une sélection.** Nous ne laissons pas n'importe qui ouvrir une campagne : nous recrutons et vérifions les groupeurs un par un. L'acheteur ne juge donc pas un groupeur — il fait confiance à Group Achat. C'est un engagement fort, et toute la section 10 existe pour le rendre tenable.
 
 ## 4. Objectifs
 
-- Permettre à tout visiteur de trouver rapidement un groupage ouvert.
-- Permettre à un groupeur de publier et gérer ses groupages.
-- Sécuriser l'argent de l'acheteur jusqu'à la validation de la remise.
-- Rendre la confiance visible (certification, avis, historique).
-- Objectifs chiffrés (utilisateurs, nombre de groupages) : **À définir**
+- Rassembler en un lieu toutes les campagnes de groupage ouvertes à Lomé.
+- Permettre à un groupeur sélectionné de lancer une campagne en quelques minutes.
+- Garantir à l'acheteur qu'il est livré ou remboursé.
+- Faire naître l'offre à partir de la demande des acheteurs.
+- Objectifs chiffrés (groupeurs, campagnes, volume) : **À définir**
 
 ## 5. Public cible
 
-**Acheteurs :** toute personne qui veut acheter au prix de gros sans disposer d'un gros budget — particuliers, ménages, petits commerçants, revendeuses de marché, qu'ils achètent pour eux-mêmes ou pour revendre. Le marché n'est volontairement pas restreint à un segment.
+**Acheteurs :** toute personne à Lomé qui veut acheter au prix de gros sans gros budget — particuliers, ménages, petits commerçants, revendeuses. Pas de restriction de segment.
 
-**Profil type retenu pour concevoir le MVP :** un adulte de Lomé avec un smartphone Android d'entrée de gamme et un forfait data limité, qui participe déjà à des achats groupés sur WhatsApp sans aucune garantie sur l'argent qu'il verse. Ce profil sert à trancher les choix concrets (interface légère, images chargées en dernier, vocabulaire du groupage déjà connu), pas à exclure les autres.
+**Profil type retenu pour concevoir le MVP :** un adulte de Lomé, smartphone Android d'entrée de gamme, forfait data limité, habitué aux achats groupés WhatsApp et aux applications où l'on fait défiler des vidéos. Ce profil tranche les choix concrets, il n'exclut personne.
 
-**Groupeurs :** personnes qui organisent déjà des groupages (WhatsApp, quartiers, tontines).
+**Groupeurs :** personnes qui savent déjà sourcer et négocier — organisateurs de groupages, commerçants, importateurs à petite échelle. **Ils ne s'inscrivent pas librement : nous les recrutons.**
 
-**Ville de lancement :** Lomé (à confirmer).
+**Catégories de produits :** sans restriction — alimentaire, vêtements, chaussures, maison, hygiène, électronique.
 
-## 6. Profils utilisateurs
+## 6. Acteurs et rôles
 
-| Profil | Rôle |
-|---|---|
-| **Visiteur** | Parcourt la plateforme librement, sans compte |
-| **Acheteur** | Visiteur connecté : rejoint et paie des groupages, reçoit son code de retrait, suit ses commandes |
-| **Groupeur** | Publie et gère des groupages, organise la remise, valide les codes, reçoit ses versements |
-| **Administrateur** | Vérifie et certifie les groupeurs, modère, arbitre les litiges |
+| Acteur | Ce qu'il fait | Ce qu'il y gagne |
+|---|---|---|
+| **Visiteur** | Fait défiler les campagnes, cherche, consulte, pose des questions — sans compte | — |
+| **Acheteur** | Commande une part dans une campagne, paie, suit, reçoit, peut contester à la livraison | La fiabilité : il est livré ou remboursé |
+| **Groupeur** | Lance les campagnes, fixe le produit, le prix et le délai, décide si la commande passe, commande chez son fournisseur, répond aux questions | Un marché bien plus large que son carnet d'adresses |
+| **Service de livraison partenaire** | Livre les acheteurs pour les groupeurs qui n'ont pas de livreur | Son tarif de livraison |
+| **Administrateur (nous)** | Recrute et vérifie les groupeurs, contrôle les justificatifs d'achat, débloque les fonds, arbitre les litiges, modère | La commission |
+
+**Sur le livreur.** Nous ne gérons pas de flotte et n'employons personne. Nous **passons un partenariat avec un service de livraison** et lui confions les livraisons des groupeurs qui n'ont pas leur propre livreur. Un groupeur qui a déjà son livreur peut l'utiliser. Le livreur n'est donc **pas un profil utilisateur de l'application** dans le MVP — c'est un prestataire, avec une conséquence importante traitée en section 11 : il faut quand même un moyen de prouver qu'il a livré.
 
 ## 7. Règles générales
 
-1. **Pas d'authentification au premier contact.** Un visiteur peut tout parcourir sans compte.
-2. La connexion (numéro de téléphone + code SMS) n'est demandée que lorsqu'une **action** le nécessite (rejoindre un groupage, payer, demander un produit, suivre ses commandes). Après connexion, l'utilisateur revient exactement où il était, avec son choix conservé.
-3. Il existe des **groupeurs certifiés** (badge visible) et des **groupeurs non certifiés**. Un avertissement clair s'affiche pour un groupeur non certifié.
-4. **Circuit de l'argent (séquestre) :**
-   1. l'acheteur paie sur la plateforme (Mobile Money) en rejoignant un groupage ;
-   2. la plateforme **bloque** les fonds : ils ne sont pas envoyés au groupeur ;
-   3. le groupeur voit que l'argent est réel et peut lancer sa commande en confiance ;
-   4. à la remise, l'acheteur donne son **code de retrait** que le groupeur valide : c'est la **seule** preuve de remise ;
-   5. l'acheteur dispose ensuite de **48 h pour réclamer** (produit non conforme, quantité incomplète) ;
-   6. passé ce délai sans réclamation, la plateforme libère les fonds au groupeur, **moins la commission** ;
-   7. si le groupage échoue, est annulé, si le code n'est jamais validé, ou si un litige est tranché en faveur de l'acheteur, celui-ci est remboursé.
-5. **Commission au succès :** la plateforme ne prélève sa commission que sur les groupages **aboutis et validés**. Aucune commission sur un groupage échoué ou annulé.
-6. La plateforme n'est **ni vendeuse ni livreuse**. Sa responsabilité se limite au séquestre et à l'arbitrage décrit en 13.7.
+1. **Aucune authentification au premier contact.** À la première ouverture, l'utilisateur arrive directement sur le fil des campagnes. Pas d'écran de connexion, pas de tutoriel bloquant, pas d'invitation à créer un compte.
 
-## 8. Périmètre du MVP
+2. **La connexion est déclenchée par l'opération, jamais par l'ouverture.** Elle n'est demandée qu'au moment où l'utilisateur engage quelque chose.
 
-- **Plateforme :** application **web**, utilisable sur ordinateur et mobile (mobile d'abord).
-- Langue de l'interface : français.
-- **Le MVP est fonctionnel de bout en bout, mais le paiement est simulé** : aucun argent réel ne circule. Le branchement d'un agrégateur de paiement agréé se fait en phase 2 (voir section 15).
+   | Reste libre, sans compte | Exige un compte |
+   |---|---|
+   | Faire défiler le fil, chercher, filtrer | **Payer** une commande |
+   | Consulter une campagne, son prix, son délai | **Envoyer** une demande de produit |
+   | Lire les questions et les réponses | **Poser** une question |
+   | Choisir sa quantité et voir son total | Suivre ses commandes et ses demandes |
 
-### 8.0 Ordre de priorité
+   Le compte se crée par **numéro de téléphone + code SMS**. Pas de mot de passe, pas d'e-mail, pas d'inscription distincte de la connexion : si le numéro est inconnu, le compte se crée à la validation du code.
 
-Si une seule chose devait être livrée, ce serait la première.
+3. **Rien de ce qui a été saisi n'est perdu.** Après connexion, l'action interrompue reprend d'elle-même, avec la quantité, l'adresse et le contenu des formulaires conservés. Une connexion abandonnée ramène à l'écran d'origine intact.
 
-1. **Rejoindre un groupage et payer, avec l'argent bloqué jusqu'à la remise.** L'acheteur voit les groupages ouverts avec leur jauge, il paie sa part, et son paiement n'est versé au groupeur qu'après validation de son code de retrait. C'est la seule fonctionnalité qui apporte ce que les groupes WhatsApp ne savent pas faire : la garantie que personne ne part avec l'argent.
-2. **La demande de produit par l'acheteur.** N'importe qui soumet un produit qu'il veut acheter ; la demande est visible par tous les groupeurs, qui peuvent la prendre en charge et lancer le groupage. La demande crée l'offre, ce qui rend le catalogue illimité sans gérer de stock.
-3. **La certification des groupeurs.** Identité vérifiée, badge visible, historique public des groupages livrés. L'acheteur sait à qui il a affaire avant de payer.
+4. **Les groupeurs sont anonymes.** L'acheteur ne voit qu'un **pseudonyme**. Ni nom, ni photo, ni quartier, ni coordonnées, et aucune page de profil. Le pseudonyme n'est cliquable nulle part.
 
-Le catalogue public et la création de groupage par le groupeur ne figurent pas dans ce classement : ce sont les fondations sans lesquelles rien ne fonctionne, et non des fonctionnalités à arbitrer.
+   La raison est économique : un acheteur qui peut identifier et joindre le groupeur traite directement avec lui la fois suivante, sans la plateforme, sans garantie et sans commission. L'anonymat protège le modèle autant que l'acheteur.
 
-### 8.1 Fonctionnalités Visiteur / Acheteur
+5. **Les échanges passent par la plateforme.** L'acheteur pose ses questions **publiquement** sous une campagne, le groupeur répond, et la réponse est visible de tous. Les numéros de téléphone et identifiants de réseaux sociaux sont masqués automatiquement dans les messages.
 
-- Accueil avec recherche, catégories et liste des groupages ouverts.
-- Carte d'un groupage : photo, prix de gros, jauge de progression (ex. « 14 / 20 participants »), groupeur, badge certifié ou non, date limite.
-- Page détail d'un groupage : description, quantité, lieu et date de remise, profil du groupeur, règles.
-- Filtres : catégorie, quartier/ville, groupeurs certifiés uniquement.
-- Connexion par numéro de téléphone et code SMS, déclenchée à la demande.
-- Rejoindre un groupage, choisir sa quantité et **payer** (paiement simulé), avec affichage clair du séquestre.
-- « Mes commandes » : liste des groupages rejoints et leur statut.
-- **Code de retrait / QR code** affiché dans le détail de la commande une fois le groupage prêt pour la remise.
-- **Signaler un problème** sur une commande (avant la libération des fonds).
-- **Demander un produit** : formulaire (nom, photo, description, quantité souhaitée, quartier), visible par les groupeurs.
-- « Mes demandes » : suivi des demandes soumises.
-- Consulter le profil public d'un groupeur et laisser un avis après une commande terminée.
+6. **Le groupeur est maître de sa campagne.** Il choisit le produit, le prix, la quantité par part, la durée, et c'est lui qui décide, à la clôture, si la commande passe ou non. La plateforme n'impose **aucun minimum de participants**.
 
-### 8.2 Fonctionnalités Groupeur
+7. **Un acheteur peut être servi seul**, si le groupeur l'autorise. Il n'y a pas de seuil imposé par la plateforme.
 
-- Inscription et profil (nom, quartier, photo, présentation).
-- Demande de certification (dépôt des pièces) et suivi de son statut (non certifié, en cours, certifié).
-- Créer un groupage : produit, photos, description, prix, quantité, nombre minimum de participants, date limite, date et lieu de remise.
-- Gérer un groupage : liste des participants, quantités et statut de paiement, statut du groupage.
-- Annoncer la remise (date, lieu).
-- **Valider une remise** : saisir ou scanner le code de retrait de l'acheteur.
-- Voir le fil des demandes d'acheteurs et en prendre une en charge (pré-remplit la création d'un groupage).
-- Portefeuille : montants bloqués, montants libérés, commission prélevée (simulés dans le MVP).
-- Tableau de bord : groupages actifs, nombre de participants, remises validées.
+8. **Tout l'argent passe par la plateforme.** L'acheteur paie Group Achat, jamais le groupeur en direct.
 
-### 8.3 Fonctionnalités Administrateur
+9. **Commission sur campagne aboutie.** Aucune commission sur une campagne annulée : les acheteurs sont remboursés intégralement.
 
-- Examiner les demandes de certification (approuver, refuser).
-- Modérer les groupeurs, groupages et demandes signalés.
-- Examiner les litiges et trancher (rembourser l'acheteur ou libérer les fonds au groupeur).
-- Vue d'ensemble des fonds bloqués, libérés et des commissions (simulés dans le MVP).
+10. **La plateforme n'est ni vendeuse ni productrice.** Elle encaisse, sécurise, fait livrer et arbitre.
 
-## 9. Statuts
+## 8. Le cycle d'une campagne
 
-**Groupage :** ouvert → complet → commandé → prêt pour la remise → terminé. Un groupage non rempli à la date limite passe à *annulé* et les acheteurs sont remboursés *(proposition)*.
+Le mot **campagne** désigne une opération de groupage sur un produit, ouverte pendant une durée fixée par le groupeur.
 
-**Participation d'un acheteur :** payé (fonds bloqués) → code de retrait disponible → remise validée (code saisi par le groupeur) → délai de réclamation de 48 h → fonds libérés. États alternatifs : *litige en cours*, *remboursé*.
+### 8.1 Statuts
 
-## 10. Parcours principaux
+**ouverte** → **clôturée** → *(décision du groupeur)* → **commande passée** → **en cours de livraison** → **terminée**
 
-1. **Visiteur → acheteur :** parcourt → ouvre un groupage → clique « Rejoindre » → se connecte (SMS) → choisit sa quantité → paie (fonds bloqués) → suit sa commande → reçoit son code de retrait → le présente à la remise.
-2. **Remise :** le groupeur annonce la remise → l'acheteur se présente avec son code → le groupeur le valide → l'acheteur a 48 h pour réclamer → sans réclamation, les fonds sont libérés au groupeur, moins la commission.
-3. **Demande de produit :** l'acheteur soumet une demande → les groupeurs la voient → un groupeur la prend en charge et crée le groupage → l'acheteur est informé et peut le rejoindre.
-4. **Groupeur :** s'inscrit → demande la certification → crée un groupage → suit les participants → organise la remise et valide les codes → reçoit son versement.
-5. **Litige :** l'acheteur signale un problème → les fonds restent bloqués → le groupeur répond → l'administrateur examine les preuves et tranche.
-6. **Administrateur :** reçoit les demandes de certification → approuve ou refuse.
+À la clôture, le groupeur tranche :
+- **il maintient** : la campagne passe à *commande passée* et suit son cours ;
+- **il annule** : tous les acheteurs sont **remboursés intégralement**, sans commission, et reçoivent une notification expliquant que la campagne n'a pas abouti.
 
-## 11. Écrans du MVP
+**État alternatif :** *annulée*.
 
-1. Accueil
-2. Résultats de recherche / filtres
-3. Détail d'un groupage
-4. Connexion / code SMS
-5. Rejoindre et choisir la quantité
-6. Paiement (simulé)
-7. Confirmation de participation
+### 8.2 Ce qui déclenche chaque étape
+
+| Étape | Déclencheur |
+|---|---|
+| Clôture | La date fixée par le groupeur est atteinte, ou il clôture à la main |
+| Décision | Le groupeur, dans un délai de **48 h** *(proposition)* après la clôture |
+| Annulation automatique | Aucune décision du groupeur passé ce délai — sinon l'argent des acheteurs resterait bloqué indéfiniment |
+| Commande passée | Le groupeur a reçu les fonds et déposé son justificatif d'achat (section 10) |
+| Livraison | Le groupeur déclare la marchandise reçue et prête |
+| Terminée | Toutes les livraisons sont confirmées |
+
+### 8.3 Statuts d'une commande d'acheteur
+
+**payée** → **campagne clôturée** → **commande en cours chez le groupeur** → **en cours de livraison** → **livrée**
+
+**États alternatifs :** *litige*, *remboursée*.
+
+## 9. Circuit de l'argent
+
+```
+   Acheteur                 Group Achat              Groupeur            Fournisseur
+      │                          │                      │                    │
+      │  paie sa part            │                      │                    │
+      ├─────────────────────────▶│                      │                    │
+      │                     fonds détenus               │                    │
+      │                          │                      │                    │
+      │                     ── clôture de la campagne ──                     │
+      │                          │                      │                    │
+      │                          │  commission retenue  │                    │
+      │                          │  + fonds versés      │                    │
+      │                          ├─────────────────────▶│  achat             │
+      │                          │                      ├───────────────────▶│
+      │                          │   justificatif        │                    │
+      │                          │◀─────────────────────┤                    │
+      │                          │                      │                    │
+      │        livraison par le partenaire              │                    │
+      │◀─────────────────────────┴──────────────────────┘                    │
+```
+
+1. L'acheteur paie sa part **à la commande**, par Mobile Money. Il ne paie rien d'autre : pas de frais de service, pas d'abonnement.
+2. **Les fonds sont détenus par Group Achat**, pas par le groupeur.
+3. À la clôture, si le groupeur maintient la campagne, la plateforme **retient sa commission** et **lui verse les fonds** pour qu'il puisse acheter la marchandise.
+4. Le groupeur achète chez son fournisseur et **dépose le justificatif de ce paiement** sur la plateforme.
+5. La marchandise arrive, le partenaire de livraison livre les acheteurs.
+6. Si la campagne est annulée, **remboursement intégral** et aucune commission.
+
+### 9.1 Le point faible de ce circuit, énoncé clairement
+
+Dans ce schéma, **l'argent des acheteurs quitte la plateforme avant que quoi que ce soit ne soit livré**. Entre l'étape 3 et l'étape 5, les acheteurs ont payé, la plateforme s'est dessaisie, et rien n'a encore été reçu.
+
+Le justificatif d'achat arrive **après** le versement : il constate, il ne conditionne rien. Un groupeur qui reçoit les fonds et ne livre pas laisse la plateforme face à des acheteurs qui ont payé et qu'elle doit rembourser sur sa propre trésorerie — ou décevoir, ce qui est pire, puisque notre promesse unique est la fiabilité.
+
+Ce n'est pas une critique du modèle : le groupeur a réellement besoin de l'argent pour acheter, et lui demander d'avancer sa trésorerie reviendrait à écarter la majorité des groupeurs. Le modèle est juste. **C'est son exécution qu'il faut armer**, et c'est l'objet de la section suivante.
+
+## 10. Sécurisation du circuit — comment tenir la promesse de fiabilité
+
+Cinq mesures, de la plus efficace à la plus accessoire. Les trois premières me paraissent nécessaires avant d'encaisser le premier franc réel.
+
+### 10.1 Verser en deux fois, pas en une
+
+**La mesure la plus efficace, et la moins coûteuse à mettre en œuvre.**
+
+Au lieu de verser la totalité à la clôture, la plateforme verse **l'avance d'achat** — le montant nécessaire pour payer le fournisseur — et **retient le solde**, qui correspond à la marge du groupeur, jusqu'à la confirmation des livraisons.
+
+| Moment | Ce que le groupeur reçoit |
+|---|---|
+| Clôture, campagne maintenue | **L'avance d'achat** : de quoi payer la marchandise |
+| Après confirmation des livraisons | **Le solde**, soit sa marge, moins la commission |
+
+Le groupeur peut acheter — rien n'est bloqué pour lui. Mais **il ne gagne son argent qu'après avoir livré**. C'est l'alignement d'intérêt que le versement unique ne produit pas.
+
+Le calcul de l'avance : **À définir**. Deux voies possibles — un pourcentage fixe *(proposition : 70 %)*, ou le montant exact du devis fournisseur déposé par le groupeur, qui est plus juste mais demande de contrôler un devis avant chaque versement.
+
+### 10.2 Déposer le devis avant, le reçu après
+
+Aujourd'hui le justificatif arrive après le versement. Inverser la séquence change tout :
+
+1. Le groupeur dépose le **devis ou la facture du fournisseur** → la plateforme sait ce qui va être acheté, à quel prix, chez qui.
+2. La plateforme verse l'avance.
+3. Le groupeur dépose le **reçu de paiement** → la plateforme constate l'achat effectif.
+4. Sans reçu dans un délai donné *(proposition : 72 h)*, la campagne est annulée et les acheteurs remboursés — pendant que l'argent est encore récupérable.
+
+Le devis n'empêche pas une fraude déterminée, mais il rend le mensonge documenté, donc attaquable, et il écarte l'erreur de bonne foi.
+
+### 10.3 Payer le fournisseur directement, quand c'est possible
+
+**La version forte, à viser pour les gros montants.** La plateforme règle le fournisseur elle-même, par Mobile Money ou virement, sur la base du devis. L'argent **ne transite jamais par le groupeur**.
+
+Le groupeur garde son rôle entier — il trouve le produit, négocie, fait livrer — mais il ne détient plus les fonds des acheteurs. Le risque principal disparaît au lieu d'être atténué.
+
+Ce n'est pas applicable partout : certains fournisseurs ne sont pas joignables par Mobile Money, certains achats se font en espèces sur un marché. D'où la règle proposée : **paiement direct au fournisseur au-delà d'un montant à fixer, avance au groupeur en dessous**. Seuil : **À définir**
+
+### 10.4 Plafonner l'exposition d'un groupeur
+
+Puisque nous recrutons les groupeurs nous-mêmes, nous disposons d'une information que personne d'autre n'a : leur historique chez nous. Autant l'utiliser pour borner le risque maximal.
+
+| Niveau | Condition | Plafond de collecte par campagne *(proposition)* |
+|---|---|---|
+| Nouveau | 0 campagne livrée | 150 000 F |
+| Confirmé | 3 campagnes livrées sans litige | 600 000 F |
+| Établi | 10 campagnes livrées sans litige | Sans plafond, au cas par cas |
+
+Un plafond n'empêche pas la fraude, il **borne le montant maximal d'un sinistre** — ce qui, pour une jeune structure, est la différence entre un incident et une fermeture. Il ne coûte rien à mettre en place et remplace utilement la certification abandonnée : la fiabilité se construit en livrant, pas en déposant des pièces.
+
+### 10.5 Contractualiser le recrutement
+
+Notre force annoncée est la sélection. Elle doit laisser une trace juridique, sinon elle ne vaut rien le jour d'un litige sérieux :
+
+- pièce d'identité conservée, contact vérifié, adresse d'activité constatée ;
+- **contrat signé** portant engagement de livraison, obligation de dépôt des justificatifs, et sanctions en cas de manquement ;
+- caution ou garant pour les campagnes au-delà d'un montant : **À définir** ;
+- procédure de retrait d'un groupeur, et sort des campagnes en cours : **À définir**
+
+### 10.6 Ce que cela donne, assemblé
+
+> L'acheteur paie Group Achat. À la clôture, le groupeur dépose son devis fournisseur et reçoit l'avance d'achat — ou le fournisseur est payé directement au-delà d'un certain montant. Il dépose ensuite son reçu, sous peine d'annulation. La marchandise est livrée par notre partenaire. **Le solde, qui est sa marge, ne lui est versé qu'après les livraisons confirmées**, et la commission n'est acquise à la plateforme qu'à ce moment-là.
+
+Le groupeur n'avance pas sa trésorerie, et il ne gagne rien tant qu'il n'a pas livré. C'est le même modèle que le tien, avec la séquence remise dans l'ordre.
+
+## 11. Livraison
+
+- **Dans le MVP, tout est livré.** Il n'y a pas de retrait sur un point de rendez-vous.
+- La livraison est assurée par un **service partenaire**, ou par le livreur du groupeur s'il en a un.
+- L'acheteur saisit son **adresse de livraison** au moment de la commande (quartier, repères, numéro joignable).
+- **Plus tard**, quand la structure aura un local, l'acheteur pourra venir récupérer sur place.
+
+**Frais de livraison :** qui les paie, et sont-ils affichés séparément du prix de la part ? **À définir** — c'est une question de modèle économique autant que d'affichage, et elle doit être tranchée avant la maquette de l'écran de commande.
+
+### 11.1 La preuve de livraison — point ouvert et important
+
+Tu n'as pas répondu à cette question, et elle commande le versement du solde (10.1) comme la fenêtre de contestation (12).
+
+Le livreur n'étant pas un utilisateur de l'application, trois voies, de la plus simple à la plus solide :
+
+| Voie | Fonctionnement | Limite |
+|---|---|---|
+| **L'acheteur confirme** dans son application | Un bouton « J'ai bien reçu ma commande » | Un acheteur qui oublie bloque le solde du groupeur. Il faut une confirmation automatique après quelques jours |
+| **Le livreur saisit un code** *(recommandé)* | L'acheteur montre un code à 6 caractères ou un QR code, le livreur le saisit sur une page web ouverte depuis un lien — sans installer l'application | Suppose un téléphone et du réseau chez le livreur |
+| **Le partenaire nous transmet ses preuves** | Intégration avec le système du service de livraison | Dépend entièrement de ses capacités techniques, inconnues à ce stade |
+
+Je recommande la deuxième, avec la première en repli. Elle conserve une **preuve unique et horodatée**, ce dont dépend tout le reste.
+
+## 12. Contestation et litiges
+
+- L'acheteur peut contester **au moment de la livraison**, pas après. Le motif est le non-respect flagrant de la commande : il a commandé une robe, on lui présente une chaussure.
+- Une fois la livraison acceptée, la contestation n'est plus possible.
+- En cas de contestation, le colis n'est pas accepté, le dossier remonte à l'administrateur, et les fonds de cette commande ne sont pas libérés.
+- L'administrateur examine et tranche : remboursement de l'acheteur, ou libération au groupeur.
+
+**Ce que cette règle implique, et qu'il faut regarder en face.** Une fenêtre fermée à la livraison protège le groupeur contre les réclamations tardives de mauvaise foi, ce qui est légitime. Mais elle ne couvre pas ce qu'on ne voit pas sur le pas de la porte : un carton scellé, une quantité manquante au fond du sac, un produit défectueux à l'usage.
+
+Je ne propose pas de rouvrir la fenêtre — ton choix se défend. Je propose de la **borner explicitement dans les conditions d'utilisation** et de l'**afficher sur l'écran de suivi** avant la livraison : « vérifiez votre commande devant le livreur, la contestation n'est plus possible ensuite ». Un acheteur prévenu accepte une règle stricte ; un acheteur surpris la vit comme une arnaque, et c'est la réputation de la plateforme qui paie.
+
+Délais de réponse du groupeur, durée maximale d'un litige : **À définir**
+
+## 13. Confiance et anonymat
+
+Tu as retiré la certification : **tous les groupeurs présents sont sélectionnés par nous**, c'est la garantie. L'acheteur ne compare donc pas les groupeurs entre eux, et ne voit d'eux qu'un pseudonyme.
+
+Cela a une conséquence qu'il faut assumer : **toute la confiance repose sur la marque Group Achat**, et plus du tout sur le groupeur. Un seul groupeur défaillant n'abîme pas sa propre réputation — il abîme la nôtre. C'est exactement pourquoi la section 10 n'est pas un luxe.
+
+Ce qui remplace la réputation individuelle, côté acheteur :
+
+- une **promesse de plateforme** affichée clairement : groupeurs sélectionnés, argent détenu par Group Achat, livré ou remboursé ;
+- les **questions publiques** sous chaque campagne, qui montrent un groupeur qui répond ;
+- la **mécanique de recours** : contestation à la livraison, arbitrage, remboursement.
+
+**Avis et notes :** retirés de l'interface acheteur, puisqu'il n'y a pas de profil à noter. Mais il serait dommage de ne pas mesurer la fiabilité **en interne** : taux de campagnes livrées, délais, litiges, c'est ce qui alimente les plafonds de 10.4. Affichage public d'un indicateur agrégé : **À définir**
+
+## 14. Périmètre du MVP
+
+- **Produit :** application mobile (Android et iOS), base de code unique.
+- **Démonstration de compétition :** prototype web reproduisant l'application, ouvrable depuis un lien, sans installation.
+- **Paiement réel** par Mobile Money — voir 17.2, qui conditionne ce choix.
+- Ville : Lomé. Langue : français.
+
+### 14.1 Ordre de priorité
+
+1. **Commander une part dans une campagne et payer.** Le fil, la campagne, la quantité, l'adresse, le paiement, le suivi. Sans cela, il n'y a pas de produit.
+2. **Lancer et gérer une campagne, côté groupeur.** Créer, suivre les participants, clôturer, décider, déposer les justificatifs, être payé.
+3. **La demande de produit par l'acheteur.** Elle fait naître l'offre et rend le catalogue illimité sans gérer de stock.
+4. **Le contrôle administrateur.** Recrutement des groupeurs, vérification des justificatifs, déblocage des fonds, litiges.
+
+### 14.2 Hors périmètre, assumé
+
+- Retrait sur place : attend le local.
+- Compte et application pour le livreur : le partenaire est un prestataire, pas un utilisateur.
+- Avis et notes publics.
+- Langues locales et recherche vocale.
+- Abonnements et visibilité payante.
+
+## 15. Parcours
+
+### 15.1 Acheteur
+
+Il ouvre l'application et **fait défiler** les campagnes en plein écran, photo ou vidéo, comme un fil de réseau social. Une campagne l'intéresse : il ouvre le détail, lit le prix, la quantité par part, le délai restant, les questions déjà posées. Il peut en poser une.
+
+Il choisit sa quantité, voit son total, saisit son adresse de livraison. **C'est en payant que son compte lui est demandé** — numéro, code SMS — et le paiement reprend seul ensuite.
+
+Il suit sa commande : *payée*, puis *campagne clôturée*, puis *commande en cours chez le groupeur*, puis *en cours de livraison*. Le livreur se présente, **il vérifie sa commande devant lui** et accepte, ou refuse si ce n'est pas du tout ce qu'il a commandé.
+
+Si la campagne est annulée, il est notifié et **remboursé intégralement**.
+
+### 15.2 Groupeur
+
+Nous le recrutons, vérifions son identité, lui faisons signer un contrat et lui créons son accès. Il choisit un **pseudonyme**.
+
+Il consulte le **fil des demandes** des acheteurs, agrégé par produit et quartier — c'est ce qui lui dit où est la demande réelle. Il peut aussi lancer une campagne de sa propre initiative.
+
+Il crée la campagne : produit, photos ou vidéo, description, prix par part, quantité par part, durée. Il suit les participants et le montant collecté, répond aux questions publiques, et peut partager sa campagne sur WhatsApp pour amener ses contacts.
+
+À la clôture, **il décide** : la commande passe, ou pas. S'il maintient, il dépose son devis fournisseur, reçoit l'avance, achète, dépose son reçu. La marchandise arrive, le partenaire livre. **Son solde lui est versé après les livraisons confirmées, moins la commission.**
+
+### 15.3 Administrateur
+
+Il recrute et vérifie les groupeurs, fixe leur plafond, contrôle les devis et les reçus, débloque les avances et les soldes, surveille les campagnes en retard, arbitre les contestations et modère les questions.
+
+## 16. Écrans
+
+**Acheteur**
+1. Fil des campagnes (défilement vertical plein écran)
+2. Recherche, catégories et résultats
+3. Détail d'une campagne
+4. Connexion (feuille remontante)
+5. Commander : quantité et adresse de livraison
+6. Paiement Mobile Money
+7. Confirmation de commande
 8. Mes commandes
-9. Détail d'une commande (statut, code de retrait / QR code, signaler un problème)
-10. Demander un produit
-11. Mes demandes
-12. Profil groupeur et avis
-13. Tableau de bord groupeur
-14. Créer un groupage
-15. Gérer un groupage (participants, annonce de remise)
-16. Valider une remise (saisie ou scan du code)
-17. Portefeuille groupeur
-18. Fil des demandes (groupeur)
-19. Demande de certification (groupeur)
-20. Validation des groupeurs (administrateur)
-21. Litiges (administrateur)
+9. Détail d'une commande et suivi de livraison
+10. Questions sur une campagne
+11. Demander un produit
+12. Mes demandes
 
-## 12. Contraintes non fonctionnelles
+**Groupeur**
+13. Tableau de bord
+14. Créer une campagne
+15. Gérer une campagne
+16. Clôturer et décider
+17. Déposer un justificatif d'achat
+18. Portefeuille
+19. Fil des demandes
+20. Questions reçues
 
-- Mobile d'abord, interface légère adaptée aux connexions lentes.
+**Administrateur** — dans l'admin Django, sans maquette
+21. Recrutement et gestion des groupeurs
+22. Contrôle des justificatifs et déblocage des fonds
+23. Litiges et contestations
+
+## 17. Contraintes non fonctionnelles
+
+### 17.1 Interface et réseau
+
+- Application légère, pensée pour une connexion lente et un forfait data limité.
+- **Le fil en défilement vidéo est le point de vigilance du projet** : c'est l'écran le plus coûteux en données, sur le public le plus sensible au coût des données. Les mesures à prendre sont détaillées au §1.6 du document Figma.
 - Gros boutons, textes lisibles, contraste élevé.
-- Traçabilité de tous les mouvements d'argent (journal des opérations).
-- Unicité et non-devinabilité des codes de retrait.
-- Protection des données personnelles (numéros de téléphone, pièces d'identité) : **À définir**
-- Performance, disponibilité, volumétrie cibles : **À définir**
+- Aucune action engageant de l'argent ne doit pouvoir être exécutée deux fois à cause d'une coupure réseau : chaque requête de paiement porte une **clé d'idempotence**.
 
-## 13. Fonctionnalités à préciser
+### 17.2 Conformité et paiement réel
 
-### 13.1 Paiement
-- **Phase 1 (MVP de test) :** paiement simulé, sans argent réel.
-- **Phase 2 (production) :** intégration d'un agrégateur de paiement agréé (Mobile Money : T-Money, Flooz) pour encaisser, bloquer et reverser. Choix de l'agrégateur : **À définir**
-- Mode de versement aux groupeurs et frais de transfert : **À définir**
+Tu as choisi le **paiement réel** dès la compétition. C'est faisable, mais cela a des prérequis qui ne sont pas techniques :
 
-### 13.2 Modèle économique et revenus
-- **Commission au succès** : pourcentage prélevé uniquement sur les groupages aboutis et validés. Aucune commission en cas d'échec ou d'annulation.
-- Taux *(proposition)* : entre 3 et 8 %. Taux définitif : **À définir**
-- Qui supporte la commission (acheteur, groupeur ou les deux) : **À définir**
-- **Revenus futurs :** abonnements et options payantes de visibilité pour les groupeurs certifiés. Détails : **À définir**
+- **Détenir l'argent de tiers est une activité réglementée.** L'encaissement doit passer par un **agrégateur de paiement agréé** connecté à T-Money et Flooz. Group Achat ne détient pas l'argent sur un compte personnel.
+- Cela suppose un **compte marchand**, donc une **structure juridique existante** et un dossier de connaissance du client. C'est le délai le plus long du projet, et il faut le lancer maintenant si la compétition est proche.
+- Un **avis juridique** est nécessaire sur la détention de fonds et sur l'engagement « livré ou remboursé ».
+- Choix de l'agrégateur, tarifs, délais de reversement : **À définir**
 
-### 13.3 Validation de la remise
-- Chaque participation génère un **code unique (ou QR code)** remis à l'acheteur.
-- À la remise, le groupeur saisit ou scanne ce code. **La validation du code est la seule preuve de remise** : aucune libération de fonds n'a lieu sans elle.
-- Une fois le code validé, l'acheteur dispose d'un **délai de réclamation de 48 h** (produit non conforme, quantité incomplète). Sans réclamation, les fonds sont libérés automatiquement au groupeur, moins la commission.
-- **Si le code n'est jamais validé**, les fonds restent bloqués. Au-delà d'un délai à fixer après la date de remise annoncée, le dossier bascule en litige ou l'acheteur est remboursé. Délai et règle : **À définir**
-- Cas particuliers (code perdu, acheteur absent, remise partielle) : **À définir**
+**Si ce dossier n'est pas bouclé à temps pour la compétition**, le repli est un paiement simulé dans le prototype, affiché honnêtement comme tel. Cela ne change rien à l'architecture : seul le connecteur de paiement diffère.
 
-### 13.4 Avis et notation des groupeurs
-- Note de 1 à 5 et commentaire, réservés aux acheteurs ayant participé à un groupage du groupeur *(proposition)*.
-- Affichage sur le profil : note moyenne, nombre de groupages réalisés, taux de remises validées *(proposition)*.
-- Règles détaillées : **À définir**
+### 17.3 Traçabilité
 
-### 13.5 Critères et processus de certification
-- **Groupeur certifié :** vérification de la pièce d'identité, des antécédents et des garanties. Il offre une garantie renforcée à l'acheteur et bénéficie d'un badge visible.
-- **Groupeur non certifié :** il peut publier ses offres pour tester le marché, mais un avertissement clair s'affiche pour les acheteurs, ce qui l'incite à se faire certifier.
-- Nature exacte des « garanties » exigées et portée juridique de la garantie offerte à l'acheteur : **À définir** (point sensible, voir 13.8).
-- Niveaux de certification, coût éventuel, conditions de retrait du badge : **À définir**
+Journal horodaté de **tous** les mouvements d'argent et de **tous** les changements de statut : paiements, versements d'avance, dépôts de justificatifs, livraisons confirmées, remboursements, décisions d'arbitrage. C'est à la fois l'exigence comptable, la preuve en cas de litige, et la matière des plafonds de 10.4.
 
-### 13.6 Notifications (SMS, e-mail, WhatsApp)
-**À définir**
+## 18. Stack technique
 
-### 13.7 Litiges et signalements
-- Bouton « Signaler un problème » sur chaque commande, avant la libération des fonds.
-- Pendant le litige, les fonds restent bloqués.
-- Un administrateur examine les preuves des deux parties, puis rembourse l'acheteur ou libère les fonds au groupeur.
-- Délais (réponse du groupeur, durée maximale du litige, délai de réclamation après remise) : **À définir**
+**Architecture.** API séparée de l'interface. Le back-end expose une API indépendante que le prototype web consomme aujourd'hui et que l'application mobile consommera. **Toute la logique métier — détention des fonds, calcul de la commission, avances, soldes, statuts — vit côté serveur, jamais dans l'application.** Une application installée ne se corrige pas par un déploiement : ce qui est côté serveur se corrige le jour même.
 
-### 13.8 Conformité légale (CGU, données personnelles, statut)
-- Détenir et bloquer l'argent de tiers est une activité réglementée : le passage par un agrégateur agréé et un avis juridique sont nécessaires avant la production.
-- La « garantie totale » annoncée pour les groupeurs certifiés engage financièrement la plateforme : son périmètre doit être défini et borné dans les CGU.
-- Autres éléments (CGU, politique de confidentialité, déclaration des données, statut de société) : **À définir**
+**Back-end :** Django + Django REST Framework, PostgreSQL. L'admin Django sert de back-office pour le recrutement, le contrôle des justificatifs, le déblocage des fonds et les litiges.
 
-### 13.9 Stack technique et hébergement
+**Front :** Flutter, compilé pour Android, iOS et le web — le prototype de compétition est ainsi le code de l'application, et non du travail jeté.
 
-**Type d'application**
-- **MVP :** application **web responsive, conçue mobile d'abord**. C'est la version utilisée pour la présentation et les tests avec les groupeurs pilotes.
-- **Version future :** application **mobile en Flutter**, qui consommera la même API que le web.
+**Intégrité.** Toute opération touchant à l'argent passe par une transaction avec verrouillage de ligne (`SELECT FOR UPDATE`) : pas de double versement d'avance, pas de double validation de livraison, pas de double paiement.
 
-**Règle d'architecture à respecter dès le départ**
-L'API est **séparée de l'interface**. Le back-end expose une API indépendante (groupages, participations, codes de retrait, paiements, certification). Le web la consomme aujourd'hui, l'application Flutter la consommera demain. Flutter utilisant Dart, l'interface web ne sera pas réutilisable : seule cette séparation évite de réécrire aussi la logique métier.
+**Tâches planifiées.** Trois règles ne se déclenchent sur aucune action utilisateur, et chacune est une **porte de sortie de l'argent détenu** :
+1. clôture d'une campagne à sa date d'échéance ;
+2. annulation et remboursement si le groupeur ne décide pas dans les 48 h ;
+3. annulation et remboursement si le reçu d'achat n'est pas déposé dans le délai.
 
-**Back-end**
-- **Django** (Python) avec **Django REST Framework** pour exposer l'API.
-- **PostgreSQL** comme base de données.
-- L'**admin Django** sert de back-office pour la certification, les litiges et la modération.
+MVP : commande de gestion Django appelée par un cron horaire. Plus tard : Celery et Redis.
 
-**Intégrité des opérations sensibles**
-Tout ce qui touche à l'argent et aux places disponibles passe par une **transaction** avec verrouillage de ligne (`SELECT FOR UPDATE`), afin d'éviter : deux acheteurs qui prennent la dernière place simultanément, et un code de retrait validé deux fois.
+**Hébergement :** VPS avec Gunicorn derrière Nginx en production ; Render ou équivalent en phase de test.
 
-**Tâches planifiées (indispensables)**
-Deux règles du cahier des charges ne se déclenchent pas sur une action utilisateur et exigent un traitement automatique :
-1. la **libération des fonds** 48 h après la validation du code de retrait ;
-2. l'**annulation et le remboursement** d'un groupage non rempli à sa date limite.
+**Stockage des médias.** Les vidéos du fil changent la nature du problème : il faut un stockage objet et une diffusion adaptée, pas des fichiers servis par le serveur applicatif. Solution retenue : **À définir**
 
-- **MVP :** commande de gestion Django appelée par un cron (toutes les heures).
-- **Plus tard :** Celery avec Redis, quand s'ajouteront les SMS et les notifications.
+## 19. Évolutions
 
-**Hébergement**
-- **Production :** serveur privé virtuel (VPS), avec Gunicorn derrière Nginx.
-- **Phase de test :** Render (et services similaires).
+- Retrait sur place dès l'ouverture d'un local.
+- Intégration technique avec le service de livraison partenaire.
+- Indicateur de fiabilité des groupeurs, interne puis peut-être public.
+- Extension à d'autres villes, puis à d'autres pays.
+- Création de campagne par dictée vocale, et interface en éwé, mina ou kabiyè. La traduction est faisable aujourd'hui ; la reconnaissance vocale dans ces langues reste faible, donc la dictée commencera en français.
+- Agrégation de la demande par produit, quartier et période, pour orienter les groupeurs.
+- Détection automatique des groupeurs à risque — signalement automatique, décision humaine.
 
-**Détails à arrêter**
-- Framework front-end du MVP web : **À définir**
-- Service SMS : **À définir**
+**Prérequis à mettre en place dès le MVP :** ces derniers usages supposent un historique qui n'existera pas au départ. Enregistrer proprement, dès maintenant, chaque changement de statut avec sa date, chaque justificatif avec son montant, chaque livraison avec son heure et chaque demande avec son quartier. C'est gratuit aujourd'hui et irrécupérable plus tard.
 
-## 14. Évolutions futures (pistes)
+## 20. Points à définir
 
-**Déjà identifiées :** paiement réel en production, abonnements et visibilité payante pour les groupeurs certifiés, notifications SMS/WhatsApp, avis et badges avancés, application mobile Flutter, extension à d'autres villes et pays.
+**Bloquants avant de maquetter**
+- Taux de commission, et qui le supporte — acheteur, groupeur, ou partagé.
+- Frais de livraison : qui paie, et affichage séparé ou inclus dans le prix de la part.
+- Preuve de livraison : laquelle des trois voies du §11.1.
 
-### 14.1 Simplifier l'usage par l'IA et les langues locales
+**Bloquants avant d'encaisser réellement**
+- Agrégateur de paiement, compte marchand, structure juridique.
+- Avis juridique sur la détention de fonds et sur la promesse « livré ou remboursé ».
+- Mode de calcul de l'avance d'achat, et seuil de paiement direct au fournisseur.
 
-- **Côté groupeur :** dicter son offre à voix haute (« riz 25 kg, 14 500 francs, minimum 20 personnes, remise samedi à Agoè ») et voir le formulaire se remplir seul, au lieu de tout taper sur un petit écran.
-- **Côté acheteur :** rechercher en langage courant (« de l'huile pas chère près de Bè ») et consulter l'interface en **éwé, mina ou kabiyè**, à l'écrit comme à l'oral, pour que savoir lire le français cesse d'être une condition pour acheter au prix de gros.
-- **Réserve :** traduire l'interface dans ces langues est faisable dès aujourd'hui, mais la **reconnaissance vocale** y reste faible et sans solution fiable prête à l'emploi. La dictée fonctionnera d'abord en français, les langues locales suivront à mesure que les modèles progressent.
-
-### 14.2 Exploiter les données de la plateforme
-
-- **Détection des groupeurs à risque** à partir du taux de remises validées, des délais, des litiges et des montants inhabituels. Un signalement automatique, une décision humaine.
-- **Agrégation de la demande** par produit, quartier et période, pour indiquer aux groupeurs où se trouve la demande réelle (« 32 personnes à Agoè cherchent de l'huile cette semaine »).
-- **Vérification des prix** par comparaison avec l'historique et le prix de détail, pour repérer les faux bons plans.
-
-**Prérequis, à mettre en place dès le MVP :** ces usages supposent un historique qui n'existera pas au départ. Il faut donc enregistrer proprement, dès maintenant, chaque changement de statut avec sa date, chaque validation de code avec son heure, chaque litige avec son issue et chaque demande avec son quartier. C'est gratuit aujourd'hui et irrécupérable plus tard.
-
-## 15. Planning et équipe
-
-- **Phase 1 : MVP web de test** avec paiement simulé : valider les écrans, les règles et les parcours avec de vrais groupeurs pilotes.
-- **Phase 2 : production** avec agrégateur de paiement agréé, après avis juridique.
-- Équipe : **À définir**
-- Jalons et dates : **À définir**
-- Budget : **À définir**
+**À traiter pendant la construction**
+- Plafonds d'exposition par niveau de groupeur.
+- Contrat groupeur, caution, procédure de retrait.
+- Délais : réponse du groupeur, dépôt du reçu, durée d'un litige.
+- Notifications : quels événements, par quel canal.
+- Protection des données personnelles : numéros, adresses de livraison, pièces d'identité des groupeurs.
+- Stockage et diffusion des vidéos.
+- Planning, équipe, budget, date de la compétition.
