@@ -277,6 +277,6 @@ Deux règles du cahier des charges ne se déclenchent pas sur une action utilisa
 
 - **Phase 1 : MVP web de test** avec paiement simulé : valider les écrans, les règles et les parcours avec de vrais groupeurs pilotes.
 - **Phase 2 : production** avec agrégateur de paiement agréé, après avis juridique.
-- Équipe : **À définir**
-- Jalons et dates : **À définir**
+- Équipe : **Innov'Elles
+- Jalons et dates : **25 Octobre
 - Budget : **À définir**
