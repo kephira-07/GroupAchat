@@ -1,6 +1,6 @@
 # Group Achat — fonctionnalités et contenu des écrans pour Figma
 
-> Accompagne le [cahier des charges](CAHIER_DES_CHARGES.md). Version : 1.0
+> Accompagne le [cahier des charges](CAHIER_DES_CHARGES.md). Version : 3.0 — deux chromes : acheteur orange, groupeur bleu
 > Objet : ce qu'il y a **dans** chaque écran — textes réels, données réelles, états réels.
 
 **Comment lire ce document.** Les textes entre guillemets se recopient tels quels. Les chiffres viennent du jeu de données du §3 : n'en invente pas d'autres, la cohérence d'un écran à l'autre est ce qui fait croire à une démonstration.
@@ -11,6 +11,64 @@
 
 ## 1. Fondations
 
+### 1.0 Principes de design
+
+Trois exigences : **fond blanc**, **moderne et épuré**, **expérience simple**. Comme « moderne » et « épuré » ne se vérifient pas, voici les règles concrètes qui les produisent. Ce sont elles qu'on contrôle, pas l'impression générale.
+
+#### Le fond est blanc
+
+**`#FFFFFF` partout.** Il n'y a pas de fond gris dans cette application.
+
+Cela supprime d'un coup le moyen le plus courant de séparer les blocs — une carte blanche sur un fond gris. Il faut donc séparer autrement, et c'est précisément ce qui rend un design épuré :
+
+| Au lieu de | On utilise |
+|---|---|
+| Un fond gris derrière des cartes blanches | **Le vide** : 24 à 32 px entre deux sections |
+| Une bordure complète autour d'un bloc | Un **filet de 1 px** sous l'élément, sur toute la largeur moins les marges |
+| Une ombre portée pour détacher une carte | Rien. Un bloc n'a pas besoin de flotter pour exister |
+| Un bloc dans un bloc | **Un seul niveau** : on aplatit |
+
+**Une seule exception à l'absence d'ombre :** les éléments qui flottent réellement au-dessus du contenu — le bouton ancré en bas, la feuille de connexion, le bouton flottant du groupeur. Une ombre très légère, et uniquement là.
+
+**Une seule nuance de gris est tolérée**, le jeton `surface-douce` (§1.2), et seulement pour les trois cas listés dans le tableau des couleurs. Si tu te retrouves à en vouloir une quatrième, c'est que la hiérarchie se joue ailleurs.
+
+#### Épuré : sept règles
+
+1. **Un seul bouton primaire par écran.** Tout le reste est secondaire ou textuel. Si deux actions se disputent le bouton primaire, c'est qu'il faut deux écrans.
+2. **Une couleur dominante par côté, et elle dépend du rôle** (§1.2) : orange côté acheteur, bleu côté groupeur. Dans les deux cas, une seule couleur porte l'action ; la seconde devient un signal rare. Le vert est réservé à une livraison réussie, le rouge à un problème. Aucun aplat « pour décorer » : une couleur signale une action, un état ou un risque, jamais un ornement.
+3. **Pas de dégradé**, sauf le voile sur les médias du fil — où il sert à rendre le texte lisible, pas à faire joli.
+4. **Un rayon de coin par famille** : 12 pour les blocs et les médias, 10 pour les boutons et les champs, 999 pour les pastilles. Jamais trois valeurs différentes sur un même écran.
+5. **Icônes en traits de 1,5 px**, jamais pleines, jamais multicolores.
+6. **Deux niveaux de hiérarchie visibles par bloc**, pas trois. Un titre et un corps ; si un troisième niveau s'impose, le bloc fait trop de choses.
+7. **Aucun élément purement décoratif.** Pas d'illustration de remplissage, pas de motif de fond, pas de séparateur ornemental. Dans cette application, tout pixel sert à informer, à rassurer ou à agir.
+
+#### Simple : six règles
+
+1. **Une décision par écran.** L'écran de commande choisit une quantité et une adresse ; il ne vend rien d'autre, ne propose rien d'autre.
+2. **Le bouton principal est toujours au même endroit** — ancré en bas, pleine largeur. L'utilisateur ne le cherche jamais.
+3. **Il dit ce qu'il fait, avec le montant** : « Payer 5 000 F », pas « Continuer ». Jamais « OK » ni « Valider » seul.
+4. **Cinq champs visibles au maximum.** Au-delà, on découpe en étapes (c'est pourquoi l'écran 14 en a trois).
+5. **Aucun menu caché.** Tout ce qui compte est dans la barre de navigation à quatre onglets. Pas de tiroir latéral, pas de menu à trois points qui cache une action importante.
+6. **Le retour est toujours possible et ne détruit rien.** Une seule exception assumée : après un paiement, on ne revient pas.
+
+#### Trois questions auxquelles chaque écran doit répondre
+
+Avant de déclarer un écran fini, vérifie qu'on peut y répondre en une seconde, sans faire défiler :
+
+> **Où suis-je ? Que puis-je faire ici ? Combien ça coûte ?**
+
+Si la troisième question n'a pas de réponse sur un écran qui en implique une, l'écran n'est pas fini.
+
+#### Le fil est l'exception
+
+L'écran 1 est le seul écran sombre de l'application : du média plein cadre, du texte blanc sur un voile. Le contraste avec le reste — blanc, aéré, orange — est volontaire et doit être net. **C'est le seul endroit où l'on sort du fond blanc**, et il est préférable que cette rupture soit franche plutôt qu'adoucie par des demi-teintes.
+
+Attention sur le fil : le texte blanc posé sur un voile sombre est autorisé parce que c'est le **voile** qui porte le contraste, pas l'orange. Un bouton `marque` à texte blanc y reste interdit comme ailleurs — le bouton « Commander » du fil est en `primaire` `#CC4A00`.
+
+#### Mode sombre
+
+Non traité dans le MVP. Les couleurs étant définies en variables Figma (§1.2), la correspondance pourra être ajoutée plus tard sans redessiner. Décision : **À définir**
+
 ### 1.1 Cadre et grille
 
 | Élément | Valeur |
@@ -18,45 +76,156 @@
 | Frame Figma | **390 × 844** |
 | Marge latérale | **16 px**, jamais entamée — sauf le fil (§4), qui est à bord perdu |
 | Grille d'espacement | multiples de 4 : 4, 8, 12, 16, 24, 32, 48 |
+| Entre deux sections | **24 px minimum**, 32 px pour une rupture forte — c'est le vide qui remplace les fonds gris (§1.0) |
+| Entre deux éléments d'un même bloc | 12 px |
+| Filet de séparation | 1 px `bordure`, sur la largeur moins les marges, **jamais bord à bord** |
 | Zone tactile minimale | **48 × 48 px** |
 | Barre de navigation | 72 px en bas |
+| Bandeau partenaires | **72 px**, en haut du fil, sous l'en-tête (§2.14) |
 
 Prévois aussi une **frame de présentation** : le téléphone centré sur fond neutre, pour la projection devant le jury.
 
 ### 1.2 Couleurs
 
-Marque : **bleu `#1E3A8A`** et **orange `#FF6A00`**. À définir en variables Figma, pas en valeurs directes.
+**L'orange domine. Le bleu reste, mais sur un seul rôle.** Les deux couleurs de marque sont conservées ; ce qui change, c'est leur répartition.
+
+#### Deux chromes, un seul système
+
+L'application sert **deux publics qui ne font pas la même chose** : l'acheteur fait ses courses, le groupeur gère son affaire. Chacun a sa couleur dominante, et le chrome dit immédiatement de quel côté on se trouve.
+
+| | **Côté acheteur** — écrans 1 à 12 | **Côté groupeur** — écrans 13 à 20 |
+|---|---|---|
+| **Dominante** | **Orange** `#CC4A00` | **Bleu** `#1E3A8A` |
+| Boutons pleins, liens, onglet actif | Orange | Bleu |
+| Rôle de la seconde couleur | Le bleu = **la garantie**, et rien d'autre | L'orange = **l'urgence**, et rien d'autre |
+| Où la seconde apparaît | Bandeau de confiance, statuts « argent détenu » | Compte à rebours, « à faire aujourd'hui », bouton flottant |
+
+**La règle de dominance, dans les deux cas :** une seule couleur porte l'action, l'autre est un signal rare. **Au plus un élément de la seconde couleur par écran** — si tu en comptes deux, l'un des deux est de trop.
+
+#### Pourquoi ce renversement fonctionne
+
+Côté acheteur, le bleu gagne à être rare : une couleur qui ne sert qu'à dire « vous êtes livré ou remboursé » dit cette chose beaucoup plus fort qu'une couleur employée partout.
+
+Côté groupeur, **l'orange change de métier**. Il n'est plus la marque, il devient l'alarme — et les écrans du groupeur sont pleins de choses qui pressent : « décidez sous 41 h », « déposez le reçu avant le 9 octobre », « 3 questions sans réponse ». Un orange qui ne sort que pour ça se remarque. Noyé dans un chrome orange, il ne se remarquerait pas.
+
+Le bleu a aussi un avantage mesurable comme couleur d'action : **10,36:1** avec du texte blanc, contre 4,62:1 pour l'orange. Les écrans du groupeur, qui portent des chiffres et des décisions sur de l'argent, y gagnent en lisibilité.
+
+#### Le coût de ce choix, dit franchement
+
+Deux chromes, c'est une application qui a deux visages. Il faut l'assumer : la cohérence de marque ne vient plus de la couleur, elle vient du reste — la typographie, le fond blanc, les rayons, le ton des textes, et le logo. **Garde donc tout le reste strictement identique entre les deux côtés.** Si les deux chromes divergent aussi sur les formes et les espacements, ce ne sont plus deux faces d'un produit, ce sont deux produits.
+
+#### Le conflit à résoudre : les statuts côté groupeur
+
+`Statut` utilise le bleu pour « argent détenu ». Sur un écran groupeur au chrome bleu, cette pastille se fond dans le décor et ne signale plus rien.
+
+**Règle :** sur les écrans groupeur, les statuts « argent détenu » passent en **neutre** (`texte-secondaire` sur `surface-douce`). Ce n'est pas une perte : du point de vue du groupeur, ces états ne disent pas « votre argent est protégé » mais simplement « ce participant a payé » — une information factuelle, pas une promesse. Le composant `Statut` porte donc un axe `Rôle`.
+
+#### Comment t'y prendre dans Figma
+
+Deux voies, et la première te fera gagner beaucoup de temps si ton plan le permet :
+
+| Voie | Principe | Condition |
+|---|---|---|
+| **Deux modes de variables** *(le plus simple)* | La collection `Couleur` reçoit deux modes, `Acheteur` et `Groupeur`. Le jeton `primaire` pointe sur l'orange dans l'un, sur le bleu dans l'autre. **Un écran change de chrome en changeant de mode** — aucun composant à dupliquer | Les modes multiples exigent un plan **Figma Professional** |
+| **Un axe `Rôle` sur les composants** | `Bouton`, `BarreNav`, `Statut` et `Encart` reçoivent une variante `Rôle=Acheteur` / `Rôle=Groupeur` | Fonctionne sur le plan gratuit, mais double le nombre de variantes et se maintient à la main |
+
+**Décide-le avant de construire tes composants** : refaire ce choix après coup demande de repasser sur chacun d'eux.
+
+#### Le problème que l'orange pose, et sa solution
+
+`#FF6A00` ne contraste qu'à **2,87:1** avec le blanc, là où il en faut 4,5. Un bouton `#FF6A00` à texte blanc est **illisible**, et il l'est d'autant plus sur l'écran bon marché et en plein soleil de l'utilisateur visé au §5 du cahier des charges.
+
+D'où **deux oranges, deux rôles** — c'est ce que font tous les systèmes construits sur une couleur chaude :
+
+| Jeton | Hex | Rôle | Règle absolue |
+|---|---|---|---|
+| **`marque`** | **`#FF6A00`** | L'orange qu'on **voit**. Aplats, logo, remplissage des compteurs, bouton flottant, indicateur d'onglet | **Uniquement avec du texte ou une icône sombre** (`#14181F`, 6,20:1). Jamais de blanc dessus |
+| **`primaire`** | **`#CC4A00`** | L'orange qui **se lit**. Boutons pleins, liens, texte orange, états actifs | Texte blanc dessus : **4,62:1** ✅. En texte sur blanc : **4,62:1** ✅ |
+
+Même orange perçu, deux valeurs.
+
+#### La palette complète
 
 | Jeton | Hex | Usage |
 |---|---|---|
-| `primaire` | **`#1E3A8A`** | Boutons d'action, liens, éléments actifs |
-| `primaire-fond` | `#E8EDF8` | Fonds d'encarts |
-| `primaire-sombre` | `#172E6E` | État pressé |
-| `accent` | **`#FF6A00`** | **Remplissage** : compteurs de temps, liserés d'urgence, bouton flottant |
-| `accent-texte` | `#B34A00` | Orange **en texte ou icône** sur fond clair |
-| `accent-fond` | `#FFF1E6` | Fond des blocs d'urgence |
-| `succes` | `#0B6B52` | Livré, paiement confirmé, économie |
+| `marque` | **`#FF6A00`** | Aplats orange vif — avec du sombre dessus uniquement |
+| `primaire` | **`#CC4A00`** | **Tous les boutons pleins**, liens, texte orange, états actifs |
+| `primaire-presse` | `#A64200` | État pressé des boutons (6,18:1) |
+| `primaire-fond` | `#FFF1E6` | Fonds d'encarts orange : délais, compteurs, avertissements |
+| `primaire-texte-sur-fond` | `#B34A00` | Texte sur `primaire-fond` (4,87:1) — `primaire` n'y passe qu'à 4,17:1 |
+| **`confiance`** | **`#1E3A8A`** | Le bleu. **Côté acheteur :** la garantie seule — bandeau, bouclier, statuts « argent détenu ». **Côté groupeur :** la couleur dominante — boutons, liens, onglet actif |
+| `confiance-presse` | `#152C68` | État pressé des boutons groupeur (13,19:1) |
+| `confiance-fond` | `#E8EDF8` | Fond du bandeau de confiance, et fonds d'encarts côté groupeur |
+| `succes` | `#0B6B52` | Livrée, paiement confirmé, position enregistrée |
 | `succes-fond` | `#E6F4EC` | Fond des confirmations |
-| `attention` | `#8A5300` | Texte des avertissements |
-| `attention-fond` | `#FFF4E0` | Fond des avertissements |
-| `danger` | `#C0392B` | Erreurs, annulation, litige |
-| `texte` | `#14181F` | Texte principal |
-| `texte-secondaire` | `#5A6472` | Libellés, métadonnées |
-| `bordure` | `#DFE3E8` | Séparateurs |
-| `fond` | `#F7F8FA` | Fond d'écran |
-| `surface` | `#FFFFFF` | Cartes, champs |
-| `voile` | `#000000` à 45 % | Dégradé sur les médias du fil, pour lire le texte par-dessus |
+| `danger` | `#C0392B` | Erreurs, annulation, litige, refus |
+| `danger-fond` | `#FBEAE8` | Fond des erreurs |
+| `texte` | `#14181F` | Texte principal — et texte sur `marque` |
+| `texte-secondaire` | `#5A6472` | Libellés, métadonnées (6,0:1 sur blanc) |
+| `bordure` | `#E4E7EC` | Filets de séparation, contours de champs |
+| **`fond`** | **`#FFFFFF`** | **Fond de tous les écrans** (§1.0) |
+| `surface` | `#FFFFFF` | Identique à `fond` : un seul niveau de surface |
+| `surface-douce` | `#F7F8FA` | La seule nuance de gris, dans ses trois usages du §1.0 |
+| `voile` | `#000000` à 45 % | Dégradé sur les médias du fil |
 
-**La règle à ne pas enfreindre sur l'orange.** `#FF6A00` ne contraste qu'à **2,87:1** avec le blanc — il en faut 4,5.
+#### Côté acheteur — où le bleu a le droit d'apparaître
 
-- ❌ jamais de texte blanc sur fond `#FF6A00`, ni de texte `#FF6A00` sur blanc ;
-- ✅ l'orange en **remplissage** : c'est son rôle ;
-- ✅ texte sombre `#14181F` sur fond orange : 6,20:1 ;
-- ✅ `accent-texte` `#B34A00` dès qu'il faut écrire en orange : 5,39:1.
+La liste est courte et exhaustive. Partout ailleurs, c'est de l'orange.
 
-Donc **les boutons d'action principale sont bleus**. L'orange est le signal, le bleu est l'action.
+| Emplacement | Écrans |
+|---|---|
+| `BandeauConfiance` | 1, 3, 5, 7, 9 |
+| Statuts « Payée — en attente de clôture » et « Campagne clôturée » | 8, 9 |
+| `Encart` `info` | information neutre |
+| L'icône bouclier | avec le bandeau |
 
-Contrastes vérifiés : blanc sur `primaire` **10,36:1**, `primaire` sur `primaire-fond` 8,83:1, `texte-secondaire` sur `surface` 6,0:1. Si tu changes une teinte, revérifie.
+**Sur les écrans acheteur : pas de bouton bleu, pas de lien bleu, pas d'onglet actif bleu.**
+
+#### Côté groupeur — où l'orange a le droit d'apparaître
+
+Symétrique, et tout aussi court.
+
+| Emplacement | Écrans |
+|---|---|
+| `CompteurTemps` et tout compte à rebours | 15, 16, 17 |
+| La section « À faire aujourd'hui » | 13 |
+| Le bouton flottant « + Créer une campagne » | 13 |
+| `Encart` `attention` — délais, reçu à déposer | 16, 17 |
+
+**Sur les écrans groupeur : pas de bouton orange, pas d'onglet actif orange.** L'orange n'y est jamais une action, toujours une alerte.
+
+Attention à un contraste : **l'orange sur un aplat bleu ne tient qu'à 3,61:1** — acceptable pour un gros caractère ou une pastille pleine, insuffisant pour du texte courant. Un badge orange sur une carte bleue, oui ; du texte orange sur fond bleu, non.
+
+#### Contrastes vérifiés
+
+| Combinaison | Ratio |
+|---|---|
+| Blanc sur `primaire` `#CC4A00` | **4,62:1** ✅ |
+| `primaire` en texte sur blanc | **4,62:1** ✅ |
+| Blanc sur `primaire-presse` `#A64200` | 6,18:1 ✅ |
+| `#14181F` sur `marque` `#FF6A00` | 6,20:1 ✅ |
+| Blanc sur `marque` `#FF6A00` | **2,87:1** ❌ **interdit** |
+| `primaire-texte-sur-fond` sur `primaire-fond` | 4,87:1 ✅ |
+| Blanc sur `confiance` `#1E3A8A` | 10,36:1 ✅ |
+| `confiance` sur `confiance-fond` | 8,83:1 ✅ |
+| `succes` sur `succes-fond` | 5,72:1 ✅ |
+| `danger` sur `danger-fond` | 4,67:1 ✅ |
+| `texte-secondaire` sur blanc | 6,0:1 ✅ |
+
+Si tu modifies une teinte, **refais ce calcul**. C'est lui qui a dicté la structure de cette palette.
+
+#### Les statuts
+
+La couleur se lit sans lire. C'est le bleu qui dit « Group Achat tient votre argent », et l'orange qui dit « ça avance » :
+
+| Famille | Couleur | Statuts |
+|---|---|---|
+| **Argent détenu** | `confiance` sur `confiance-fond` | Payée — en attente de clôture · Campagne clôturée |
+| **En mouvement** | `primaire-texte-sur-fond` sur `primaire-fond` | Commande en cours chez le groupeur |
+| **En cours maintenant** | `marque` plein, texte `#14181F` | En cours de livraison |
+| **Terminé** | `succes` sur `succes-fond` | Livrée |
+| **Problème** | `danger` sur `danger-fond` | Litige · Campagne annulée |
+| **Clos sans suite** | `texte-secondaire` sur `surface-douce` | Remboursée |
 
 ### 1.3 Typographie
 
@@ -79,7 +248,7 @@ Jamais de texte sous 12 px. Sur les médias du fil, tout texte blanc est posé s
 ### 1.4 Rédaction
 
 - **Vouvoiement** partout.
-- **Montants :** `14 500 F` — espace comme séparateur de milliers, `F` et non `FCFA` ni `XOF`.
+- **Montants :** `4 000 F` — espace comme séparateur de milliers, `F` et non `FCFA` ni `XOF`.
 - **Dates :** `sam. 11 oct.` en liste, `samedi 11 octobre` en détail. Les délais en relatif : « Plus que 2 jours ».
 - **Vocabulaire :** une **campagne** (pas un « groupage » ni un « deal »), un **groupeur**, **commander une part**, **livraison**. Jamais *séquestre*, *escrow*, *transaction* à l'écran.
 - **Ne jamais nommer le groupeur autrement que par son pseudonyme.**
@@ -125,10 +294,15 @@ Six règles à matérialiser dans la maquette :
 4. **Un mode « économie de données »** dans le profil : images seulement, aucune vidéo automatique. À dessiner, c'est un argument produit sur ce marché.
 5. **Les vidéos sont courtes et verticales** : 9:16, 15 secondes maximum, et le prix est lisible sans le son.
 6. **Un état de secours** : si le média ne charge pas, la carte reste utilisable avec l'image, le titre, le prix et le bouton.
+7. **Le bandeau partenaires se charge en dernier**, après le média de la campagne. Ce sont des **images fixes uniquement, jamais de vidéo publicitaire**, et en mode économie de données les logos cèdent la place à du texte (§2.14). Une publicité ne doit pas retarder l'affichage du contenu que l'utilisateur est venu voir.
 
-À prévoir aussi côté maquette : les campagnes de produits non filmables (un sac de riz) auront **une photo, pas une vidéo**. Le fil doit être aussi convaincant avec une photo fixe qu'avec une vidéo — sinon les groupeurs sans moyens de tournage sont désavantagés sans raison.
+À prévoir aussi côté maquette : les campagnes de produits qui se filment mal (un carton, un sachet) auront **une photo, pas une vidéo**. Le fil doit être aussi convaincant avec une photo fixe qu'avec une vidéo — sinon les groupeurs sans moyens de tournage sont désavantagés sans raison.
 
-### 1.7 Anonymat du groupeur
+### 1.7 Anonymat des deux côtés
+
+**L'anonymat va dans les deux sens, et c'est le second sens qui protège la commission.**
+
+#### Le groupeur, vu de l'acheteur
 
 **Il n'existe aucune page de profil de groupeur, et aucun moyen de le joindre.**
 
@@ -140,14 +314,108 @@ Six règles à matérialiser dans la maquette :
 
 **Le pseudonyme n'est cliquable nulle part.** C'est une étiquette, pas un lien.
 
+#### L'acheteur, vu du groupeur
+
+Symétrique, et tout aussi strict. Le groupeur gère une campagne, pas un carnet d'adresses.
+
+| Visible pour le groupeur | Jamais visible |
+|---|---|
+| Le **nombre** de parts et de participants | Les noms des acheteurs |
+| La **répartition par quartier** (écran 15) | Les téléphones, les adresses précises |
+| Les **questions** posées, sous pseudonyme | Qui a commandé quoi, et combien de fois |
+| Les **codes de livraison** sur son bordereau de colisage | — |
+
+C'est cette moitié-là qui ferme la fuite réelle. Un groupeur qui connaît les gros acheteurs et leurs numéros peut leur proposer la même marchandise hors plateforme, au même prix, sans commission. **L'étiquette de colis est le dernier endroit par où cette information pouvait s'échapper** : elle ne porte donc qu'un code, un quartier et un produit. Les identités ne sortent qu'à l'enlèvement, vers le transporteur — voir [LIVRAISON.md §4](LIVRAISON.md) étapes 2 et 3.
+
+Appliqué : l'écran 15 liste les commandes **par code de livraison**, pas par nom. L'écran 22 — la page du livreur — est le seul endroit du produit où nom, adresse et téléphone apparaissent ensemble.
+
 Ce qui porte la confiance à la place, et qui doit être visible sur le fil comme sur le détail, c'est la **promesse de plateforme** :
 
-> 🛡️ **Groupeurs sélectionnés par Group Achat**
-> Votre paiement est détenu par Group Achat. Vous êtes livré, ou remboursé.
+> 🛡️ **Groupeurs vérifiés par Group Achat**
+> Vous êtes livré, ou remboursé.
 
 C'est le seul signal de confiance de l'application : il doit être présent, court, et répété.
 
+**Un point de rédaction qui n'est pas négociable.** Le groupeur reçoit son argent **à la clôture de la campagne, avant la livraison** (§10.1 du cahier des charges). Il ne faut donc **jamais** écrire « votre argent est bloqué jusqu'à la livraison » ni « le groupeur ne sera payé qu'après votre livraison » : ce serait faux.
+
+Ce qui est vrai, et qui suffit :
+
+| ✅ À écrire | ❌ À ne jamais écrire |
+|---|---|
+| « Vous êtes livré, ou remboursé » | « Votre argent est bloqué jusqu'à la livraison » |
+| « Groupeurs vérifiés par Group Achat » | « Le groupeur n'est payé qu'après votre livraison » |
+| « Si la campagne n'aboutit pas, vous êtes remboursé intégralement » | « Votre paiement est protégé jusqu'à la remise » |
+| « Votre paiement est détenu par Group Achat **jusqu'à la clôture** » | « …jusqu'à la livraison » |
+
+Sur un produit dont l'argument est la sécurité de l'argent, une promesse inexacte sur le circuit de l'argent est la faute la plus coûteuse possible. La garantie réelle est un **engagement de Group Achat** — et c'est déjà un argument fort, qui n'a pas besoin d'être exagéré.
+
 **Filtre anti-contournement :** à la publication d'une question ou d'une réponse, les numéros de téléphone et identifiants de réseaux sociaux sont masqués, avec le message « Les échanges de numéros ne sont pas autorisés. Votre paiement n'est protégé que sur Group Achat. »
+
+### 1.8 Inventaire des médias — ce que tu dois fournir
+
+Tous les emplacements d'image et de vidéo de l'application, avec leur taille. **En attendant tes visuels, chaque emplacement est un bloc `surface-douce` portant sa dimension écrite dessus** — l'échange sera alors immédiat, sans rien redessiner.
+
+#### Les emplacements
+
+| # | Écran | Emplacement | Affiché | À fournir | Format |
+|---|---|---|---|---|---|
+| M1 | 1 — fil | **Média de campagne** | 390 × 600 | **1080 × 1920** | Photo verticale **ou** vidéo |
+| M2 | 3 — détail | Média principal | 390 × 488 | **1170 × 1464** (4:5) | Photo, jusqu'à 3 |
+| M3 | 2, 8, 15 | Vignette carrée | 96 × 96 | **288 × 288** | Photo recadrée au carré |
+| M4 | 5, 9, 10 | Petite vignette | 64 × 64 et 48 × 48 | Reprise de M3 | — |
+| M5 | 1 — bandeau | **Logo d'annonceur** | 40 × 40 | **120 × 120** | PNG à fond transparent |
+| M6 | partout | **Logo Group Achat** | 28 de haut en en-tête | Icône **84 × 84**, icône d'application **1024 × 1024**, logotype horizontal | SVG de préférence |
+| M7 | 17 | Exemple de reçu fournisseur | pleine largeur | 1 photo, même approximative | Photo de reçu |
+
+#### Ce qui ne demande aucun visuel
+
+- **Les icônes** — jeu en traits de 1,5 px, que je produis dans Figma.
+- **Le QR code** de l'écran 9 — généré par le code.
+- **Les états vides** — pas d'illustration, c'est la règle 7 du §1.0.
+- **Les dépôts de l'utilisateur** — photos de demande (écran 11), photos de produit du groupeur (écran 14), justificatifs (écran 17) : ce sont des zones de dépôt, pas des visuels à fournir.
+
+#### La zone de sécurité du fil — le point à ne pas rater
+
+Sur l'écran 1, le média fait 600 px de haut mais **les 280 px du bas sont recouverts** par le bloc d'information et le bouton, et les 40 px du haut par le dégradé. Il reste donc **280 px réellement dégagés, dans la partie haute**.
+
+```
+  ┌──────────────────────┐  ← haut du média
+  │ ░░░ dégradé 40 px ░░░│
+  │                      │
+  │    ZONE DÉGAGÉE      │  ← le produit doit être ICI
+  │       280 px         │
+  │                      │
+  ├──────────────────────┤
+  │ compteur, titre,     │
+  │ prix, bouton         │  ← 280 px recouverts
+  │                      │
+  └──────────────────────┘
+```
+
+**Conséquence pour tes photos et tes vidéos :** cadre le produit dans le **tiers supérieur**, pas au centre. Une belle photo centrée aura son sujet masqué par le prix et le bouton — c'est l'erreur classique sur ce type de fil, et elle ne se voit qu'au montage.
+
+#### Les vidéos
+
+- **Verticales 9:16**, 1080 × 1920.
+- **15 secondes maximum** (§1.6).
+- **Compréhensibles sans le son**, qui est coupé par défaut. Si la vidéo a besoin d'une voix pour être comprise, elle ne sert à rien ici.
+- MP4, H.264. **Visez moins de 3 Mo** : c'est l'écran le plus coûteux en données de l'application, pour le public le plus sensible à ce coût.
+- Filmées au téléphone, c'est très bien. Ce fil n'attend pas des films publicitaires.
+
+#### La liste de courses minimale pour la démonstration
+
+Pour que les cinq campagnes du §3 tiennent à l'écran :
+
+| Besoin | Quantité |
+|---|---|
+| Photo verticale 1080 × 1920 | **5** — une par campagne (C1 à C5) |
+| Photo carrée 288 × 288 | **5** — recadrages des précédentes |
+| Vidéo verticale de 15 s | **2** — pour C2 (robe wax) et C4 (baskets), les deux campagnes où le mouvement vend |
+| Logo d'annonceur | **2 à 4** |
+| Logo Group Achat | **1** jeu |
+| Photo de reçu | **1** |
+
+Dépose-les dans [medias/](medias/) en suivant la convention de nommage qui y est décrite.
 
 ---
 
@@ -157,7 +425,9 @@ C'est le seul signal de confiance de l'application : il doit être présent, cou
 Le composant le plus important de l'application. Détaillé à l'écran 1.
 
 ### 2.2 `BarreNav`
-Hauteur 72, fond `surface`, bordure haute. Icône 24 + libellé 12. Actif en `primaire`, inactif en `texte-secondaire`.
+Hauteur 72, fond blanc, **filet de 1 px en haut** et rien d'autre — pas d'ombre. Icône en traits de 1,5 px, 24 px. **Onglet actif : `primaire` côté acheteur, `confiance` côté groupeur** (§1.2). Inactif en `texte-secondaire` dans les deux cas. Variantes : une par onglet actif, par rôle — soit 8.
+
+C'est l'élément où les deux chromes se voient le plus : la barre de navigation est permanente, et c'est elle qui dit en permanence de quel côté du produit on se trouve.
 - **Acheteur :** Fil · Rechercher · Demander · Mes commandes
 - **Groupeur :** Tableau de bord · Mes campagnes · Demandes · Portefeuille
 
@@ -165,73 +435,141 @@ Hauteur 72, fond `surface`, bordure haute. Icône 24 + libellé 12. Actif en `pr
 
 Sur le fil, la barre est posée sur le média avec un dégradé `voile` derrière elle.
 
-### 2.3 `CarteCampagne` — version liste
+### 2.3 `LigneCampagne` — version liste
 Pour la recherche et les listes, à côté du fil plein écran.
 
+**Ce n'est pas une carte.** Sur fond blanc, une carte blanche n'existe pas : c'est une **ligne**, séparée de la suivante par un filet de 1 px et par du vide. Rien ne l'encadre.
+
 ```
-┌──────────────────────────────────────┐
-│ [photo 96×96]  Riz parfumé 25 kg     │
-│                14 500 F  18 000 F    │
-│                🕐 Plus que 2 jours   │
-│                Mama Gro              │
-│                32 personnes ont      │
-│                commandé              │
-└──────────────────────────────────────┘
+  [photo 96×96]   Écouteurs filaires avec micro
+   coins 12       4 000 F
+                  🕐 Plus que 2 jours
+                  Mama Gro · 32 commandes
+  ────────────────────────────────────────   ← filet 1 px, largeur moins les marges
 ```
 
-Variantes : `ouverte`, `derniers-jours` (liseré `accent`), `cloturee` (grisée), `annulee`.
+Seule la photo a des coins arrondis — c'est elle qui donne sa structure à la ligne, et c'est suffisant.
+
+Variantes : `ouverte`, `derniers-jours` (le `CompteurTemps` passe en orange, **sans liseré ni cadre**), `cloturee` (photo à 40 % d'opacité, texte en `texte-secondaire`), `annulee`.
+
+Ce choix allège aussi le rendu : une liste de lignes défile mieux qu'une liste de cartes ombrées sur un téléphone d'entrée de gamme.
 
 ### 2.4 `CompteurTemps`
 Puce avec icône horloge. **Le temps restant est le seul élément de pression de l'application** — il n'y a ni minimum ni places limitées, donc c'est lui qui crée l'urgence.
-Variantes : `large` (« Plus que 6 jours », `texte-secondaire`), `proche` (« Plus que 2 jours », `accent-fond` + `accent-texte`), `derniere-heure` (« Plus que 4 h », `danger`), `terminee` (« Campagne clôturée », grisé).
+Variantes :
+- `large` — « Plus que 6 jours », `texte-secondaire` sur fond blanc
+- `proche` — « Plus que 2 jours », `primaire-texte-sur-fond` sur `primaire-fond`
+- `derniere-heure` — « Plus que 4 h », `danger` sur `danger-fond`
+- `terminee` — « Campagne clôturée », `texte-secondaire` sur `surface-douce`
+
+Sur le fil, où le compteur est posé sur un média sombre, il devient un aplat **`marque` avec texte `#14181F`** : c'est son usage le plus visible dans toute l'application, et celui où l'orange de la marque travaille le mieux.
 
 ### 2.5 `CompteurParticipants`
 « 32 personnes ont commandé ». Jamais de fraction ni de jauge : **il n'y a pas de plafond ni de minimum**, donc rien à remplir. Un nombre qui monte suffit, et il rassure.
 
 ### 2.6 `BandeauConfiance`
-Le bandeau de la promesse de plateforme (§1.7). Fond `primaire-fond`, bordure gauche 4 px `primaire`, icône bouclier. Deux tailles : `compact` (une ligne, pour le fil) et `complet` (deux lignes, pour le détail et la confirmation).
+Le bandeau de la promesse de plateforme (§1.7). **C'est le seul élément bleu de l'application** (§1.2) : fond `confiance-fond`, texte `confiance`, icône bouclier `confiance`, coins 12, **pas de bordure ni d'ombre** — le fond teinté suffit à le détacher du blanc.
+
+Deux tailles : `compact` (une ligne, pour le fil) et `complet` (deux lignes, pour le détail et la confirmation).
+
+C'est précisément parce que tout le reste est orange que ce bandeau se détache. Dans un écran entièrement bleu, il disparaîtrait ; dans un écran orange, il arrête l'œil — et c'est le message qu'on veut faire remarquer.
+
+**Relis le §1.7 avant d'écrire son contenu** : la formulation est contrainte, parce que le groupeur est payé avant la livraison.
 
 ### 2.7 `Bouton`
 Hauteur 52, coins 10, pleine largeur moins les marges.
-Variantes : `primaire` (fond `#1E3A8A`, texte blanc), `secondaire` (contour `primaire`), `danger-texte`, `desactive`, et pour chacune un état `chargement`. **Aucune variante orange** (§1.2).
-Les boutons principaux sont **ancrés en bas** sur `surface` avec une ombre haute.
+**Deux axes : `Rôle` et `Style`**, parce que la couleur d'action dépend du côté (§1.2).
+
+| Style | Côté acheteur | Côté groupeur |
+|---|---|---|
+| `primaire` | fond `#CC4A00`, texte blanc (4,62:1), pressé `#A64200` | fond `#1E3A8A`, texte blanc (**10,36:1**), pressé `#152C68` |
+| `secondaire` | contour 1,5 px `primaire`, texte `primaire` | contour `confiance`, texte `confiance` |
+| `danger-texte` | texte `danger`, sans fond | identique |
+| `desactive` | fond `surface-douce`, texte `texte-secondaire` | identique |
+
+Plus un état `chargement` pour chacune.
+
+Le bouton groupeur est nettement plus lisible que le bouton acheteur — 10,36:1 contre 4,62:1. Ce n'est pas un hasard qu'on s'en satisfasse : ses écrans portent des décisions sur des sommes à cinq chiffres.
+
+**Jamais `marque` `#FF6A00` en fond de bouton avec un texte blanc** : 2,87:1, illisible (§1.2). Si tu veux absolument un bouton dans l'orange vif de la marque, son texte doit être `#14181F` — c'est lisible, mais réserve-le au bouton flottant du groupeur, pour qu'un seul élément de l'application ait ce traitement.
+Les boutons principaux sont **ancrés en bas** sur fond blanc, avec une **ombre haute très légère** — le bouton ancré est l'un des trois seuls éléments de l'application autorisés à porter une ombre (§1.0), parce qu'il flotte réellement au-dessus du contenu qui défile dessous.
 
 ### 2.8 `Statut`
 Hauteur 24, coins complets, texte 12 Medium.
 
 | Statut | Couleur |
 |---|---|
-| Payée — en attente de clôture | `primaire` sur `primaire-fond` |
-| Campagne clôturée | `primaire` sur `primaire-fond` |
-| Commande en cours chez le groupeur | `accent-texte` sur `accent-fond` |
-| En cours de livraison | `accent-texte` sur `accent-fond` |
+| Payée — en attente de clôture | `confiance` sur `confiance-fond` |
+| Campagne clôturée | `confiance` sur `confiance-fond` |
+| Commande en cours chez le groupeur | `primaire-texte-sur-fond` sur `primaire-fond` |
+| **En cours de livraison** | **`marque` plein, texte `#14181F`** — le seul statut en aplat vif : c'est celui qui demande de l'attention aujourd'hui |
 | Livrée | `succes` sur `succes-fond` |
-| Litige | `danger` sur rouge très clair |
-| Remboursée | `texte-secondaire` sur gris clair |
-| Campagne annulée | `danger` sur rouge très clair |
+| Litige | `danger` sur `danger-fond` |
+| Remboursée | `texte-secondaire` sur `surface-douce` |
+| Campagne annulée | `danger` sur `danger-fond` |
+
+Bleu, Group Achat tient l'argent. Orange, ça avance. Vert, c'est fait. Rouge, il y a un problème. Gris, c'est clos (§1.2).
+
+**Axe `Rôle`.** Sur un écran groupeur au chrome bleu, une pastille bleue se fond dans le décor. Les statuts « argent détenu » y passent donc en **neutre** — `texte-secondaire` sur `surface-douce`. Du point de vue du groupeur, ces états ne promettent rien : ils constatent qu'un participant a payé.
 
 ### 2.9 `Champ`
-Libellé 14 **au-dessus** du champ, jamais un simple placeholder — il disparaît à la saisie et l'utilisateur ne sait plus ce qu'il remplit. Hauteur 52, coins 10.
-Variantes : `vide`, `rempli`, `focus` (bordure `primaire` 2 px), `erreur` (bordure `danger` + message 12 dessous).
+Libellé 14 **au-dessus** du champ, jamais un simple placeholder — il disparaît à la saisie et l'utilisateur ne sait plus ce qu'il remplit. Hauteur 52, coins 10, **fond blanc avec un contour de 1 px `bordure`** : sur fond blanc, c'est le contour qui dit « ici on écrit », pas un remplissage gris.
+Variantes : `vide`, `rempli`, `focus` (contour `primaire` 2 px), `erreur` (contour `danger` + message 12 dessous), `desactive` (fond `surface-douce`, l'un des trois usages autorisés du gris).
 
 ### 2.10 `CodeLivraison`
 Bloc centré, fond `surface`, bordure 2 px en tirets `primaire`, coins 16. QR code 160 × 160, le code en style `Code`, et « Montrez ce code au livreur ».
 
 ### 2.11 `Encart`
-Bordure gauche 4 px, icône + texte, coins 8.
+Fond teinté, icône + texte, coins 12, **sans bordure ni ombre**. Sur fond blanc, un aplat de couleur douce se détache seul : y ajouter un liseré alourdit sans rien apporter.
 
-| Variante | Fond | Bordure et texte |
-|---|---|---|
-| `attention` | `attention-fond` | `attention` |
-| `info` | `primaire-fond` | `primaire` |
-| `succes` | `succes-fond` | `succes` |
-| `danger` | `#FBEAE8` | `danger` |
+| Variante | Fond | Texte et icône | Pour quoi |
+|---|---|---|---|
+| `info` | `confiance-fond` | `confiance` | Une information neutre, ou qui rassure |
+| `attention` | `primaire-fond` | `primaire-texte-sur-fond` | Un délai, un compte à rebours, un avertissement |
+| `succes` | `succes-fond` | `succes` | Une réussite |
+| `danger` | `danger-fond` | `danger` | Une erreur, un refus, une annulation |
+
+La répartition suit le §1.2 : le bleu informe et rassure, l'orange presse. Un encart `info` et un encart `attention` ne disent donc pas la même chose, et leur couleur le dit avant le texte.
 
 ### 2.12 `EtatVide`
-Icône 64, titre 18, phrase explicative 16 en `texte-secondaire`, bouton `secondaire`. À décliner : aucune commande, aucune demande, aucune campagne, aucun résultat, non connecté.
+**Icône en traits de 1,5 px, 48 px, en `texte-secondaire`** — pas d'illustration, pas de dessin de remplissage (§1.0, règle 7). Puis titre 18, phrase explicative 16 en `texte-secondaire`, bouton `secondaire`. Centré, avec beaucoup de vide autour : c'est le vide qui rend un état vide élégant, pas l'image qu'on y met.
+
+À décliner : aucune commande, aucune demande, aucune campagne, aucun résultat, non connecté.
+
+### 2.14 `BandeauPartenaires`
+
+L'emplacement publicitaire vendu aux entreprises (§9.3 du cahier des charges). **Hauteur 72 px**, fond blanc, filet de 1 px en dessous, en haut du fil sous l'en-tête.
+
+```
+  ┌────────────────────┐ ┌────────────────────┐
+  │ [logo]  Nom        │ │ [logo]  Nom        │  ← défilement horizontal
+  │         Accroche   │ │         Accroche   │
+  └────────────────────┘ └────────────────────┘
+  Sponsorisé
+```
+
+- **Carrousel horizontal** de vignettes de 280 × 56, coins 12, 12 px entre elles. Deux à quatre annonceurs, défilement au doigt — **pas de rotation automatique** : un contenu qui bouge seul au-dessus d'un fil qu'on fait défiler est désagréable et empêche de toucher ce qu'on visait.
+- Chaque vignette : logo 40 × 40 à gauche, nom de l'annonceur en `Corps-fort`, accroche d'une ligne en `Petit` `texte-secondaire`.
+- **Mention « Sponsorisé »** en 10 px `texte-secondaire`, alignée à gauche sous le carrousel. Discrète mais présente — c'est une obligation de loyauté, pas une option de mise en page (§9.3).
+- **Jamais de prix ni de bouton « Commander »** sur une vignette. Une publicité ne doit à aucun moment ressembler à une campagne.
+
+**Variantes à dessiner**
+
+| Variante | Contenu |
+|---|---|
+| `deux-annonceurs` | Le cas courant |
+| `un-annonceur` | Une vignette pleine largeur |
+| `aucun-annonceur` | **Le bandeau disparaît entièrement.** Pas de « Votre publicité ici », pas de place vide : au lancement il n'y aura pas d'annonceur, et un emplacement vide fait plus de mal qu'une absence |
+| `economie-donnees` | Les logos sont remplacés par le nom de l'annonceur en texte, sur une seule ligne de 40 px |
+
+**Au toucher**, deux comportements selon ce que l'annonceur a acheté :
+- une **page interne** décrivant l'offre, avec un bouton vers l'extérieur ;
+- un **lien externe**, et dans ce cas une confirmation obligatoire : « Vous quittez Group Achat » avec les boutons « Continuer » et « Annuler ».
 
 ### 2.13 `FriseEtapes`
-Frise verticale à 4 ou 5 étapes, l'étape atteinte en `primaire`, les suivantes en `bordure`. Sert au suivi de commande (écran 9) et à la confirmation (écran 7).
+Frise verticale à 4 ou 5 étapes : un point de 10 px et un trait vertical de 2 px entre les points. Étapes franchies en `primaire`, étape en cours en `primaire` avec un anneau, étapes à venir en `bordure`. Libellé 16 et date 12 à droite de chaque point. Pas d'encadrement autour de la frise.
+
+Sert au suivi de commande (écran 9) et à la confirmation (écran 7).
 
 ---
 
@@ -244,20 +582,45 @@ Un seul jeu, utilisé sur **tous** les écrans.
 **Groupeurs** — pseudonymes seuls, jamais de nom réel :
 **Mama Gro** · **Lomé Deals** · **Chez Sika**
 
-| # | Produit | Prix / part | Prix détail | Commandes | Groupeur | Fin | Média |
-|---|---|---|---|---|---|---|---|
-| C1 | Riz parfumé 25 kg | **14 500 F** | 18 000 F | 32 | Mama Gro | Plus que 2 jours | Photo |
-| C2 | Robe wax, taille au choix | 7 500 F | 11 000 F | 18 | Chez Sika | Plus que 5 jours | **Vidéo** |
-| C3 | Huile de palme 20 L | 11 200 F | 14 000 F | 24 | Mama Gro | Plus que 6 jours | Photo |
-| C4 | Baskets homme, pointures 39-45 | 9 800 F | 15 000 F | 41 | Lomé Deals | **Plus que 4 h** | **Vidéo** |
-| C5 | Savon de Marseille, carton de 48 | 9 500 F | 12 500 F | 12 | Chez Sika | Clôturée | Photo |
+| # | Produit | Prix / part | Commandes | Groupeur | Fin | Média |
+|---|---|---|---|---|---|---|
+| C1 | Écouteurs filaires avec micro | **4 000 F** | 32 | Mama Gro | Plus que 2 jours | Photo |
+| C2 | Robe wax, taille au choix | 7 500 F | 18 | Chez Sika | Plus que 5 jours | **Vidéo** |
+| C3 | Huile de palme 20 L | 11 200 F | 24 | Mama Gro | Plus que 6 jours | Photo |
+| C4 | Baskets homme, pointures 39-45 | 9 800 F | 41 | Lomé Deals | **Plus que 4 h** | **Vidéo** |
+| C5 | Savon de Marseille, carton de 48 | 9 500 F | 12 | Chez Sika | Clôturée | Photo |
 
-**La commande fil rouge :** C1, 1 part, **14 500 F**, code de livraison **`K7M-4PQ`**.
+> **Pas de colonne « prix détail », et c'est une décision de produit** — voir la règle ci-dessous.
 
-**Portefeuille de Mama Gro** (cohérent avec C1 : 32 × 14 500 = 464 000 F) :
-collecté sur C1 **464 000 F** · avance reçue **324 800 F** (70 %) · commission **23 200 F** (5 %) · solde retenu **116 000 F** · disponible **86 450 F**.
+### Aucun prix barré, aucun badge de réduction
 
-Le calcul doit tomber juste à l'écran : 464 000 − 324 800 − 23 200 = **116 000**. Un jury vérifie ce genre d'addition.
+**Règle absolue dans toute l'application.** Un prix de part s'affiche seul. Jamais de prix de détail barré à côté, jamais de pastille « −19 % », jamais de mention « au lieu de ».
+
+C'est contre-intuitif pour qui vient du e-commerce, et c'est pourtant le bon choix ici, pour trois raisons :
+
+- **Le prix barré est une promesse qu'on ne peut pas tenir.** « 18 000 F au lieu de 4 000 F » suppose qu'on connaisse le prix de détail — or il varie d'un marché à l'autre à Lomé, et il est *déclaré par le groupeur*. Afficher un chiffre que personne ne vérifie dans un produit qui vend la confiance est le pire échange possible.
+- **Ça déplace l'argument au mauvais endroit.** Notre promesse n'est pas « c'est soldé », c'est **le prix de gros par le groupage, avec la garantie Group Achat**. Le prix de groupe parle de lui-même : l'acheteur de Lomé sait très bien ce que coûte un écouteur au marché.
+- **Ça nous expose.** Des prix barrés gonflés sont la pratique qui a ruiné la crédibilité de bien des plateformes. Ne jamais commencer coûte zéro ; arrêter plus tard coûte la confiance déjà bâtie.
+
+**Donc, à ne dessiner nulle part :** prix barré, pastille de pourcentage, « économisez X F », compte à rebours de promotion, « prix habituel ». Ce qui reste, et qui suffit : le prix de la part, ce que contient une part, le nombre de participants et le temps restant.
+
+**Frais de livraison : calculés selon la position de l'acheteur** (§11.1 du cahier des charges), payés par lui, **sur une ligne distincte** du prix de la part. Le calcul réel n'existe pas encore : **la fonction renvoie 1 000 F pour toute position**. Dans les maquettes, affiche donc 1 000 F — mais **jamais comme un tarif annoncé à l'avance**.
+
+**La commande fil rouge :** C1, 1 part. **4 000 F de part + 1 000 F de livraison = `5 000 F` payés.** Code de livraison **`K7M-4PQ`**.
+
+> **Attention en maquettant :** le montant que l'acheteur paie est **5 000 F**, pas 4 000 F. Le prix de la part (4 000 F) s'affiche sur le fil, la campagne et le sélecteur de quantité ; le **total payé** (5 000 F) s'affiche à partir du récapitulatif de commande, sur le paiement, la confirmation, la liste des commandes et le détail. C'est l'erreur la plus facile à commettre dans cette maquette.
+
+**Portefeuille de Mama Gro** — campagne C1, 32 commandes :
+
+| Ligne | Montant | Calcul |
+|---|---|---|
+| Collecté sur les parts | **128 000 F** | 32 × 4 000 |
+| Commission Group Achat (5 %) | **− 6 400 F** | 5 % de 128 000 |
+| **Versé au groupeur à la clôture** | **121 600 F** | 128 000 − 6 400 |
+| Frais de livraison collectés | 32 000 F | 32 × 1 000, **reversés au transporteur, hors commission** |
+| Disponible sur son portefeuille | 86 450 F | après ses retraits |
+
+Les additions doivent tomber juste à l'écran : un jury vérifie ce genre de calcul.
 
 **Quartiers :** Agoè, Bè, Tokoin, Adidogomé, Nyékonakpoè, Hédzranawoé.
 
@@ -269,34 +632,53 @@ Le calcul doit tomber juste à l'écran : 464 000 − 324 800 − 23 200 = **116
 
 **Objectif :** qu'un visiteur comprenne en trois secondes ce qu'il regarde, et qu'il ait envie de faire défiler. C'est l'écran d'accueil, celui qui s'ouvre à la toute première utilisation, **sans aucun compte**.
 
-**Structure : une carte par campagne, plein écran, défilement vertical.** Une campagne occupe tout l'écran ; on glisse vers le haut pour la suivante.
+**Structure : une carte par campagne, défilement vertical.** On glisse vers le haut pour la campagne suivante.
+
+**Répartition verticale de l'écran**, qui n'est plus tout à fait plein écran depuis l'ajout du bandeau partenaires :
+
+| Zone | Hauteur |
+|---|---|
+| Barre de statut | 44 px |
+| En-tête Group Achat | 56 px |
+| **Bandeau partenaires** | **72 px** |
+| **Média de la campagne** | **600 px** |
+| Barre de navigation | 72 px |
+
+Le média passe donc de 844 à **600 px de haut**. C'est le prix du bandeau, et il faut le connaître : **le bandeau consomme 9 % de l'écran, en permanence, sur la surface principale de l'application.** En contrepartie, un emplacement visible en haut de l'accueil se vend en une conversation, sans ciblage ni mesure — voir la réserve en fin d'écran.
+
+Le bloc d'information et le bouton restent **ancrés en bas du média**, pas en bas de l'écran : rien ne passe sous la barre de navigation.
 
 **De haut en bas sur une carte**
 
 1. **Le média à bord perdu** : photo ou vidéo 9:16 couvrant tout l'écran. Un dégradé `voile` en haut sur 120 px et en bas sur 280 px, sans quoi aucun texte n'est lisible.
-2. **En haut :** « Group Achat » à gauche, icône de recherche à droite. Rien d'autre — pas de bouton « Connexion », pas d'avatar (§1.5).
+2. **En-tête :** « Group Achat » à gauche, icône de recherche à droite. Rien d'autre — pas de bouton « Connexion », pas d'avatar (§1.5).
+2bis. **`BandeauPartenaires`** (§2.14), sous l'en-tête, sur fond blanc. Il **reste en place quand on fait défiler le fil** : c'est ce que l'annonceur achète.
 3. **Rail d'actions vertical à droite**, aligné sur le bas, icônes blanches de 28 avec libellé 12 dessous :
    - 💬 **Questions** — « 7 »
    - ↗️ **Partager**
    - 🔇 **Son** — coupé par défaut (§1.6), seulement si la campagne a une vidéo
 4. **Bloc d'information en bas à gauche**, au-dessus de la barre de navigation :
    - `CompteurTemps` : « 🕐 Plus que 2 jours »
-   - **Nom du produit** en `Titre-fil` blanc : « Riz parfumé 25 kg »
-   - **Prix** : `14 500 F` en `Prix` blanc, puis `18 000 F` barré, puis une puce « **−19 %** » sur `succes`
+   - **Nom du produit** en `Titre-fil` blanc : « Écouteurs filaires avec micro »
+   - **Prix** : `4 000 F` en `Prix` blanc, **seul** — pas de prix barré, pas de pastille de pourcentage. En dessous, en `Petit` blanc : « la part ». C'est ce qui remplace le badge : on dit ce qu'on achète, pas ce qu'on économise
    - `CompteurParticipants` : « 32 personnes ont commandé »
    - **Pseudonyme** en 14 : « Mama Gro » — **non cliquable** (§1.7)
    - `BandeauConfiance` en version `compact`, une ligne : « 🛡️ Groupeur sélectionné · Livré ou remboursé »
-5. **Bouton ancré** au-dessus de la barre de navigation, pleine largeur : « **Commander — 14 500 F** ». Le montant dans le bouton supprime la surprise à l'étape suivante.
+5. **Bouton ancré** au-dessus de la barre de navigation, pleine largeur : « **Commander — 4 000 F** ». Le montant dans le bouton supprime la surprise à l'étape suivante.
 6. **`BarreNav`**, onglet Fil actif, posée sur un dégradé.
 7. **Indice de défilement**, à dessiner seulement sur la première carte : une flèche vers le haut et « Faites glisser pour voir d'autres campagnes », qui disparaît au premier geste. Sans cet indice, un utilisateur qui n'a jamais vu ce type d'interface reste bloqué sur la première campagne.
 
-**Cartes à dessiner** — au moins trois, pour montrer la variété : **C1** (photo, 2 jours), **C2** (vidéo, robe wax), **C4** (vidéo, 4 h restantes — en `danger`, l'urgence maximale).
+**Cartes à dessiner** — au moins trois, pour montrer la variété : **C1** (photo, 2 jours), **C2** (vidéo, robe wax), **C4** (vidéo, 4 h restantes — en `danger`, l'urgence maximale). Plus la variante **sans annonceur**, où le média récupère ses 72 px.
+
+**Ma réserve sur l'emplacement, à lire avant de dessiner.** Un bandeau permanent en haut d'un fil est l'inventaire publicitaire le plus facile à vendre et **le moins performant** : on apprend très vite à ne plus le voir, et il coûte 9 % de la surface principale en continu. L'inventaire qui se vend cher dans un fil, c'est la **carte sponsorisée insérée dans le fil lui-même** — plein écran, au format d'une campagne, marquée « Sponsorisé », tous les cinq ou six contenus. Elle ne coûte aucun espace permanent et se regarde vraiment.
+
+Je garde le bandeau comme tu l'as demandé : il est visible, démontrable devant un jury, et vendable dès maintenant sans ciblage ni mesure. Mais si tu veux un jour monter tes tarifs, c'est la carte sponsorisée qu'il faudra construire — elle est notée en évolution au §19 du cahier des charges.
 
 **États à dessiner**
 
 | État | Contenu |
 |---|---|
-| Chargement | Fond `fond` avec un dégradé animé, logo discret au centre |
+| Chargement | Fond `surface-douce` avec un dégradé animé discret, sans logo ni texte |
 | Image seule | La vidéo n'a pas chargé : image de couverture + tous les éléments d'information, pleinement utilisable (§1.6) |
 | Mode économie de données | Un bandeau discret en haut : « Mode économie activé — vidéos désactivées » |
 | Fin du fil | « Vous avez vu toutes les campagnes ouvertes » + « Demander un produit » |
@@ -311,7 +693,7 @@ Le calcul doit tomber juste à l'écran : 464 000 − 324 800 − 23 200 = **116
 2. **Catégories** en puces défilantes : Alimentaire · Vêtements · Chaussures · Hygiène · Maison · Électronique.
 3. **Filtres** en puces : « Se termine bientôt » · « Moins de 10 000 F » · catégorie.
 4. **Tri :** fin proche · prix · nombre de commandes.
-5. **Résultats** en `CarteCampagne` (liste, pas plein écran), avec le compte : « 7 campagnes ».
+5. **Résultats** en `LigneCampagne` (§2.3 — des lignes séparées par un filet, pas des cartes), avec le compte : « 7 campagnes ».
 6. `BarreNav`, onglet Rechercher actif.
 
 **États :** recherches récentes et suggestions avant toute saisie ; chargement ; **aucun résultat** → `EtatVide` « Aucune campagne pour « lait en poudre » » + bouton « **Demander ce produit** », qui transforme un échec de recherche en demande (écran 11).
@@ -321,30 +703,35 @@ Le calcul doit tomber juste à l'écran : 464 000 − 324 800 − 23 200 = **116
 **Objectif :** donner tout ce qu'il faut pour décider de payer.
 
 1. **Média** pleine largeur, ratio 4:5, flèche de retour à gauche et **icône de partage à droite**. Si vidéo : lecture au toucher, son coupé par défaut.
-2. **Titre :** « Riz parfumé 25 kg »
-3. **Prix :** `14 500 F` en `Prix`, `18 000 F` barré, puce « **−19 %** ».
+2. **Titre :** « Écouteurs filaires avec micro »
+3. **Prix :** `4 000 F` en `Prix`, seul. En dessous, en `Corps` `texte-secondaire` : « par part ». **Ni prix barré, ni pastille de réduction.**
 4. **`CompteurTemps`** : « 🕐 Plus que 2 jours — se termine le 7 octobre à 23 h 59 ».
 5. **`CompteurParticipants`** : « 32 personnes ont commandé ».
 6. **Pseudonyme**, non cliquable, sans aucun autre détail : « Proposé par **Mama Gro** ».
 7. **`BandeauConfiance`** version `complet` — **avant le bouton, pas après** :
    > 🛡️ **Groupeurs sélectionnés par Group Achat**
-   > Votre paiement est détenu par Group Achat jusqu'à la livraison. Vous êtes livré, ou remboursé.
-8. **Ce que contient une part :** « 1 sac de 25 kg », en bloc distinct — c'est la question que tout acheteur se pose en premier.
+   > Vous êtes livré, ou remboursé. Si la campagne n'aboutit pas, Group Achat vous rembourse intégralement.
+8. **Ce que contient une part :** « 1 écouteur filaire avec micro, garantie 3 mois », en bloc distinct — c'est la question que tout acheteur se pose en premier.
 9. **Description** sur 4 lignes, avec « Voir plus ».
-10. **Livraison :** « Livraison à domicile par notre partenaire » · « Sous 3 à 5 jours après la clôture » · frais de livraison. ⚠️ **Le traitement des frais de livraison est un point ouvert du cahier des charges (§11) : dessine cette ligne avec un montant provisoire et attends l'arbitrage.**
+10. **Livraison**, en bloc distinct :
+    - « Livraison à domicile par notre partenaire »
+    - « Sous 3 à 5 jours après la clôture »
+    - « **Frais de livraison selon votre position** » en `Corps-fort`, puis « à partir de 1 000 F » en `Petit`.
+
+      **Ne promets pas de tarif unique ici.** À ce stade l'acheteur n'a pas encore indiqué où il est, donc l'écran ne peut pas connaître son prix. Écrire « 1 000 F partout » serait un engagement que le vrai calcul ne tiendra pas — et revenir dessus après coûterait bien plus que de ne jamais le dire.
 11. **Les règles**, en liste à puces :
-    - « Paiement à la commande, détenu par Group Achat »
+    - « Paiement à la commande, détenu par Group Achat jusqu'à la clôture »
     - « Le groupeur décide à la clôture si la commande passe »
     - « **Si la campagne n'aboutit pas, vous êtes remboursée intégralement** »
     - « **Vérifiez votre commande devant le livreur** : la contestation n'est plus possible après acceptation »
 
     La dernière règle est à écrire exactement ainsi. Une fenêtre de contestation fermée à la livraison est acceptable si elle est annoncée ; découverte après coup, elle est vécue comme une arnaque (§12 du cahier des charges).
 12. **« Questions sur cette campagne »** : les deux plus récentes avec leur réponse, puis « Voir les 7 questions » (écran 10) et un bouton `secondaire` « Poser une question ».
-13. **Bouton ancré :** « Commander — 14 500 F ». **Ne demande aucun compte** : il ouvre l'écran 5.
+13. **Bouton ancré :** « Commander — 4 000 F ». **Ne demande aucun compte** : il ouvre l'écran 5.
 
 **Bloc Partage** — à dessiner, c'est un levier de croissance. Deux entrées : l'icône sur le média, et un bouton `secondaire` sous les règles. La feuille propose **WhatsApp en premier**, puis « Copier le lien ». Message pré-rempli :
 
-> *Riz parfumé 25 kg à **14 500 F** au lieu de 18 000 F 🌾*
+> *Écouteurs filaires avec micro à **4 000 F** la part — 32 personnes ont déjà commandé*
 > *Plus que 2 jours — 32 personnes ont déjà commandé.*
 > *Livré à domicile. Paiement gardé par Group Achat jusqu'à la livraison.*
 > *👉 [lien]*
@@ -366,7 +753,7 @@ Le lien doit ouvrir **directement la campagne, consultable sans rien installer n
 4. Champ : `+228` figé à gauche, puis `90 12 34 56`. Clavier numérique.
 5. Mention 12 px : « Nous ne communiquons jamais votre numéro au groupeur. »
 6. Bouton « Recevoir mon code ».
-7. **Rappel de contexte** : « Vous commandez : Riz parfumé 25 kg — 1 part, 14 500 F ».
+7. **Rappel de contexte** : « Vous commandez : Écouteurs filaires avec micro — 1 part, 4 000 F ».
 
 **Aucun second bouton.** Pas de « Créer un compte » à côté de « Se connecter » (§1.5).
 
@@ -387,34 +774,73 @@ Le lien doit ouvrir **directement la campagne, consultable sans rien installer n
 **Objectif :** choisir une quantité, saisir une adresse, voir le total. **Aucun compte encore demandé.**
 
 1. En-tête « Commander », retour.
-2. **Rappel compact :** vignette 64, « Riz parfumé 25 kg », « 14 500 F la part ».
+2. **Rappel compact :** vignette 64, « Écouteurs filaires avec micro », « 4 000 F la part ».
 3. **Sélecteur de quantité :** `−` | `1` | `+`, boutons 48 × 48, valeur en 24 Semibold.
    **Pas de plafond** : il n'y a ni places limitées ni minimum (§7 du cahier des charges). Ne dessine donc **aucune** mention « places disponibles ».
 4. **Variantes du produit** si la campagne en a — pour C2, « Taille » ; pour C4, « Pointure ». En puces sélectionnables, obligatoire avant de continuer.
-5. **Adresse de livraison**, en bloc :
-   - « Quartier » — liste déroulante
-   - « Adresse et repères » — texte libre, avec l'exemple « rue des Cocotiers, près de la pharmacie Sodji ». À Lomé, le repère vaut plus que la rue : écris-le dans le placeholder.
+5. **Où livrer**, en bloc. Ce bloc vient **avant le récapitulatif**, parce que c'est lui qui détermine les frais (§11.1 du cahier des charges).
+
+   **Deux façons d'indiquer où on est, et l'acheteur choisit.** À dessiner comme deux options côte à côte, pas comme un formulaire à remplir entièrement :
+
+   | Option | Ce que l'acheteur voit | Pourquoi la proposer |
+   |---|---|---|
+   | **Partager ma position** *(mise en avant)* | Un bouton `secondaire` pleine largeur avec une icône de repère. Un appui, l'autorisation du téléphone, et c'est fait | Le plus précis, le plus rapide, et c'est ce qui aide le plus le livreur |
+   | **Indiquer le nom du lieu** | Un champ de recherche : « Tokoin, Agoè, Adidogomé… », avec suggestions pendant la frappe | Pour qui refuse le GPS, n'a pas de réseau, ou commande pour quelqu'un d'autre |
+
+   **Les deux mènent au même résultat** : une position, que la fonction de frais consomme. Ne fais pas de la seconde un rattrapage honteux — beaucoup de gens refusent le GPS, et ce doit rester un chemin normal.
+
+   Puis, dans les deux cas :
+   - « **Repère** » — texte libre, avec l'exemple « rue des Cocotiers, près de la pharmacie Sodji ». **Obligatoire même avec le GPS** : à Lomé le repère vaut plus que la coordonnée, et un livreur avec un point sur une carte mais sans repère tourne quand même.
    - « Numéro à joindre à la livraison » — pré-rempli après connexion
-6. **Récapitulatif :**
-   - 1 part × 14 500 F → `14 500 F`
-   - Livraison → *(selon l'arbitrage du §11)*
-   - **Total à payer** → **`14 500 F`** en `Prix`
+
+   **Les états à maquetter pour ce bloc**, dans cet ordre d'importance :
+
+   | État | Affichage |
+   |---|---|
+   | **Rien de donné** — l'état d'arrivée | Les deux options, et le récapitulatif sans total |
+   | **Position partagée** | « Position enregistrée » avec une coche `succes`, le nom du lieu reconnu, et un lien « Modifier » |
+   | **Autorisation refusée** | `Encart` `info`, **jamais** `danger` — « Pas de problème : indiquez le nom du lieu ci-dessous. » Un refus de permission n'est pas une erreur |
+   | **Position imprécise ou introuvable** | On garde ce que le téléphone a donné et on demande un repère plus précis. On ne bloque pas |
+
+   > **Une règle d'anonymat à ne pas perdre ici** (§1.7) : la position précise est une donnée personnelle, et elle **ne remonte jamais au groupeur** — lui ne voit que des codes et des quartiers (écran 15). Elle ne sort qu'une fois, vers le livreur, le jour de la tournée (écran 22).
+6. **Récapitulatif** — trois lignes, et le total est la seule valeur en style `Prix` :
+   - 1 part × 4 000 F → `4 000 F`
+   - Livraison à Tokoin → `1 000 F`
+   - **Total à payer** → **`5 000 F`**
+
+   **Deux états à maquetter pour la ligne de livraison**, puisque son montant dépend de la position :
+
+   | État | Affichage |
+   |---|---|
+   | **Position pas encore donnée** | « Livraison » → *« selon votre position »* en `texte-secondaire`. Le total affiche « — », et le bouton « Payer » est `desactive` |
+   | **Position connue** | « Livraison à Tokoin » → `1 000 F`, et le total se calcule |
+
+   Le premier état est celui qu'on oublie, et c'est pourtant celui que l'utilisateur voit en arrivant sur l'écran. **Un total ne doit jamais s'afficher faux en attendant une saisie.**
+
+   À prévoir aussi, même si ça n'arrive pas dans la démonstration : une zone **non desservie**. `Encart` `attention` — « Nous ne livrons pas encore à Kpalimé. »
+
+   La ligne de livraison est **distincte et visible**, jamais fondue dans le prix de la part. Deux raisons : les frais varient selon la position alors que la part est la même pour tous, et l'acheteur doit pouvoir vérifier qu'on ne lui a rien glissé dans le total.
+
+   **Supprimé : la variante « tarif calculé plus tard ».** Elle existait quand les frais hors de Lomé étaient à définir. Désormais le prix est **toujours connu avant le paiement** — soit la fonction renvoie un montant pour cette position, soit elle répond que la zone n'est pas desservie. Il n'y a pas de troisième cas, et c'est un progrès : **on ne demande jamais à quelqu'un de payer un total qu'on complétera plus tard.**
 7. **`BandeauConfiance`** version courte.
 8. Case à cocher « J'accepte les conditions de vente » (lien). Non cochée par défaut, bouton désactivé tant qu'elle ne l'est pas.
-9. **Bouton ancré : « Payer 14 500 F ».**
+9. **Bouton ancré : « Payer 5 000 F ».** Le montant du bouton est le **total**, livraison comprise — pas le prix de la part.
 
 **C'est ce bouton qui déclenche la connexion** (écran 4), et seulement si l'utilisateur n'a pas de compte. S'il en a un, il va droit à l'écran 6. **Deux variantes à prototyper depuis ce bouton.**
 
-## Écran 6 — Paiement Mobile Money
+## Écran 6 — Paiement Mobile Money (simulé)
 
-**Objectif :** encaisser réellement, avec assez de clarté pour qu'un acheteur méfiant aille au bout.
+**Objectif :** reproduire un paiement Mobile Money avec assez de fidélité pour qu'il soit crédible, tout en disant honnêtement qu'il est simulé.
 
 1. En-tête « Paiement », retour.
-2. **Montant** au centre : `14 500 F` en 32 Bold, puis « Riz parfumé 25 kg — 1 part ».
-3. **Moyen de paiement** : deux cartes sélectionnables 100 × 80, **T-Money** et **Flooz**.
-4. **Champ numéro**, pré-rempli, modifiable — le numéro de paiement peut différer du numéro du compte.
-5. **Rappel :** « Votre argent est détenu par Group Achat, pas versé au groupeur. »
-6. Bouton ancré : « Confirmer le paiement ».
+2. **Bandeau de démonstration**, `Encart` `info`, **tout en haut et à dessiner** : « **Démonstration** — aucun paiement réel n'est effectué. »
+
+   Ne le cache pas. Notre argument est la sécurité de l'argent : nous nous jugeons d'abord sur notre franchise. Un jury qui découvre seul que le paiement est faux le prend bien plus mal que s'il l'a lu. Il disparaîtra au branchement de l'agrégateur agréé (§17.2 du cahier des charges).
+3. **Montant** au centre : `5 000 F` en 32 Bold, puis « Écouteurs filaires avec micro — 1 part + livraison ». Une ligne dépliable « Détail » affiche 4 000 F + 1 000 F.
+4. **Moyen de paiement** : deux cartes sélectionnables 100 × 80, **T-Money** et **Flooz**.
+5. **Champ numéro**, pré-rempli, modifiable — le numéro de paiement peut différer du numéro du compte.
+6. **Rappel :** « Votre paiement est détenu par Group Achat jusqu'à la clôture de la campagne. » — formulation contrainte, voir §1.7.
+7. Bouton ancré : « Confirmer le paiement ».
 
 **États à dessiner — ce sont eux qui font la différence**
 
@@ -424,7 +850,7 @@ Le lien doit ouvrir **directement la campagne, consultable sans rien installer n
 - **Expiré :** « Vous n'avez pas validé le paiement à temps. Aucun montant n'a été débité. »
 - **Campagne clôturée entre-temps :** « Cette campagne vient de se clôturer. Aucun montant n'a été débité. »
 
-**Si le paiement réel n'est pas prêt pour la compétition** (§17.2 du cahier des charges), ajoute en haut un `Encart` `info` : « **Démonstration** — aucun paiement réel n'est effectué. » Ne le cache pas : un jury qui découvre seul que le paiement est faux le prend bien plus mal que s'il l'a lu.
+**L'écran est identique en paiement réel**, au bandeau près. L'étape « validez sur votre téléphone » n'est pas une fiction destinée à la démo : c'est le déroulement réel d'un paiement Mobile Money, et la maquette doit la montrer, sans quoi le branchement de l'agrégateur obligerait à redessiner le parcours.
 
 ## Écran 7 — Confirmation de commande
 
@@ -435,10 +861,12 @@ Le lien doit ouvrir **directement la campagne, consultable sans rien installer n
 3. **Titre :** « Commande confirmée »
 4. **Sous-titre :** « Vous êtes la 33ᵉ personne à commander cette campagne. »
 5. **`BandeauConfiance` en version développée** — le plus grand de l'application :
-   > 🛡️ **Vos 14 500 F sont détenus par Group Achat**
-   > Ils ne sont versés au groupeur qu'une fois la campagne confirmée. **Si elle n'aboutit pas, vous êtes remboursée intégralement.**
+   > 🛡️ **Vos 5 000 F sont détenus par Group Achat**
+   > Ils ne sont versés au groupeur qu'à la clôture de la campagne. **Si elle n'aboutit pas, vous êtes remboursée intégralement.**
+
+   Exact et suffisant. Ne va pas au-delà : le groupeur est payé à la clôture, donc rien n'est « bloqué jusqu'à la livraison » (§1.7).
 6. **`FriseEtapes`**, première étape active :
-   - ✅ **Paiement reçu** — argent détenu par Group Achat
+   - ✅ **Paiement reçu** — 5 000 F détenus par Group Achat
    - ⏳ **Clôture de la campagne** — 7 octobre
    - 📦 **Commande chez le fournisseur** — par le groupeur
    - 🛵 **Livraison à domicile** — sous 3 à 5 jours
@@ -454,11 +882,13 @@ Le lien doit ouvrir **directement la campagne, consultable sans rien installer n
 
 | Produit | Montant | Statut |
 |---|---|---|
-| Riz parfumé 25 kg — Mama Gro | 14 500 F | **En cours de livraison** — arrive demain |
-| Robe wax — Chez Sika | 7 500 F | **Commande en cours chez le groupeur** |
-| Huile de palme 20 L — Mama Gro | 11 200 F | **Payée — en attente de clôture** — 6 jours |
-| Baskets homme — Lomé Deals | 9 800 F | **Livrée** — 28 septembre |
-| Savon de Marseille — Chez Sika | 9 500 F | **Remboursée** — campagne annulée |
+| Écouteurs filaires avec micro — Mama Gro | 5 000 F | **En cours de livraison** — arrive demain |
+| Robe wax — Chez Sika | 8 500 F | **Commande en cours chez le groupeur** |
+| Huile de palme 20 L — Mama Gro | 12 200 F | **Payée — en attente de clôture** — 6 jours |
+| Baskets homme — Lomé Deals | 10 800 F | **Livrée** — 28 septembre |
+| Savon de Marseille — Chez Sika | 10 500 F | **Remboursée** — campagne annulée |
+
+Les montants de cette liste sont des **totaux payés**, livraison comprise : chacun est le prix de la part du §3 plus 1 000 F. C'est ce que l'acheteur a réellement débité, donc c'est ce qu'il doit retrouver ici.
 
 La ligne « Remboursée » est à garder : elle montre que la promesse de remboursement n'est pas qu'une phrase dans les conditions.
 
@@ -477,7 +907,7 @@ La ligne « Remboursée » est à garder : elle montre que la promesse de rembou
    - « Montrez ce code au livreur »
    - Lien « Augmenter la luminosité » — en plein soleil, un écran sombre ne se scanne pas
 4. **`FriseEtapes`** avec l'étape atteinte et les dates.
-5. **Récapitulatif :** vignette, produit, 1 part, 14 500 F, « Payée le 5 octobre ».
+5. **Récapitulatif :** vignette, produit, 1 part, puis le détail — part `4 000 F`, livraison `1 000 F`, **total `5 000 F`** — et « Payée le 5 octobre ».
 6. **Adresse de livraison** et numéro joignable. **Aucun contact du groupeur** (§1.7) — ni numéro, ni bouton d'appel. À la place : « Une question ? » vers l'écran 10.
 7. **`Encart` `attention`**, tant que la livraison n'est pas faite : « **Vérifiez votre commande devant le livreur.** Vous pouvez refuser le colis s'il ne correspond pas à votre commande. »
 8. **Bouton « Refuser le colis »** en `danger-texte`, visible **uniquement** pendant la livraison.
@@ -486,39 +916,83 @@ La ligne « Remboursée » est à garder : elle montre que la promesse de rembou
 
 | État | Ce qui change |
 |---|---|
-| **Payée — en attente de clôture** | Pas de code. « Votre code apparaîtra ici quand la livraison sera lancée. » Compteur : « Clôture dans 2 jours » |
-| **Campagne clôturée** | « Le groupeur confirme la commande sous 48 h. Vos 14 500 F sont toujours détenus par Group Achat. » |
+| **Payée — en attente de clôture** | Pas de code. « Votre code apparaîtra ici quand la livraison sera lancée. » Compteur : « Clôture dans 2 jours ». Mention : « Vos 5 000 F sont détenus par Group Achat jusqu'à la clôture. » |
+| **Campagne clôturée** | « Le groupeur confirme la commande sous 48 h. » Si la campagne est maintenue : « Le groupeur a reçu les fonds et prépare votre commande. **Group Achat garantit votre livraison.** » — exact, et c'est la garantie qui porte, pas la détention des fonds (§1.7) |
 | **Commande en cours chez le groupeur** | « Le groupeur a passé commande chez son fournisseur. » |
 | **En cours de livraison** | Le code est affiché. État principal ci-dessus. Bouton « Refuser le colis » actif |
 | **Livrée** | Coche `succes`, « Livrée le 11 octobre ». Le code et le bouton de refus disparaissent |
-| **Campagne annulée** | `Encart` `danger` : « Cette campagne n'a pas abouti. **Vos 14 500 F vous ont été remboursés le 8 octobre.** » |
+| **Campagne annulée** | `Encart` `danger` : « Cette campagne n'a pas abouti. **Vos 5 000 F vous ont été remboursés le 8 octobre**, livraison comprise. » |
 
-**Feuille « Refuser le colis »** : motif (ce n'est pas le produit commandé · produit visiblement abîmé · autre), description, photos, bouton « Refuser et signaler ». Puis : « Votre signalement est enregistré. Vos 14 500 F restent détenus par Group Achat pendant l'examen. »
+**Feuille « Refuser le colis »** : motif (ce n'est pas le produit commandé · produit visiblement abîmé · autre), description, photos, bouton « Refuser et signaler ». Puis : « Votre signalement est enregistré. Group Achat examine votre dossier sous 48 h et vous rembourse si le refus est justifié. »
+
+Ne promets pas ici que l'argent « reste détenu » : à ce stade, le groupeur a déjà été payé. Le remboursement est un **engagement de Group Achat**, et c'est ce qu'il faut écrire.
 
 ## Écran 10 — Questions sur une campagne
 
 **Objectif :** obtenir une information manquante sans jamais sortir de la plateforme. C'est ce qui rend l'anonymat du groupeur supportable.
 
-1. En-tête « Questions », retour, rappel de la campagne : vignette 48 + « Riz parfumé 25 kg ».
-2. **Champ de question** en haut : « Posez votre question sur ce produit… », 2 lignes, bouton « Envoyer ».
-3. **Mention sous le champ**, 12 px : « Votre question et la réponse seront visibles par tout le monde. » À lire avant d'écrire.
-4. **Liste des questions**, la plus récente en haut :
+1. En-tête « Questions », retour, rappel de la campagne : vignette 48 + « Écouteurs filaires avec micro ».
+2. **Questions courantes d'abord**, pas le champ libre. Une rangée de pastilles tactiles à 36 px, défilables horizontalement : « Quelle marque ? » · « Quelle origine ? » · « Quand la livraison ? » · « Quelles variantes ? » · « Autre question ». Un appui envoie directement.
+
+   **C'est une mesure de sécurité autant qu'un confort** (§13.2 du cahier des charges) : la plupart des questions légitimes n'ont alors aucun texte libre, et le texte libre redevient l'exception.
+
+3. **Champ de question libre**, sous les pastilles : « Posez votre question sur ce produit… », 2 lignes, bouton « Envoyer ».
+4. **Mention sous le champ**, 12 px : « Votre question et la réponse seront visibles par tout le monde. » À lire avant d'écrire.
+5. **Liste des questions**, la plus récente en haut :
    - question en `Corps`, auteur « Akosua D. » et date en `Petit`
-   - réponse en retrait, fond `fond`, bordure gauche 3 px `primaire`, avec « **Mama Gro** » et la date
+   - réponse en retrait de 16 px, fond `surface-douce`, coins 12, sans bordure, avec « **Mama Gro** » et la date. C'est l'un des trois seuls usages autorisés du gris (§1.2) : ici il sépare deux voix, donc il informe
    - une question sans réponse porte une pastille `En attente de réponse`
 
 **Contenu à écrire dans la maquette** — du vrai contenu, c'est ce qui rend l'écran crédible :
 
 | Question | Réponse |
 |---|---|
-| « C'est du riz parfumé de quelle marque ? » — Akosua D. | « Riz parfumé Delice, sac de 25 kg, récolte 2025. » — Mama Gro |
+| « C'est quelle marque d'écouteurs ? » — Akosua D. | « Jack 3,5 mm, micro intégré, câble de 1,2 m. Garantie 3 mois. » — Mama Gro |
 | « La livraison va jusqu'à Adidogomé ? » — Yawa T. | « Oui, tout Lomé est couvert. Comptez un jour de plus pour Adidogomé. » — Mama Gro |
 | « On peut prendre 2 sacs ? » — Kossi A. | « Oui, mettez 2 dans la quantité. » — Mama Gro |
 | « Est-ce qu'on peut payer à la livraison ? » — Dodzi M. | *En attente de réponse* |
 
-5. **`Encart` `attention` en bas de liste** : « N'échangez jamais de numéro de téléphone. Votre paiement n'est protégé que sur Group Achat. » À dessiner, pas à sous-entendre (§1.7).
+6. **`Encart` `attention` en bas de liste** : « N'échangez jamais de numéro de téléphone. Votre paiement n'est protégé que sur Group Achat. » À dessiner, pas à sous-entendre (§1.7).
 
 **La connexion est demandée au bouton « Envoyer »**, pas à l'ouverture : la lecture est libre.
+
+### Les états de modération — à dessiner
+
+Le filtre du §13.2 du cahier des charges a besoin de ses écrans, sinon il n'existe pas. **Trois états à maquetter**, et le premier est le plus important.
+
+**a) Message refusé — le cas courant, et le plus important à bien écrire.**
+
+Deux choses se produisent **en même temps** : le message **n'est pas publié**, et son auteur en est averti immédiatement avec la raison. Jamais l'un sans l'autre — pas de blocage silencieux, pas de message qui part et disparaît ensuite.
+
+Le message reste dans le champ, modifiable. Sous le champ, un `Encart` `danger` :
+
+> **Ce message ne sera pas publié.**
+> Il contient des informations qui permettraient de vous identifier. Pour votre sécurité, les échanges restent anonymes sur Group Achat.
+>
+> Posez votre question sur le produit — le groupeur répond ici même.
+
+**Chaque mot de ce texte est choisi**, et c'est la copie la plus sensible du produit :
+
+| Formulation | Pourquoi |
+|---|---|
+| « ne **sera** pas publié » | Au futur, parce que rien n'est encore parti. C'est un avertissement avant l'envoi, pas le constat d'un échec |
+| « permettraient de **vous** identifier » | On parle de **sa** protection, pas de notre règlement. C'est la seule formulation qu'il acceptera sans se sentir soupçonné |
+| « les échanges **restent anonymes** » | On rappelle une protection, on n'énonce pas une interdiction |
+| **Jamais** « tentative de contournement », « interdit », « violation » | La plupart des gens qui écrivent leur numéro le font **de bonne foi**, pour être joints à la livraison. Les traiter en fraudeurs est faux et les fait fuir |
+
+Le passage en cause est **surligné en `danger-fond`** dans le champ, pour qu'il voie exactement quoi corriger. Deux boutons : « Modifier » (primaire) et « Annuler ».
+
+**Le signal arrive avant l'appui sur Envoyer.** Dès que la saisie déclenche la détection, le bouton « Envoyer » passe en `desactive` et l'encart apparaît. L'utilisateur n'a donc pas à échouer pour apprendre — **il voit tout de suite que ça ne passera pas**, ce qui est exactement ce qu'on veut. (Au niveau 2, le classifieur IA ne pouvant pas tourner à chaque frappe, son refus arrive à l'envoi, avec le même encart.)
+
+**Une variante à ne pas oublier : le cas de bonne foi.** Si l'acheteur écrit son numéro parce qu'il veut être joignable, la bonne réponse n'est pas de le bloquer et de s'arrêter là — c'est de lui dire où ça va. Une ligne supplémentaire dans l'encart, affichée quand un numéro est détecté :
+
+> *Votre numéro est déjà enregistré pour la livraison. Le livreur l'aura le jour de sa tournée.*
+
+**À ne pas faire :** afficher le message publié avec le numéro masqué en ●●●●. Ça apprend à contourner, et ça laisse l'intention lisible de tous.
+
+**b) En vérification** — phase 2, quand le classifieur hésite. La question apparaît dans le fil, **visible de son seul auteur**, avec une pastille `Statut` neutre « En vérification » et la mention « Votre question sera publiée après vérification. »
+
+**c) Signalement** — une icône de drapeau discrète, en `texte-secondaire`, sur chaque message. Un appui ouvre une feuille : « Signaler ce message » avec trois motifs — *coordonnées personnelles*, *proposition de vente hors plateforme*, *contenu inapproprié*. **Pas de champ libre**, pour que la file de modération reste exploitable.
 
 **État vide :** « Aucune question pour le moment » + « Soyez le premier à poser une question ».
 
@@ -567,39 +1041,94 @@ La première ligne ferme la boucle du produit : une demande devient une campagne
 
 ## Écran 13 — Tableau de bord groupeur
 
-1. **En-tête :** « Bonjour Mama Gro », pseudonyme et non nom réel, même sur son propre écran.
-2. **Quatre tuiles**, grille 2 × 2 :
+**Chrome bleu** (§1.2) : l'en-tête, les boutons, l'onglet actif et les tuiles de chiffres sont en `confiance`. L'orange n'apparaît que dans « À faire aujourd'hui » et sur le bouton flottant — c'est son seul métier de ce côté-ci : l'alerte.
+
+1. **En-tête :** « Bonjour Mama Gro », pseudonyme et non nom réel, même sur son propre écran. Fond `confiance`, texte blanc (10,36:1).
+2. **Quatre tuiles**, grille 2 × 2. **Toutes cliquables vers l'écran 21** — un chiffre affiché sans moyen d'aller voir ce qu'il contient est une frustration :
    - **3** campagnes ouvertes
    - **74** commandes
-   - **464 000 F** collectés
+   - **128 000 F** collectés
    - **86 450 F** disponibles
-3. **« À faire aujourd'hui »** — la section qui donne une raison d'ouvrir l'application :
-   - 🔴 « **Riz parfumé — campagne clôturée, décidez sous 41 h** » → écran 16
+
+   Sous la grille, un lien discret : « **Voir toutes mes statistiques** » → écran 21.
+3. **« À faire aujourd'hui »** — la section qui donne une raison d'ouvrir l'application, et **le seul bloc orange de l'écran**. C'est ce qui la fait ressortir sur le bleu :
+   - 🔴 « **Écouteurs filaires — campagne clôturée, décidez sous 41 h** » → écran 16
    - 🟠 « **Déposez le reçu d'achat — Robe wax** » → écran 17
    - 🟣 « **3 questions sans réponse** » → écran 20
    - 🔵 « 4 nouvelles demandes dans votre quartier » → écran 19
 4. **« Mes campagnes »** : liste compacte avec compteur de commandes, temps restant et statut.
-5. **Bouton flottant** « + Créer une campagne », 56 × 56, en bas à droite, fond `accent` avec icône `#14181F` — le seul élément orange plein de l'interface groupeur, donc le plus repérable.
-6. `BarreNav` version groupeur.
+5. **Bouton flottant** « + Créer une campagne », 56 × 56, en bas à droite, fond `marque` `#FF6A00` avec icône `#14181F` (6,20:1). Sur un écran bleu, c'est l'élément le plus repérable de toute l'interface groupeur — et c'est voulu : créer une campagne est l'action qui fait vivre la plateforme.
+6. `BarreNav` version groupeur — quatre onglets : **Tableau de bord · Mes campagnes · Statistiques · Portefeuille**. C'est l'arrivée de l'écran 21 qui fixe ce quatrième onglet ; sans lui, les statistiques resteraient un écran qu'on ne retrouve pas.
 
 ## Écran 14 — Créer une campagne
 
 **Trois étapes** avec indicateur de progression : un formulaire de douze champs sur un seul écran mobile ne se remplit pas.
 
-**Étape 1 — le produit**
-Nom · catégorie · **média** (jusqu'à 3 photos **ou une vidéo verticale de 15 s**) · description · ce que contient une part.
+**Étape 1 — le produit, en détail**
+
+C'est l'étape qui décide si une campagne se vend. Un acheteur qui ne trouve pas une information ne pose pas de question : il passe à la campagne suivante. Le formulaire doit donc **réclamer les détails**, pas les rendre optionnels.
+
+| Champ | Obligatoire | Remarque |
+|---|---|---|
+| **Nom du produit** | Oui | Avec la marque si elle existe |
+| **Catégorie** | Oui | Pilote les filtres de l'écran 2 |
+| **Média** | Oui | Jusqu'à 3 photos **ou une vidéo verticale de 15 s** |
+| **Ce que contient une part** | Oui | La question que tout acheteur se pose en premier |
+| **Description** | Oui, 200 caractères minimum | Voir ci-dessous |
+| **Caractéristiques** | Recommandé | Liste de paires *libellé / valeur* — voir ci-dessous |
+| **État** | Oui | Neuf / reconditionné / occasion. **Un choix, pas un texte libre** |
+| **Garantie** | Oui | Durée, ou « aucune ». Ne pas laisser le champ vide par défaut |
+| **Origine** | Recommandé | Import, local, marque officielle |
+
+**Les caractéristiques, en paires libellé / valeur.** C'est ce qui remplace une description fourre-tout, et c'est ce qui se maquette bien : un tableau sur deux colonnes à l'écran 3. Le groupeur ajoute ses lignes, et le formulaire **en propose selon la catégorie** — pour de l'électronique : connectique, longueur de câble, compatibilité, couleur.
+
+> Exemple à utiliser dans les maquettes :
+> *Connectique : jack 3,5 mm · Longueur : 1,2 m · Micro : intégré · Couleur : noir · Garantie : 3 mois*
+
+**Une liste de contrôle avant publication**, à dessiner comme un bloc à cocher plutôt qu'une suite d'erreurs : « Photo nette ✓ · Contenu d'une part ✓ · Garantie ✓ · Caractéristiques — *3 recommandées, 0 remplie* ». Un formulaire qui guide obtient de meilleures fiches qu'un formulaire qui refuse.
 
 Sur le média, une consigne à afficher dans le formulaire : « Une vidéo verticale filmée au téléphone marche très bien. Une photo nette suffit aussi. » Les groupeurs sans moyens de tournage ne doivent pas se sentir exclus du fil (§1.6).
 
-**Étape 2 — le prix et la durée**
-Prix par part · prix au détail, pour afficher l'économie · quantité par part · **durée de la campagne** (3, 7, 14 jours, ou une date) · variantes éventuelles (tailles, pointures, coloris).
+**Étape 2 — le prix, les paliers et la durée**
+
+**Le prix se saisit à la pièce, puis les autres quantités se déduisent.** C'est l'ordre naturel pour un commerçant : il connaît son prix unitaire, pas son prix par lot.
+
+1. **« Prix pour 1 pièce »** — le champ principal, et le seul obligatoire. C'est ce prix qui s'affiche partout dans l'application.
+2. **« Ce que contient une part »** — 1 pièce par défaut. Un groupeur peut vendre par lot de 2 ou de 10.
+3. **Les autres quantités, avec leur prix** — une liste que le groupeur allonge lui-même, un bouton « + Ajouter une quantité » :
+
+   | Quantité | Prix total | Prix à la pièce |
+   |---|---|---|
+   | 1 pièce | **4 000 F** | 4 000 F |
+   | 3 pièces | 11 000 F | *3 667 F* |
+   | 5 pièces | 17 500 F | *3 500 F* |
+
+   **La troisième colonne est calculée, pas saisie**, et affichée en `texte-secondaire`. Elle sert à deux choses : le groupeur voit tout de suite si son palier a du sens, et l'acheteur comprend l'intérêt de prendre plus.
+
+   **Deux garde-fous à dessiner :** un palier dont le prix à la pièce *monte* au lieu de descendre déclenche un `Encart` `attention` — « À 3 pièces, le prix unitaire est plus élevé qu'à 1 pièce. C'est voulu ? » On avertit, **on ne bloque pas** : il peut avoir une raison. Et les paliers sont **facultatifs** : une campagne sans palier reste parfaitement valable.
+
+4. **Sa marge, affichée pour lui seul.** Un champ optionnel « Ce que ça vous coûte à la pièce », qui ne sort jamais de son interface et n'est **jamais visible de l'acheteur**. En échange, il obtient le calcul qu'il refait aujourd'hui de tête :
+
+   > Prix de vente 4 000 F · votre coût 2 800 F · commission 200 F
+   > **Votre marge : 1 000 F par pièce, soit 32 000 F sur 32 commandes**
+
+   C'est l'écran qui transforme le formulaire en outil de gestion. Et c'est ce qui alimente les statistiques de l'écran 21 — sans ce champ, aucune marge ne peut y être calculée.
+
+5. **Durée de la campagne** — 3, 7, 14 jours, ou une date.
+6. **Variantes éventuelles** — tailles, pointures, coloris.
+
+**Pas de champ « prix au détail ».** Il a été retiré : aucun prix barré dans l'application (§3). Un groupeur qui le réclame s'entend répondre que son prix de groupe est l'argument.
 
 **Un aperçu en direct de la `CarteFil`** telle que les acheteurs la verront, mis à jour à la saisie. Il évite les erreurs de prix et rend le formulaire moins aride.
 
-Sous le prix, le calcul affiché : « Sur 14 500 F, vous recevrez **13 775 F** par part. Commission Group Achat : 725 F (5 %). » La commission se dit au moment de fixer le prix, pas au moment de verser.
+Sous le prix, le calcul affiché : « Sur 4 000 F, vous recevrez **3 800 F** par part. Commission Group Achat : 200 F (5 %). » La commission se dit au moment de fixer le prix, pas au moment de verser.
 
 **Étape 3 — la livraison**
-Délai de livraison annoncé · zones couvertes · « J'ai mon propre livreur » ou « J'utilise le service partenaire de Group Achat ».
+Délai de livraison annoncé · zones couvertes · et un choix en deux cartes :
+- « **J'utilise le service partenaire de Group Achat** » — l'option par défaut
+- « **J'ai mon propre livreur** » — il gère alors ses livraisons lui-même
+
+Sous ce choix, une mention qui évite un malentendu : « Les frais de livraison (1 000 F dans Lomé) sont payés par l'acheteur et vont au transporteur. Ils n'entrent pas dans votre versement. »
 
 **Écran de fin :** récapitulatif + « Publier la campagne ». Puis une confirmation avec **« Partager sur WhatsApp »** bien visible : c'est par là que les groupeurs amènent leurs contacts existants, et l'ignorer serait ignorer comment ce marché fonctionne.
 
@@ -607,31 +1136,35 @@ Délai de livraison annoncé · zones couvertes · « J'ai mon propre livreur »
 
 ## Écran 15 — Gérer une campagne
 
-1. En-tête « Riz parfumé 25 kg », retour, icône « modifier ».
-2. **Bandeau de synthèse :** « 32 commandes » · « 464 000 F collectés » · `CompteurTemps` « Plus que 2 jours ».
+1. En-tête « Écouteurs filaires avec micro », retour, icône « modifier ».
+2. **Bandeau de synthèse :** « 32 commandes » · « 128 000 F collectés » · `CompteurTemps` « Plus que 2 jours ».
 3. **Actions :** « Partager » · « Clôturer maintenant » · « Prévenir les participants ».
-4. **Liste des commandes**, 32 lignes : initiales en rond, prénom et initiale (« Akosua D. »), quantité, variante choisie, montant, quartier de livraison.
+4. **Liste des commandes**, 32 lignes : **code de livraison** en `Code` (« K7M-4PQ »), quantité, variante choisie, montant, quartier de livraison. **Pas de nom** — le code identifie la commande, et c'est tout ce dont le groupeur a besoin pour emballer et compter.
 5. **Répartition par quartier**, en petit tableau — utile au groupeur pour organiser les tournées, et c'est une information qu'il n'a nulle part ailleurs.
 
-**Point de conception :** affiche un prénom et une initiale, **jamais le numéro de téléphone de l'acheteur**. L'écran 4 promet à l'acheteur que son numéro n'est pas communiqué au groupeur : l'écran du groupeur doit tenir cette promesse. Le numéro ne va qu'au livreur, au moment de la livraison.
+**Point de conception — et c'est le plus important de l'écran.** Ni nom, ni numéro, ni adresse : le groupeur voit des codes et des quartiers (§1.7). L'écran 4 promet à l'acheteur que ses coordonnées ne sont pas communiquées au groupeur, et cet écran-ci doit tenir cette promesse — c'est aussi ce qui empêche un groupeur de se constituer un fichier de clients et de les servir hors plateforme. Les identités ne sortent qu'une fois, vers le livreur, le jour de la livraison (écran 22).
 
 ## Écran 16 — Clôturer et décider
 
 **Objectif :** le point de bascule de la campagne. **C'est l'écran le plus important côté groupeur**, et il n'a pas d'équivalent dans une application de vente classique.
 
 1. En-tête « Décision », retour désactivé — on ne quitte pas cet écran sans décider ou sans le refermer explicitement.
-2. **`Encart` `attention` avec compte à rebours :**
+**Chrome bleu**, à une exception près : le bandeau de décision est orange. C'est le seul écran où l'orange occupe autant de place côté groupeur, parce que c'est le seul où quelque chose presse vraiment.
+
+2. **`Encart` `attention` avec compte à rebours** — orange sur fond bleu clair :
    > ⏳ **La campagne est clôturée**
-   > 32 commandes · **464 000 F collectés** · il vous reste **41 h** pour décider.
+   > 32 commandes · **128 000 F collectés** · il vous reste **41 h** pour décider.
    > Sans décision, les acheteurs seront remboursés automatiquement.
 3. **Récapitulatif de la décision :**
-   - Collecté : `464 000 F`
-   - Commission Group Achat (5 %) : `− 23 200 F`
-   - **Avance d'achat versée maintenant : `324 800 F`**
-   - **Solde versé après les livraisons : `116 000 F`**
-4. **`Encart` `info`** expliquant le versement en deux temps : « L'avance vous permet d'acheter la marchandise. Le solde vous est versé une fois les livraisons confirmées. » Un groupeur qui découvre la retenue au moment du versement se sent trompé — elle doit être dite ici, et déjà à l'écran 14.
+   - Collecté sur les parts : `128 000 F`
+   - Commission Group Achat (5 %) : `− 6 400 F`
+   - **Versé maintenant : `121 600 F`** — en style `Prix`, c'est le chiffre qui décide
+   - *Frais de livraison collectés : 32 000 F — gérés par Group Achat avec son transporteur*
+
+   La dernière ligne est en retrait et en `texte-secondaire` : ce n'est pas son argent, et il doit comprendre pourquoi elle n'entre pas dans son versement.
+4. **`Encart` `info`** : « Ce montant vous est versé immédiatement pour acheter la marchandise. Déposez ensuite le devis de votre fournisseur, puis votre reçu de paiement. » Le groupeur doit savoir, à l'instant où il décide, ce qu'on attendra de lui juste après.
 5. **Deux boutons :**
-   - « **Je passe la commande** » (primaire) → confirmation : « Vous vous engagez à livrer les 32 commandes. Déposez ensuite le devis de votre fournisseur. » → écran 17
+   - « **Je passe la commande** » (primaire) → confirmation : « Vous recevez 121 600 F et vous vous engagez à livrer les 32 commandes. Déposez le devis de votre fournisseur pour débloquer le versement. » → écran 17
    - « J'annule la campagne » (`danger-texte`) → confirmation : « Les 32 acheteurs seront remboursés intégralement. Aucune commission ne vous sera prélevée. »
 
 **Le compte à rebours n'est pas décoratif** : passé 48 h, la plateforme annule et rembourse (§8.2 du cahier des charges). L'afficher en heures, pas en date.
@@ -642,9 +1175,9 @@ Délai de livraison annoncé · zones couvertes · « J'ai mon propre livreur »
 
 **Deux dépôts successifs, dans cet ordre.**
 
-**A — Le devis, avant de recevoir l'avance**
+**A — Le devis, avant de recevoir le versement**
 1. Titre : « Devis de votre fournisseur »
-2. Phrase : « Déposez le devis ou la facture. L'avance vous est versée après vérification. »
+2. Phrase : « Déposez le devis ou la facture. Vos 121 600 F sont versés après vérification. »
 3. Champs : montant du devis · nom du fournisseur · **photo ou PDF du document** (zone de dépôt).
 4. Bouton « Envoyer pour vérification ».
 5. **État d'attente :** « En cours de vérification — réponse sous 4 h ouvrées » avec `FriseEtapes`.
@@ -655,7 +1188,9 @@ Délai de livraison annoncé · zones couvertes · « J'ai mon propre livreur »
 3. Champs : montant payé · date · photo du reçu.
 4. Bouton « Envoyer ».
 
-**États à dessiner :** à déposer · en vérification · **refusé** (`Encart` `danger` : « Document illisible. Déposez une photo plus nette. » + bouton « Déposer à nouveau ») · validé (coche `succes` + « Avance de 324 800 F versée le 7 octobre »).
+**États à dessiner :** à déposer · en vérification · **refusé** (`Encart` `danger` : « Document illisible. Déposez une photo plus nette. » + bouton « Déposer à nouveau ») · validé (coche `succes` + « **121 600 F versés le 7 octobre** »).
+
+**Variante à prévoir — le paiement direct au fournisseur.** Au-delà d'un certain montant, Group Achat règle le fournisseur elle-même et le groupeur ne reçoit rien en main (§10.3 du cahier des charges). L'écran devient alors : « Group Achat règle directement votre fournisseur sur la base de ce devis. Vous recevrez la confirmation du paiement. » Le seuil n'est pas encore fixé, mais **cette variante existera** : autant la dessiner maintenant.
 
 L'état *refusé* est celui qu'on oublie et celui qui arrivera le plus souvent : une photo de reçu prise à la va-vite dans un marché est rarement nette du premier coup.
 
@@ -664,24 +1199,31 @@ L'état *refusé* est celui qu'on oublie et celui qui arrivera le plus souvent :
 **Objectif :** montrer où est l'argent et à quel titre. C'est l'écran qui explique le modèle économique sans un mot de pitch.
 
 1. En-tête « Portefeuille ».
-2. **Carte principale**, fond `primaire`, texte blanc : « Disponible » / **`86 450 F`** / bouton blanc « Retirer mes fonds ».
+2. **Carte principale**, fond `confiance` (`#1E3A8A`), texte blanc (10,36:1) : « Disponible » / **`86 450 F`** / bouton blanc « Retirer mes fonds ».
 3. **Trois tuiles :**
-   - **324 800 F** — « Avance versée » — « Pour l'achat de la marchandise » — icône panier
-   - **116 000 F** — « Solde retenu » — « Versé après les livraisons » — icône horloge
-   - **23 200 F** — « Commission Group Achat » — « 5 % sur les campagnes abouties » — icône pourcentage
-4. **`Encart` explicatif**, à ne pas omettre : « Votre solde vous est versé une fois les livraisons de la campagne confirmées. La commission n'est prélevée que sur les campagnes abouties. »
+   - **135 000 F** — « En cours de collecte » — « Campagnes pas encore clôturées » — icône horloge
+   - **121 600 F** — « Versé » — « Écouteurs filaires, le 7 octobre » — icône flèche entrante
+   - **6 400 F** — « Commission Group Achat » — « 5 % sur les campagnes abouties » — icône pourcentage
+4. **`Encart` explicatif**, à ne pas omettre : « Vous recevez l'intégralité du montant collecté à la clôture de chaque campagne, moins 5 % de commission. Aucune commission sur une campagne annulée. Les frais de livraison payés par vos acheteurs ne vous sont pas versés : ils vont au transporteur. »
+
+   Un groupeur qui découvre la retenue au moment du versement se sent trompé. Elle est dite ici, à l'écran 14 au moment de fixer le prix, et à l'écran 16 au moment de décider : trois fois, et c'est volontaire.
 5. **Historique**, lignes datées :
 
 | Date | Libellé | Montant |
 |---|---|---|
-| 11 oct. | Solde versé — Riz parfumé (32 livraisons) | **+116 000 F** |
-| 11 oct. | Commission Group Achat (5 %) | −23 200 F |
-| 7 oct. | Avance d'achat — Riz parfumé | +324 800 F |
+| 7 oct. | **Versement — Écouteurs filaires** (32 commandes) | **+121 600 F** |
+| 7 oct. | Commission Group Achat (5 %) | −6 400 F |
 | 7 oct. | Devis fournisseur validé | — |
-| 28 sept. | Solde versé — Baskets homme | +72 400 F |
+| 28 sept. | Versement — Baskets homme (41 commandes) | +381 710 F |
+| 28 sept. | Commission Group Achat (5 %) | −20 090 F |
 | 20 sept. | Campagne annulée — Savon de Marseille | **Aucune commission** |
 
+Les chiffres des baskets doivent tomber juste aussi : 41 × 9 800 = 401 800 F, moins 5 % (20 090 F) = **381 710 F**.
+
 La dernière ligne vaut d'être montrée : elle prouve qu'aucune commission n'est prélevée sur une campagne annulée, comme l'annonce le §7 du cahier des charges.
+
+6. **Lien** « Voir mes statistiques » → écran 21. Le portefeuille dit *combien*, les statistiques disent *pourquoi*.
+7. **Bandeau de démonstration** en bas : « Démonstration — aucun mouvement de fonds réel. »
 
 ## Écran 19 — Fil des demandes (groupeur)
 
@@ -717,6 +1259,154 @@ Trois autres : Lait en poudre (18, Tokoin) · Charbon (14, Bè) · Couches béb�
 
 Une question sans réponse est une vente qui n'a pas lieu : c'est pourquoi elle figure dans « À faire aujourd'hui » de l'écran 13.
 
+### Le filtre s'applique ici aussi — et plus fermement
+
+**C'est le côté risqué du fil** (§13.2 du cahier des charges). L'acheteur n'a rien à gagner à sortir de la plateforme ; le groupeur, si. Les états de modération de l'écran 10 s'appliquent donc **à l'identique sur ses réponses**, et deux éléments s'ajoutent.
+
+**a) L'avertissement de première réponse.** Une feuille, affichée **une seule fois**, à sa toute première réponse. Fond blanc, icône bouclier en `confiance` :
+
+> **Vos réponses sont publiques.**
+> Ne communiquez jamais votre numéro, votre adresse ou un lien vers un autre service. Les acheteurs paient sur Group Achat, et c'est ce qui vous garantit d'être payé à la clôture.
+>
+> *Un seul bouton : « J'ai compris ».*
+
+Le second paragraphe est à soigner : il ne menace pas, **il explique son intérêt**. C'est plus efficace qu'un règlement.
+
+**b) L'état « réponse refusée », en plus ferme que côté acheteur.** Même `Encart` `danger`, même mécanique — non publié et averti en même temps — mais la copie change, parce que la bonne foi est moins probable ici :
+
+> **Cette réponse ne sera pas publiée.**
+> Elle contient des informations permettant de vous identifier ou de vous contacter hors de Group Achat.
+>
+> Cette tentative est enregistrée. Les échanges de coordonnées peuvent entraîner la suspension de votre compte.
+
+La dernière ligne est la seule menace du produit, et elle n'apparaît que de ce côté. Elle doit être vraie : le compteur de tentatives alimente les signaux de surveillance du §10.5.
+
+Elle doit y être, et elle doit être vraie : le compteur de tentatives alimente les signaux de surveillance du §10.5.
+
+**Ce qui n'apparaît nulle part dans l'application :** le compteur lui-même, l'historique des messages refusés, le palier de suspension. Ça vit dans **l'admin Django**, pas dans une maquette — un groupeur qui voit son compteur apprend à rester juste en dessous.
+
+---
+
+## Écran 21 — Statistiques du groupeur
+
+**Objectif :** qu'un groupeur sache, en dix secondes, **si son activité marche et ce qu'il doit changer**. C'est l'écran qui fait passer Group Achat d'une place de marché à un outil de gestion — et c'est celui qui le retient, parce qu'il ne le retrouvera nulle part ailleurs.
+
+**Chrome bleu**, comme tout le côté groupeur (§1.2). L'orange n'y apparaît que sur une alerte.
+
+### Le principe à tenir : un chiffre, puis sa variation, puis sa cause
+
+Un tableau de bord qui donne un chiffre sans point de comparaison ne sert à rien : « 128 000 F collectés » ne dit pas si c'est bien. **Chaque chiffre porte donc sa variation**, et un appui dessus ouvre ce qui l'explique.
+
+**Période, en haut** — segment à trois positions : « 30 jours » · « 3 mois » · « Tout ». 30 jours par défaut. Toutes les variations se lisent par rapport à la période précédente de même durée.
+
+### De haut en bas
+
+1. **En-tête** « Mes statistiques », fond `confiance`, texte blanc (10,36:1). À droite, une icône d'export.
+
+2. **La carte maîtresse** — fond `confiance`, texte blanc, coins 16. Une seule chose dedans, et c'est **ce qu'il a gagné**, pas ce qu'il a encaissé :
+
+   > **Vos revenus — 30 jours**
+   > **121 600 F** versés
+   > *+ 18 % par rapport aux 30 jours précédents* — flèche montante
+
+   **Pourquoi « versé » et pas « collecté » :** le collecté inclut l'argent qui n'est pas encore à lui. Un tableau de bord qui met en avant un chiffre plus flatteur que la réalité détruit sa propre crédibilité au premier versement.
+
+3. **Quatre tuiles**, en grille 2 × 2, fond blanc, filet 1 px `bordure`, coins 12. Chacune : un libellé en `Libelle`, le chiffre en `Prix`, la variation en `Petit`.
+
+   | Tuile | Valeur de démonstration | Variation |
+   |---|---|---|
+   | **Campagnes abouties** | **4 sur 5** | `succes` |
+   | **Participants** | **127** | + 31 % |
+   | **Panier moyen** | **4 150 F** | − 4 % en `danger` |
+   | **Taux de réussite** | **80 %** | stable |
+
+   Le **taux de réussite** — campagnes allées jusqu'à la livraison sur campagnes lancées — est le chiffre qui compte le plus pour nous comme pour lui : c'est le même que celui qui conditionne ses plafonds d'exposition (§10.4 du cahier des charges). **Le lui montrer est un acte de loyauté** : il doit savoir ce sur quoi il est jugé.
+
+4. **Graphique : revenus par campagne** — un **histogramme horizontal**, une barre par campagne, en `confiance`. Horizontal et non vertical, pour que les noms de campagne restent lisibles sur 390 px de large. Au bout de chaque barre, le montant.
+
+   ```
+   Écouteurs filaires     ████████████████████  121 600 F
+   Baskets homme          ██████████████████████████  381 710 F
+   Huile de palme         ███████████  142 800 F
+   Savon de Marseille     ▏ annulée
+   ```
+
+   La campagne annulée **reste visible**, en `texte-secondaire`, sans barre. Un tableau de bord qui cache les échecs ne sert pas à décider.
+
+5. **Graphique : ce qui se vend, par catégorie** — barres empilées ou anneau, maximum **quatre catégories plus un « autres »**. Au-delà, c'est illisible sur mobile et personne ne lit la légende.
+
+6. **Carte des quartiers** — *pas une carte géographique*, un tableau classé : les cinq quartiers d'où viennent ses commandes, avec leur part.
+
+   | Quartier | Commandes | Part |
+   |---|---|---|
+   | Agoè | 38 | 30 % |
+   | Tokoin | 29 | 23 % |
+   | Bè | 24 | 19 % |
+
+   **C'est la donnée la plus actionnable de l'écran**, et il ne l'a nulle part ailleurs : elle lui dit où concentrer ses tournées et quels quartiers annoncer. Et elle respecte l'anonymat (§1.7) — un quartier n'identifie personne.
+
+7. **Section « Ce que ça vous dit »** — deux ou trois constats en phrases, calculés, dans des `Encart` :
+
+   > `info` — « Vos campagnes d'électronique aboutissent plus souvent que vos campagnes alimentaires. »
+   > `attention` — « Votre panier moyen baisse depuis deux mois. »
+   > `succes` — « 3 acheteurs sur 10 vous ont recommandé une campagne. »
+
+   **À dessiner avec soin, et à écrire avec prudence.** C'est ce qui distingue un vrai outil d'un empilement de chiffres. Mais la règle est stricte : **un constat, jamais un conseil**. « Votre panier moyen baisse » est un fait ; « augmentez vos prix » est un conseil commercial dont nous ne sommes pas responsables, et qui nous rendrait comptables de ses pertes.
+
+8. **Lien bas de page** : « Voir mon portefeuille » → écran 18. Les statistiques expliquent, le portefeuille paie. **Deux écrans distincts, volontairement** : on ne mélange pas l'analyse et le mouvement d'argent.
+
+### Les états à maquetter
+
+| État | Affichage |
+|---|---|
+| **Aucune campagne** — le plus important, c'est le premier écran d'un nouveau groupeur | `EtatVide` — « Vos statistiques apparaîtront ici après votre première campagne » + bouton « Créer une campagne ». **Ne dessine jamais un tableau de bord rempli de zéros** : c'est décourageant et ça n'informe de rien |
+| **Une seule campagne** | Les chiffres s'affichent, **sans variation** — il n'y a pas de période précédente. Masque les flèches, ne mets pas « + 0 % » |
+| **Chargement** | Squelettes gris aux emplacements des tuiles et des graphiques, pas de roue qui tourne |
+
+### Ce qui ne doit surtout pas y figurer
+
+- **Aucun nom, aucun numéro, aucune adresse d'acheteur.** Des quartiers, des nombres, des montants. C'est la même règle qu'à l'écran 15, et c'est elle qui protège la commission (§1.7).
+- **Aucune comparaison avec les autres groupeurs.** Pas de classement, pas de « vous êtes dans les 20 % les meilleurs ». Les groupeurs ne se voient pas entre eux, et nous ne les mettons pas en concurrence — ce serait les pousser à baisser leurs prix jusqu'à ne plus pouvoir livrer.
+- **Aucune projection.** « Vous gagnerez X le mois prochain » est une promesse. On montre le passé.
+
+---
+
+# Lot 4 — la livraison
+
+## Écran 22 — Tournée du livreur (page web)
+
+**Ce n'est pas un écran de l'application mobile.** C'est une **page web** que le livreur ouvre depuis un lien reçu, sans rien installer et sans compte — le livreur est un prestataire partenaire, pas un utilisateur de Group Achat (§6 du cahier des charges). À dessiner quand même : c'est là que se fabrique la **preuve de livraison**, dont dépend le versement du solde au groupeur.
+
+**À dessiner en 390 × 844 comme les autres**, puisqu'elle sera ouverte sur un téléphone, mais sans `BarreNav` : c'est une page isolée.
+
+**De haut en bas**
+
+1. **En-tête simple :** « Group Achat — Livraisons » et la date du jour. Pas de navigation, pas de menu.
+2. **Progression :** « **3 livrées sur 12** » avec une barre fine remplie en `marque`.
+3. **Liste des livraisons**, une carte par acheteur :
+   - **Nom** : « Akosua D. » en `Corps-fort`
+   - **Adresse et repère** : « Tokoin, rue des Cocotiers, près de la pharmacie Sodji »
+   - **Téléphone** avec un bouton d'appel — c'est **le seul endroit de tout le produit** où le numéro d'un acheteur est visible, et uniquement le jour de sa livraison
+   - **Contenu** : « Écouteurs filaires avec micro — 1 part »
+   - **Jamais le montant payé** : le livreur n'a pas à le connaître, et l'afficher créerait une tentation inutile
+   - **Champ de saisie du code** : six cases, deux groupes de trois, clavier en majuscules
+   - Deux boutons : « **Valider la livraison** » (primaire) et « Colis refusé » (`danger-texte`)
+4. **Les cartes validées** passent en haut repliées, avec une coche `succes` et l'heure : « Livrée à 10 h 32 ».
+
+**Les états et cas particuliers à dessiner**
+
+| Cas | Écran |
+|---|---|
+| **Succès** | La carte se replie, coche `succes`, « Livrée à 10 h 32 », la progression avance |
+| **Code incorrect** | Cases en `danger` + « Code incorrect. Vérifiez auprès du client. » |
+| **Code déjà validé** | « Cette livraison a déjà été validée à 10 h 32. » |
+| **Code non présenté** | Lien discret « Le client n'a pas son code » → confirmation avec le **nom et le numéro**, coché « code non présenté ». La livraison est marquée **confirmée sans code** et signalée pour contrôle, sans bloquer le groupeur (§11.1) |
+| **Colis refusé** | Feuille : motif (ce n'est pas le produit commandé · colis abîmé · client absent · adresse introuvable), champ de description, photo, bouton « Enregistrer le refus ». Sans ce bouton, un refus ressemble à une livraison non faite et le litige devient impossible à instruire |
+| **Hors réseau** | Bandeau `attention` : « Pas de connexion — vos validations seront envoyées dès le retour du réseau. » La saisie reste possible |
+| **Lien expiré** | Page simple : « Ce lien a expiré. Demandez un nouveau lien à Group Achat. » |
+
+**Sécurité à matérialiser dans la maquette :** le lien ne couvre **que la tournée du jour**, il expire le soir, et il n'affiche aucun montant. Une page qui liste des noms, des adresses et des numéros de téléphone est une page sensible — c'est à ce titre qu'elle se dessine, et pas comme un simple formulaire.
+
 ---
 
 ## 4. Ce qu'il faut prototyper dans Figma
@@ -727,6 +1417,7 @@ Un enchaînement cliquable vaut dix écrans statiques. Quatre parcours :
 2. **Livraison :** 9 en état *en cours de livraison* → code affiché → 9 en état *livrée*
 3. **Groupeur :** 13 → 16 → *(je passe la commande)* → 17A → *(validé)* → 18
 4. **Demande :** 11 → *(confirmation)* → 12, puis 19 → 14
+5. **Livraison :** 21 → *(code saisi)* → succès → retour à la liste avec la progression qui avance, puis l'écran 9 de l'acheteur passé en *livrée*
 
 Six détails qui font la différence devant un jury :
 
@@ -735,12 +1426,16 @@ Six détails qui font la différence devant un jury :
 - la **reprise de l'action après connexion** : la feuille redescend, le paiement continue ;
 - l'**attente de validation Mobile Money**, qui est l'étape réelle du paiement ;
 - l'**écran de décision du groupeur** (16), avec son compte à rebours et son calcul avance/solde ;
+- la **validation d'un code par le livreur** (écran 22), qui est la preuve de livraison et le déclencheur du versement du solde ;
 - au moins un **cas d'erreur** cliquable — le reçu refusé à l'écran 17 est le plus parlant.
 
 ## 5. À vérifier avant de présenter
 
 - [ ] Aucun *Lorem ipsum*, aucun « Produit 1 » sur aucun écran.
-- [ ] Les montants concordent : 14 500 F la part, 464 000 F collectés, 324 800 F d'avance, 116 000 F de solde, 23 200 F de commission.
+- [ ] Les montants concordent : **4 000 F la part, 1 000 F de livraison, 5 000 F payés**, 128 000 F collectés, 6 400 F de commission, **121 600 F versés au groupeur**.
+- [ ] Le **total payé** (5 000 F) apparaît partout à partir du récapitulatif, et le **prix de la part** (4 000 F) seulement avant.
+- [ ] La ligne de frais de livraison est **distincte**, jamais fondue dans le prix de la part.
+- [ ] **Aucun écran ne promet que l'argent est bloqué jusqu'à la livraison** (§1.7) — le groupeur est payé à la clôture.
 - [ ] Le `BandeauConfiance` est présent sur les écrans 1, 3, 5, 7 et 9.
 - [ ] L'avertissement « vérifiez votre commande devant le livreur » figure sur les écrans 3, 7 et 9.
 - [ ] **Aucun contact de groupeur sur un écran acheteur**, et **aucun numéro d'acheteur sur un écran groupeur**.
@@ -750,5 +1445,28 @@ Six détails qui font la différence devant un jury :
 - [ ] Le son des vidéos est **coupé par défaut**, avec son icône visible.
 - [ ] Chaque liste a son état vide, et les onglets protégés leur variante « non connecté ».
 - [ ] L'écran 17 a son état **refusé**.
-- [ ] Nulle part de texte blanc sur orange `#FF6A00`, ni de texte orange sur blanc.
+- [ ] Le **bandeau de démonstration** est présent sur les écrans 6 et 18.
+- [ ] L'écran 22 existe, avec ses états **code refusé**, **code non présenté** et **colis refusé**.
+- [ ] L'écran 22 n'affiche **aucun montant**, et le numéro de l'acheteur n'apparaît nulle part ailleurs.
+- [ ] **Nulle part de texte blanc sur `marque` `#FF6A00`** (2,87:1). Les boutons pleins sont en `primaire` `#CC4A00`.
+- [ ] `marque` n'apparaît qu'avec du texte ou une icône sombre : compteur du fil, statut « en cours de livraison », bouton flottant, barre de progression.
+- [ ] **Écrans acheteur (1 à 12) : chrome orange.** Au plus un élément bleu par écran, et c'est le bandeau de confiance ou un statut « argent détenu ». Aucun bouton, lien ou onglet actif bleu.
+- [ ] **Écrans groupeur (13 à 20) : chrome bleu.** Au plus un bloc orange par écran, et c'est une urgence. Aucun bouton ni onglet actif orange.
+- [ ] Les statuts « argent détenu » passent en **neutre** sur les écrans groupeur.
+- [ ] **Nulle part de texte orange sur un aplat bleu** (3,61:1) — une pastille pleine, oui ; du texte courant, non.
+- [ ] Typographie, fond blanc, rayons, espacements et ton des textes **strictement identiques** des deux côtés : c'est tout ce qui reste pour tenir la cohérence de marque.
+- [ ] **Le fond est blanc sur tous les écrans**, le fil excepté (§1.0).
+- [ ] **Aucune ombre**, sauf sur le bouton ancré, la feuille de connexion et le bouton flottant.
+- [ ] Les listes sont des **lignes séparées par un filet**, pas des cartes encadrées.
+- [ ] Le gris `surface-douce` n'apparaît que dans ses trois usages autorisés.
+- [ ] **Un seul bouton primaire par écran.**
+- [ ] Aucun élément purement décoratif, aucune illustration de remplissage.
+- [ ] Le **bandeau partenaires** porte la mention « Sponsorisé », n'affiche **ni prix ni bouton « Commander »**, et sa variante **sans annonceur** fait disparaître le bandeau.
+- [ ] Un lien publicitaire externe passe par la confirmation « Vous quittez Group Achat ».
+- [ ] Le média du fil est bien calculé à **600 px**, bandeau compris.
+- [ ] Chaque écran répond en une seconde à : où suis-je, que puis-je faire, combien ça coûte.
 - [ ] Tous les textes de bouton sont des verbes d'action, pas « OK » ni « Valider » seul.
+- [ ] **Aucun prix barré, aucune pastille de pourcentage, aucun « au lieu de »** nulle part (§3).
+- [ ] L'article de démonstration est l'**écouteur filaire à 4 000 F**, et les additions tombent juste : 32 × 4 000 = 128 000 F, moins 5 % (6 400 F) = **121 600 F versés**.
+- [ ] L'écran 21 a son **état vide dessiné**, et il ne montre **ni nom d'acheteur, ni classement entre groupeurs**.
+- [ ] L'écran 14 saisit le **prix pour 1 pièce**, et les paliers de quantité affichent leur prix unitaire calculé.
