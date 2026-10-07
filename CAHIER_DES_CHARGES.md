@@ -1,6 +1,6 @@
 # Group Achat — cahier des charges
 
-> Version : 1.6 — web d'abord, mobile ensuite
+> Version : 1.7 — l'administrateur, troisième rôle
 > Lomé, Togo · interface en français · **web aujourd'hui, mobile pour le grand public**
 > Légende : **À définir** = volontairement vide. *(proposition)* = à valider par toi.
 > Documents liés : [contenu des écrans pour Figma](SPEC_ECRANS_FIGMA.md) — [le partenariat de livraison](LIVRAISON.md)
@@ -69,7 +69,7 @@ L'acheteur ne juge donc pas un groupeur : il fait confiance à Group Achat. C'es
 | **Groupeur** | Lance les campagnes, fixe le produit, le prix et le délai, décide si la commande passe, commande chez son fournisseur, répond aux questions | Un marché bien plus large que son carnet d'adresses |
 | **Service de livraison partenaire** | Livre les acheteurs pour les groupeurs qui n'ont pas de livreur | Son tarif de livraison |
 | **Annonceur** | Achète un emplacement dans le bandeau partenaires de l'accueil. **Pas un utilisateur de l'application** : son emplacement est saisi par l'administrateur | De la visibilité auprès des acheteurs |
-| **Administrateur (nous)** | Recrute et vérifie les groupeurs, contrôle les justificatifs d'achat, débloque les fonds, arbitre les litiges, modère, **gère les emplacements publicitaires** | La commission et les emplacements |
+| **Administrateur (nous)** | Recrute et vérifie les groupeurs, contrôle les justificatifs d'achat, débloque les fonds, arbitre les litiges, modère, **gère les emplacements publicitaires**. Ce n'est pas un spectateur : c'est l'opérateur dont dépend tout le circuit de l'argent — **§13** | La commission et les emplacements |
 
 **Sur le livreur.** Nous ne gérons pas de flotte et n'employons personne. Nous **passons un partenariat avec un service de livraison** et lui confions les livraisons des groupeurs qui n'ont pas leur propre livreur. Un groupeur qui a déjà son livreur peut l'utiliser. Le livreur n'est donc **pas un profil utilisateur de l'application** dans le MVP — c'est un prestataire, avec une conséquence importante traitée en section 11 : il faut quand même un moyen de prouver qu'il a livré.
 
@@ -235,7 +235,7 @@ Il n'y a donc **rien en aval** pour tenir le groupeur : tout le dispositif de s�
 Aujourd'hui le justificatif arrive après le versement. Inverser la séquence change tout :
 
 1. Le groupeur dépose le **devis ou la facture du fournisseur** → la plateforme sait ce qui va être acheté, à quel prix, chez qui.
-2. La plateforme verse l'avance.
+2. La plateforme **verse le montant collecté, moins la commission** (§10.1) — en une fois, à la clôture.
 3. Le groupeur dépose le **reçu de paiement** → la plateforme constate l'achat effectif.
 4. Sans reçu dans un délai donné *(proposition : 72 h)*, la campagne est annulée et les acheteurs remboursés — pendant que l'argent est encore récupérable.
 
@@ -279,7 +279,7 @@ Le second n'est pas une formalité administrative : c'est la matérialisation de
 | # | Contrôle | Comment | Ce qu'il empêche |
 |---|---|---|---|
 | 1 | **Pièce d'identité** | CNI, passeport ou carte consulaire, recto et verso, plus un **selfie tenant la pièce près du visage** | Qu'on se présente avec la pièce d'un tiers. Sans le selfie, une pièce volée suffit |
-| 2 | **Concordance du compte Mobile Money** | Le **nom du titulaire** du compte qui recevra l'avance doit correspondre à la pièce d'identité | Le prête-nom. C'est le contrôle le plus rentable du lot : gratuit, immédiat, et c'est sur ce compte que partira l'argent |
+| 2 | **Concordance du compte Mobile Money** | Le **nom du titulaire** du compte qui recevra le versement doit correspondre à la pièce d'identité | Le prête-nom. C'est le contrôle le plus rentable du lot : gratuit, immédiat, et c'est sur ce compte que partira l'argent |
 | 3 | **Téléphone vérifié** | Code SMS, numéro conservé au dossier | Un numéro jetable |
 | 4 | **Lieu d'activité** | Photo de l'étal ou de la boutique, localisation, et **visite physique pour les premiers groupeurs** | Le groupeur sans existence réelle. Rien ne remplace d'avoir vu la personne à son poste |
 | 5 | **Justificatif d'activité** | Registre de commerce, NIF, ou tout document d'activité | L'improvisation. **Non bloquant** : la plupart des bons groupeurs sont dans l'informel, l'exiger écarterait notre cœur de cible |
@@ -654,9 +654,11 @@ Il consulte le **fil des demandes** des acheteurs, agrégé par produit et quart
 
 Il crée la campagne : produit détaillé — caractéristiques, état, garantie —, photos ou vidéo, description, **prix pour une pièce** et paliers de quantité facultatifs, durée. Il suit les participants et le montant collecté, répond aux questions publiques, et peut partager sa campagne sur WhatsApp pour amener ses contacts.
 
-**Et il dispose d'un outil de gestion, pas seulement d'un formulaire.** Un écran de statistiques lui montre ses revenus versés, son taux de réussite, son panier moyen, ses revenus par campagne et la répartition de ses commandes par quartier. C'est ce qui le retient : il ne trouve ces chiffres nulle part ailleurs, et la répartition par quartier lui dit concrètement où concentrer ses tournées. Trois interdits y sont stricts : **aucune identité d'acheteur, aucun classement entre groupeurs, aucune projection de revenus** — détail au §écran 21 du document des écrans.
+**Et il dispose d'un outil de gestion, pas seulement d'un formulaire.** Un écran de statistiques lui montre ses revenus versés, son taux de réussite, son panier moyen, ses revenus par campagne et la répartition de ses commandes par quartier. C'est ce qui le retient : il ne trouve ces chiffres nulle part ailleurs, et la répartition par quartier lui dit concrètement où concentrer ses tournées. Trois interdits y sont stricts : **aucune identité d'acheteur, aucun classement entre groupeurs, aucune projection de revenus** — détail à l'écran 21 du document des écrans.
 
-À la clôture, **il décide** : la commande passe, ou pas. S'il maintient, il dépose son devis fournisseur, reçoit l'avance, achète, dépose son reçu. La marchandise arrive, le partenaire livre. **Son solde lui est versé après les livraisons confirmées, moins la commission.**
+À la clôture, **il décide** : la commande passe, ou pas. S'il maintient, il dépose son devis fournisseur, **reçoit l'intégralité du montant collecté moins les 5 % de commission** (§10.1), achète, dépose son reçu. La marchandise arrive, le partenaire livre.
+
+**Il n'y a pas de solde retenu après la livraison** : tout est versé à la clôture. C'est ce qui rend le contrôle *avant* versement — KYC, plafond, devis, paiement direct du fournisseur — indispensable plutôt que confortable.
 
 ### 16.3 Administrateur
 
@@ -724,17 +726,17 @@ Il recrute et vérifie les groupeurs, fixe leur plafond, contrôle les reçus, d
 - Un **avis juridique** est nécessaire sur la détention de fonds et sur l'engagement « livré ou remboursé », qui nous engage financièrement.
 - Choix de l'agrégateur, **ses tarifs d'encaissement et de reversement** — qui déterminent si la commission de 5 % tient (§9.2) —, délais de reversement : **À définir**
 
-Architecturalement, le passage de la phase 1 à la phase 2 ne touche qu'une seule couche : le connecteur de paiement. Statuts, écrans, calculs d'avance et de solde, journal des opérations sont identiques dans les deux cas. C'est à cette condition que le travail de la phase 1 n'est pas perdu.
+Architecturalement, le passage de la phase 1 à la phase 2 ne touche qu'une seule couche : le connecteur de paiement. Statuts, écrans, calculs de versement et de commission, journal des opérations sont identiques dans les deux cas. C'est à cette condition que le travail de la phase 1 n'est pas perdu.
 
 ### 18.3 Traçabilité
 
-Journal horodaté de **tous** les mouvements d'argent et de **tous** les changements de statut : paiements, versements d'avance, dépôts de justificatifs, livraisons confirmées, remboursements, décisions d'arbitrage. C'est à la fois l'exigence comptable, la preuve en cas de litige, et la matière des plafonds de 10.4.
+Journal horodaté de **tous** les mouvements d'argent et de **tous** les changements de statut : paiements, versements aux groupeurs, dépôts de justificatifs, livraisons confirmées, remboursements, décisions d'arbitrage. C'est à la fois l'exigence comptable, la preuve en cas de litige, et la matière des plafonds de 10.4.
 
 ## 19. Stack technique
 
-**Architecture.** API séparée de l'interface. Le back-end expose une API indépendante que le prototype web consomme aujourd'hui et que l'application mobile consommera. **Toute la logique métier — détention des fonds, calcul de la commission, avances, soldes, statuts — vit côté serveur, jamais dans l'application.** Une application installée ne se corrige pas par un déploiement : ce qui est côté serveur se corrige le jour même.
+**Architecture.** API séparée de l'interface. Le back-end expose une API indépendante que le prototype web consomme aujourd'hui et que l'application mobile consommera. **Toute la logique métier — détention des fonds, calcul de la commission, versements, statuts — vit côté serveur, jamais dans l'application.** Une application installée ne se corrige pas par un déploiement : ce qui est côté serveur se corrige le jour même.
 
-**Back-end :** Django + Django REST Framework, PostgreSQL. L'admin Django sert de back-office pour le recrutement, le contrôle des justificatifs, le déblocage des fonds et les litiges.
+**Back-end :** Django + Django REST Framework, PostgreSQL. L'admin Django sert de back-office pour le recrutement, le contrôle des justificatifs, le déblocage des fonds et les litiges — **plus une seule page sur mesure**, le tableau de bord de synthèse (§13.6).
 
 **Front, v1 :** **React**, application web responsive conçue **mobile d'abord** (390 px). C'est le choix de la vitesse : on livre quelque chose d'utilisable sans passer par les magasins d'applications, et on corrige en déployant.
 
@@ -742,7 +744,7 @@ Journal horodaté de **tous** les mouvements d'argent et de **tous** les changem
 
 > **La décision à ne pas prendre trop vite :** React Native permettrait de partager du code entre le web et le mobile, Flutter donnerait une meilleure application mais aucun partage avec React. Ce choix ne se tranche pas maintenant — il se tranche quand le web aura des utilisateurs et qu'on saura ce qu'ils font. Choisir aujourd'hui, c'est choisir sans information.
 
-**Intégrité.** Toute opération touchant à l'argent passe par une transaction avec verrouillage de ligne (`SELECT FOR UPDATE`) : pas de double versement d'avance, pas de double validation de livraison, pas de double paiement.
+**Intégrité.** Toute opération touchant à l'argent passe par une transaction avec verrouillage de ligne (`SELECT FOR UPDATE`) : pas de double versement au groupeur, pas de double validation de livraison, pas de double paiement.
 
 **Tâches planifiées.** Trois règles ne se déclenchent sur aucune action utilisateur, et chacune est une **porte de sortie de l'argent détenu** :
 1. clôture d'une campagne à sa date d'échéance ;

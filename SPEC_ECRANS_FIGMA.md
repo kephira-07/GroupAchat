@@ -592,6 +592,19 @@ Un seul jeu, utilisé sur **tous** les écrans.
 
 > **Pas de colonne « prix détail », et c'est une décision de produit** — voir la règle ci-dessous.
 
+### Le vocabulaire de l'interface — fixé sur la maquette
+
+Les mots visibles à l'écran ne sont pas ceux des documents internes. **Ce tableau fait foi pour toute copie d'interface.**
+
+| À l'écran | Jamais à l'écran | Pourquoi |
+|---|---|---|
+| **un groupage** | une campagne | C'est le mot que l'utilisateur emploie déjà. « Campagne » reste le terme interne, dans ce document et le cahier des charges |
+| **32 acheteurs confirmés** | 32 commandes, 32 participants | « Confirmés » dit que ces gens ont payé. C'est rassurant, et c'est vrai |
+| **4 000 F CFA** | 4 000 F | Le prix complet partout où l'utilisateur lit un montant. Le `F` seul reste admis dans les tableaux denses et côté administration |
+| **RESTE 2 JOURS** | Plus que 2 jours | Capitales, court, lisible sur une photo |
+| **Par Mama Gro** | Vendu par, Groupeur : | Sobre, et ça ne suggère pas une fiche à ouvrir (§1.7) |
+| **Voir le groupage** | Commander — 4 000 F | Sur le fil, on ouvre ; on ne s'engage pas. L'engagement est à l'écran 3 |
+
 ### Aucun prix barré, aucun badge de réduction
 
 **Règle absolue dans toute l'application.** Un prix de part s'affiche seul. Jamais de prix de détail barré à côté, jamais de pastille « −19 % », jamais de mention « au lieu de ».
@@ -628,62 +641,68 @@ Les additions doivent tomber juste à l'écran : un jury vérifie ce genre de ca
 
 # Lot 1 — commander et payer
 
-## Écran 1 — Le fil des campagnes
+## Écran 1 — Accueil, le fil des groupages
 
-**Objectif :** qu'un visiteur comprenne en trois secondes ce qu'il regarde, et qu'il ait envie de faire défiler. C'est l'écran d'accueil, celui qui s'ouvre à la toute première utilisation, **sans aucun compte**.
+**Objectif :** qu'un visiteur comprenne en trois secondes ce qu'il regarde, et qu'il ait envie de faire défiler. C'est l'écran d'ouverture, **sans aucun compte**.
 
-**Structure : une carte par campagne, défilement vertical.** On glisse vers le haut pour la campagne suivante.
+**Structure : un groupage par écran, défilement vertical.** On glisse vers le haut pour le suivant.
 
-**Répartition verticale de l'écran**, qui n'est plus tout à fait plein écran depuis l'ajout du bandeau partenaires :
-
-| Zone | Hauteur |
-|---|---|
-| Barre de statut | 44 px |
-| En-tête Group Achat | 56 px |
-| **Bandeau partenaires** | **72 px** |
-| **Média de la campagne** | **600 px** |
-| Barre de navigation | 72 px |
-
-Le média passe donc de 844 à **600 px de haut**. C'est le prix du bandeau, et il faut le connaître : **le bandeau consomme 9 % de l'écran, en permanence, sur la surface principale de l'application.** En contrepartie, un emplacement visible en haut de l'accueil se vend en une conversation, sans ciblage ni mesure — voir la réserve en fin d'écran.
-
-Le bloc d'information et le bouton restent **ancrés en bas du média**, pas en bas de l'écran : rien ne passe sous la barre de navigation.
-
-**De haut en bas sur une carte**
+**De haut en bas** *(aligné sur ta maquette)*
 
 1. **Le média à bord perdu** : photo ou vidéo 9:16 couvrant tout l'écran. Un dégradé `voile` en haut sur 120 px et en bas sur 280 px, sans quoi aucun texte n'est lisible.
-2. **En-tête :** « Group Achat » à gauche, icône de recherche à droite. Rien d'autre — pas de bouton « Connexion », pas d'avatar (§1.5).
-2bis. **`BandeauPartenaires`** (§2.14), sous l'en-tête, sur fond blanc. Il **reste en place quand on fait défiler le fil** : c'est ce que l'annonceur achète.
-3. **Rail d'actions vertical à droite**, aligné sur le bas, icônes blanches de 28 avec libellé 12 dessous :
-   - 💬 **Questions** — « 7 »
+2. **Barre de recherche flottante**, posée sur le média, coins arrondis, fond blanc à 92 % d'opacité : « **Rechercher un produit…** » avec l'icône de loupe. À droite, un bouton `secondaire` compact « **Demander** » → écran 11.
+
+   La recherche en clair plutôt qu'une icône, c'est un choix fort et c'est le bon : sur un fil vertical, rien ne dit à l'utilisateur qu'il peut chercher autre chose que ce qui défile. Une loupe se remarque moins qu'un champ.
+3. **Rail d'actions vertical à droite**, icônes blanches de 28, libellé 12 dessous :
+   - 💬 **Questions** — « **7** » → écran 10
    - ↗️ **Partager**
-   - 🔇 **Son** — coupé par défaut (§1.6), seulement si la campagne a une vidéo
+   - 🔇 **Son** — coupé par défaut (§1.6), seulement si le groupage a une vidéo
 4. **Bloc d'information en bas à gauche**, au-dessus de la barre de navigation :
-   - `CompteurTemps` : « 🕐 Plus que 2 jours »
-   - **Nom du produit** en `Titre-fil` blanc : « Écouteurs filaires avec micro »
-   - **Prix** : `4 000 F` en `Prix` blanc, **seul** — pas de prix barré, pas de pastille de pourcentage. En dessous, en `Petit` blanc : « la part ». C'est ce qui remplace le badge : on dit ce qu'on achète, pas ce qu'on économise
-   - `CompteurParticipants` : « 32 personnes ont commandé »
-   - **Pseudonyme** en 14 : « Mama Gro » — **non cliquable** (§1.7)
-   - `BandeauConfiance` en version `compact`, une ligne : « 🛡️ Groupeur sélectionné · Livré ou remboursé »
-5. **Bouton ancré** au-dessus de la barre de navigation, pleine largeur : « **Commander — 4 000 F** ». Le montant dans le bouton supprime la surprise à l'étape suivante.
-6. **`BarreNav`**, onglet Fil actif, posée sur un dégradé.
-7. **Indice de défilement**, à dessiner seulement sur la première carte : une flèche vers le haut et « Faites glisser pour voir d'autres campagnes », qui disparaît au premier geste. Sans cet indice, un utilisateur qui n'a jamais vu ce type d'interface reste bloqué sur la première campagne.
+   - `CompteurTemps` : « **RESTE 2 JOURS** »
+   - **Nom du produit** en `Titre-fil` blanc : « **Écouteurs filaires Pro avec micro** »
+   - **Prix** : « **4 000 F CFA** » en `Prix` blanc, **seul** — pas de prix barré, pas de pastille de pourcentage (§3). En dessous, en `Petit` : « la part »
+   - « **32 acheteurs confirmés** »
+   - « **Par Mama Gro** » en 14 — **non cliquable** (§1.7)
+5. **Bouton ancré** au-dessus de la barre de navigation, pleine largeur : « **Voir le groupage** » → écran 3.
+6. **`BarreNav`** — quatre onglets : **Accueil · Groupage · Commandes · Profil**. Accueil actif, posée sur un dégradé.
+7. **Indice de défilement**, sur la première carte seulement : « **Glisser vers le haut pour le groupage suivant** », qui disparaît au premier geste. Sans lui, un utilisateur qui n'a jamais vu ce type d'interface reste bloqué sur le premier écran.
 
-**Cartes à dessiner** — au moins trois, pour montrer la variété : **C1** (photo, 2 jours), **C2** (vidéo, robe wax), **C4** (vidéo, 4 h restantes — en `danger`, l'urgence maximale). Plus la variante **sans annonceur**, où le média récupère ses 72 px.
+### Les deux éléments manquants de ta maquette
 
-**Ma réserve sur l'emplacement, à lire avant de dessiner.** Un bandeau permanent en haut d'un fil est l'inventaire publicitaire le plus facile à vendre et **le moins performant** : on apprend très vite à ne plus le voir, et il coûte 9 % de la surface principale en continu. L'inventaire qui se vend cher dans un fil, c'est la **carte sponsorisée insérée dans le fil lui-même** — plein écran, au format d'une campagne, marquée « Sponsorisé », tous les cinq ou six contenus. Elle ne coûte aucun espace permanent et se regarde vraiment.
+Ce ne sont pas des oublis de dessin, ce sont **deux décisions antérieures que la maquette abandonne**. Il faut les reprendre sciemment.
 
-Je garde le bandeau comme tu l'as demandé : il est visible, démontrable devant un jury, et vendable dès maintenant sans ciblage ni mesure. Mais si tu veux un jour monter tes tarifs, c'est la carte sponsorisée qu'il faudra construire — elle est notée en évolution au §20 du cahier des charges.
+**1. Le bandeau publicitaire a disparu.** Tu l'avais demandé en haut de l'accueil. Il n'y est plus — et franchement, **c'est mieux ainsi** : je t'avais signalé qu'il coûtait 9 % de la surface principale en permanence pour l'inventaire le moins performant qui soit. Deux endroits valent mieux :
+
+| Où | Ce que ça donne |
+|---|---|
+| **En tête de l'onglet Groupage** *(recommandé)* | Une liste supporte un bandeau sans rien sacrifier. L'annonceur garde sa visibilité, l'accueil garde son plein écran |
+| **Carte sponsorisée dans le fil** | Plein écran, au format d'un groupage, marquée « Sponsorisé », tous les cinq ou six contenus. C'est l'inventaire qui se vend cher — et c'est plus de travail |
+
+**2. Le bandeau de confiance a disparu aussi**, et celui-là, **il faut le remettre**. « Groupeur sélectionné · Livré ou remboursé » est la seule chose qui distingue ton produit d'un groupage WhatsApp. Sur un écran où un inconnu demande 4 000 F CFA à quelqu'un qui n'a pas de compte, le retirer coûte cher.
+
+**Proposition qui tient dans ta maquette :** une ligne de 20 px, juste au-dessus du bouton « Voir le groupage », texte blanc 12 avec une icône de bouclier — « 🛡️ Groupeur sélectionné · Livré ou remboursé ». Pas un encart bleu, pas un bloc : une ligne. Elle coûte 20 px et elle porte toute la promesse.
+
+### Les onglets, à définir maintenant
+
+| Onglet | Contenu | Écran |
+|---|---|---|
+| **Accueil** | Le fil vertical plein écran | 1 |
+| **Groupage** | La même offre en **vue liste**, avec catégories et filtres. C'est là que vont ceux qui cherchent plutôt que ceux qui flânent | 2 |
+| **Commandes** | Mes commandes et leur suivi | 8 |
+| **Profil** | Mes informations, mes demandes, mode économie de données, aide | 12 et réglages |
+
+**Cartes à dessiner** — au moins trois, pour montrer la variété : **C1** (photo, 2 jours), **C2** (vidéo, robe wax), **C4** (vidéo, 4 h restantes — `CompteurTemps` en `danger`, l'urgence maximale).
 
 **États à dessiner**
 
 | État | Contenu |
 |---|---|
 | Chargement | Fond `surface-douce` avec un dégradé animé discret, sans logo ni texte |
-| Image seule | La vidéo n'a pas chargé : image de couverture + tous les éléments d'information, pleinement utilisable (§1.6) |
+| Image seule | La vidéo n'a pas chargé : image de couverture + toute l'information, pleinement utilisable (§1.6) |
 | Mode économie de données | Un bandeau discret en haut : « Mode économie activé — vidéos désactivées » |
-| Fin du fil | « Vous avez vu toutes les campagnes ouvertes » + « Demander un produit » |
+| Fin du fil | « Vous avez vu tous les groupages ouverts » + bouton « Demander un produit » |
 
-**Actions :** glisser vers le haut → campagne suivante · toucher le média → pause de la vidéo · « Commander » → écran 5 · toucher le titre ou le prix → écran 3 · 💬 → écran 10 · recherche → écran 2.
+**Actions :** glisser vers le haut → groupage suivant · toucher le média → pause de la vidéo · « Voir le groupage » → écran 3 · 💬 → écran 10 · recherche → écran 2 · « Demander » → écran 11.
 
 ## Écran 2 — Recherche, catégories et résultats
 
@@ -1375,7 +1394,7 @@ Un tableau de bord qui donne un chiffre sans point de comparaison ne sert à rie
 
 ## Écran 22 — Tournée du livreur (page web)
 
-**Ce n'est pas un écran de l'application mobile.** C'est une **page web** que le livreur ouvre depuis un lien reçu, sans rien installer et sans compte — le livreur est un prestataire partenaire, pas un utilisateur de Group Achat (§6 du cahier des charges). À dessiner quand même : c'est là que se fabrique la **preuve de livraison**, dont dépend le versement du solde au groupeur.
+**Ce n'est pas un écran de l'application mobile.** C'est une **page web** que le livreur ouvre depuis un lien reçu, sans rien installer et sans compte — le livreur est un prestataire partenaire, pas un utilisateur de Group Achat (§6 du cahier des charges). À dessiner quand même : c'est là que se fabrique la **preuve de livraison**. Elle ne conditionne aucun versement — le groupeur a déjà été payé à la clôture (§10.1 du cahier des charges) — mais elle construit **son historique de fiabilité**, qui détermine son plafond d'exposition. C'est le seul levier qui nous reste sur lui, donc il vaut cet écran.
 
 **À dessiner en 390 × 844 comme les autres**, puisqu'elle sera ouverte sur un téléphone, mais sans `BarreNav` : c'est une page isolée.
 
@@ -1472,6 +1491,419 @@ Sous le premier, une ligne qui n'est pas décorative : « **Rapprochement : éca
 
 ---
 
+# Textes d'écran, prêts à coller
+
+Le contenu littéral de chaque écran, dans le format de ta maquette d'accueil. **À donner tel quel à Stitch, ou à recopier dans Figma.** Le vocabulaire suit le tableau du §3 : *groupage*, *acheteurs confirmés*, *F CFA*.
+
+---
+
+### 1 — Accueil
+
+```
+Rechercher un produit...          Demander
+                                        7
+                                  Partager
+RESTE 2 JOURS
+Écouteurs filaires Pro avec micro
+4 000 F CFA
+la part
+32 acheteurs confirmés
+Par Mama Gro
+Groupeur sélectionné · Livré ou remboursé
+Voir le groupage
+Glisser vers le haut pour le groupage suivant
+Accueil   Groupage   Commandes   Profil
+```
+
+### 2 — Groupage (vue liste)
+
+```
+Rechercher un produit...
+Tous   Alimentaire   Électronique   Mode   Maison
+Écouteurs filaires Pro avec micro
+4 000 F CFA · 32 acheteurs confirmés · RESTE 2 JOURS
+Robe wax, taille au choix
+7 500 F CFA · 18 acheteurs confirmés · RESTE 5 JOURS
+Baskets homme, pointures 39-45
+9 800 F CFA · 41 acheteurs confirmés · RESTE 4 H
+Vide : Aucun groupage ne correspond. Demander ce produit
+```
+
+### 3 — Détail du groupage
+
+```
+Écouteurs filaires Pro avec micro
+4 000 F CFA  par part
+RESTE 2 JOURS · 32 acheteurs confirmés
+Par Mama Gro
+Ce que contient une part
+1 écouteur filaire avec micro, garantie 3 mois
+Caractéristiques
+Connectique  jack 3,5 mm
+Longueur     1,2 m
+Micro        intégré
+Garantie     3 mois
+État         Neuf
+Livraison
+À domicile par notre partenaire
+Sous 3 à 5 jours après la clôture
+Frais de livraison selon votre position — à partir de 1 000 F CFA
+Les règles
+Paiement à la commande, détenu par Group Achat jusqu'à la clôture
+Le groupeur décide à la clôture si la commande passe
+Si le groupage n'aboutit pas, vous êtes remboursé intégralement
+Questions (7)          Voir les questions
+Partager
+Commander — 4 000 F CFA
+```
+
+### 4 — Connexion *(feuille remontante, déclenchée par « Payer »)*
+
+```
+Encore une étape
+Votre numéro sert à vous joindre pour la livraison. Rien de plus.
++228  Numéro de téléphone
+Recevoir le code
+--- puis ---
+Code reçu par SMS
+[  ][  ][  ][  ]
+Renvoyer le code (0:42)
+Valider
+```
+
+### 5 — Commander
+
+```
+Écouteurs filaires Pro avec micro
+Quantité
+−   1   +
+Où livrer
+Partager ma position
+ou
+Indiquer le nom du lieu
+Repère : rue des Cocotiers, près de la pharmacie Sodji
+Numéro à joindre à la livraison
+Récapitulatif
+1 part × 4 000 F CFA            4 000 F CFA
+Livraison à Tokoin              1 000 F CFA
+Total à payer                   5 000 F CFA
+Groupeur sélectionné · Livré ou remboursé
+J'accepte les conditions de vente
+Payer 5 000 F CFA
+```
+
+### 6 — Paiement Mobile Money *(simulé)*
+
+```
+Paiement
+5 000 F CFA
+Choisissez votre opérateur
+T-Money        Flooz
+Confirmez sur votre téléphone
+Composez #145# et validez
+En attente de confirmation...
+Démonstration — aucun argent réel ne circule
+```
+
+### 7 — Confirmation
+
+```
+C'est confirmé
+5 000 F CFA payés
+Écouteurs filaires Pro avec micro — 1 part
+Votre code de livraison
+K7M-4PQ
+À donner au livreur, et à lui seul.
+Livraison prévue sous 3 à 5 jours après la clôture du groupage
+Voir ma commande          Retour à l'accueil
+```
+
+### 8 — Mes commandes
+
+```
+Mes commandes
+En cours   Terminées
+Écouteurs filaires Pro avec micro
+5 000 F CFA · Payée — en attente de clôture
+Robe wax, taille M
+8 500 F CFA · En cours de livraison
+Savon de Marseille, carton de 48
+10 500 F CFA · Remboursée
+Vide : Aucune commande pour le moment. Voir les groupages ouverts
+```
+
+### 9 — Détail d'une commande
+
+```
+Écouteurs filaires Pro avec micro
+Payée — en attente de clôture
+Commandé    Clôturé    Commande passée    En livraison    Livré
+Votre code de livraison
+K7M-4PQ
+Récapitulatif
+Part        4 000 F CFA
+Livraison   1 000 F CFA
+Total       5 000 F CFA
+Payée le 5 octobre
+Livrer à : Tokoin, rue des Cocotiers, près de la pharmacie Sodji
+Votre paiement est détenu par Group Achat jusqu'à la clôture du groupage.
+Une question ?          Signaler un problème
+```
+
+### 10 — Questions
+
+```
+Questions
+Écouteurs filaires Pro avec micro
+Quelle marque ?   Quelle origine ?   Quand la livraison ?   Autre question
+Posez votre question sur ce produit...
+Votre question et la réponse seront visibles par tout le monde.
+Envoyer
+---
+C'est quelle marque d'écouteurs ?  — Akosua D.
+  Jack 3,5 mm, micro intégré, câble de 1,2 m. Garantie 3 mois.  — Mama Gro
+La livraison va jusqu'à Adidogomé ?  — Yawa T.
+  Oui, tout Lomé est couvert.  — Mama Gro
+Est-ce qu'on peut payer à la livraison ?  — Dodzi M.
+  En attente de réponse
+---
+N'échangez jamais de numéro de téléphone. Votre paiement n'est protégé que sur Group Achat.
+Message refusé :
+Ce message ne sera pas publié.
+Il contient des informations qui permettraient de vous identifier.
+Pour votre sécurité, les échanges restent anonymes sur Group Achat.
+Votre numéro est déjà enregistré pour la livraison. Le livreur l'aura le jour de sa tournée.
+Modifier          Annuler
+```
+
+### 11 — Demander un produit
+
+```
+Demander un produit
+Dites ce que vous cherchez. Si assez de personnes le demandent, un groupeur lance le groupage.
+Quel produit ?
+Quantité souhaitée
+Votre quartier
+Prix que vous accepteriez (facultatif)
+Envoyer ma demande
+```
+
+### 12 — Mes demandes
+
+```
+Mes demandes
+Huile de palme 20 L
+32 personnes le demandent · Groupage lancé
+Sucre en poudre, sac de 50 kg
+7 personnes le demandent · En attente
+Vide : Vous n'avez encore rien demandé.
+```
+
+---
+
+## Côté groupeur — chrome bleu
+
+### 13 — Tableau de bord
+
+```
+Bonjour Mama Gro
+3 groupages ouverts    74 commandes
+128 000 F CFA collectés    86 450 F CFA disponibles
+Voir toutes mes statistiques
+À faire aujourd'hui
+Écouteurs filaires — groupage clôturé, décidez sous 41 h
+Déposez le reçu d'achat — Robe wax
+3 questions sans réponse
+4 nouvelles demandes dans votre quartier
+Mes groupages
++ Créer un groupage
+Tableau de bord   Mes groupages   Statistiques   Portefeuille
+```
+
+### 14 — Créer un groupage
+
+```
+Étape 1 — Le produit
+Nom du produit · Catégorie · Photos ou vidéo
+Ce que contient une part
+Description
+Caractéristiques : Connectique / Longueur / Micro / Couleur
+État : Neuf — Reconditionné — Occasion
+Garantie
+Avant publication : Photo nette ✓ · Contenu d'une part ✓ · Garantie ✓
+
+Étape 2 — Le prix
+Prix pour 1 pièce        4 000 F CFA
+Ce que contient une part : 1 pièce
++ Ajouter une quantité
+   3 pièces   11 000 F CFA   (3 667 F CFA la pièce)
+   5 pièces   17 500 F CFA   (3 500 F CFA la pièce)
+Ce que ça vous coûte à la pièce (visible de vous seul)
+   Prix de vente 4 000 · votre coût 2 800 · commission 200
+   Votre marge : 1 000 F CFA par pièce, soit 32 000 F CFA sur 32 commandes
+Sur 4 000 F CFA, vous recevrez 3 800 F CFA par part. Commission Group Achat : 200 F CFA (5 %).
+Durée : 3 jours — 7 jours — 14 jours — une date
+Variantes (tailles, pointures, coloris)
+
+Étape 3 — La livraison
+Délai annoncé · Zones couvertes
+J'utilise le service partenaire de Group Achat
+J'ai mon propre livreur
+Les frais de livraison sont payés par l'acheteur et vont au transporteur. Ils n'entrent pas dans votre versement.
+Publier le groupage
+Partager sur WhatsApp
+```
+
+### 15 — Gérer un groupage
+
+```
+Écouteurs filaires Pro avec micro
+32 commandes · 128 000 F CFA collectés · RESTE 2 JOURS
+Partager   Clôturer maintenant   Prévenir les participants
+Commandes
+K7M-4PQ   1 part · noir · 4 000 F CFA · Tokoin
+P3R-9XA   2 parts · noir · 8 000 F CFA · Agoè
+...
+Répartition par quartier
+Agoè 38 %   Tokoin 23 %   Bè 19 %
+```
+
+### 16 — Clôturer et décider
+
+```
+Le groupage est clôturé
+Décidez sous 41 h
+32 commandes · 128 000 F CFA collectés
+Vous recevrez 121 600 F CFA (commission 5 % : 6 400 F CFA)
+Je maintiens le groupage
+J'annule — tous les acheteurs sont remboursés
+Sans décision sous 48 h, le groupage est annulé et les acheteurs remboursés.
+```
+
+### 17 — Déposer un justificatif
+
+```
+Déposer votre reçu d'achat
+Photographiez le reçu du fournisseur.
+Prendre une photo        Choisir un fichier
+Montant   Fournisseur   Date
+Envoyer
+Sans reçu avant le 9 octobre, le groupage est annulé et les acheteurs remboursés.
+```
+
+### 18 — Portefeuille
+
+```
+Portefeuille
+Disponible
+86 450 F CFA
+Retirer mes fonds
+135 000 F CFA  En cours de collecte
+121 600 F CFA  Versé — Écouteurs filaires, le 7 octobre
+6 400 F CFA    Commission Group Achat
+Vous recevez l'intégralité du montant collecté à la clôture de chaque groupage, moins 5 % de commission.
+Aucune commission sur un groupage annulé. Les frais de livraison vont au transporteur.
+Historique
+7 oct.   Versement — Écouteurs filaires (32 commandes)   +121 600 F CFA
+7 oct.   Commission Group Achat (5 %)                     −6 400 F CFA
+28 sept. Versement — Baskets homme (41 commandes)        +381 710 F CFA
+20 sept. Groupage annulé — Savon de Marseille            Aucune commission
+Voir mes statistiques
+Démonstration — aucun mouvement de fonds réel.
+```
+
+### 19 — Fil des demandes
+
+```
+Demandes des acheteurs
+Mon quartier   Toutes   Cette semaine
+Huile de palme 20 L
+32 personnes · Agoè · prix souhaité ~11 000 F CFA
+Lancer un groupage
+```
+
+### 20 — Questions reçues
+
+```
+Questions          3 sans réponse
+Sans réponse (3)   Toutes
+Écouteurs filaires Pro avec micro
+  Est-ce qu'on peut payer à la livraison ? — Dodzi M.
+  Répondre
+Une réponse publique profite à tous vos participants et rassure les visiteurs.
+Avertissement, première réponse :
+Vos réponses sont publiques.
+Ne communiquez jamais votre numéro, votre adresse ou un lien vers un autre service.
+Les acheteurs paient sur Group Achat, et c'est ce qui vous garantit d'être payé à la clôture.
+J'ai compris
+```
+
+### 21 — Statistiques
+
+```
+Mes statistiques
+30 jours   3 mois   Tout
+Vos revenus — 30 jours
+121 600 F CFA versés
++ 18 % par rapport aux 30 jours précédents
+Groupages aboutis   4 sur 5
+Participants        127        + 31 %
+Panier moyen        4 150 F CFA   − 4 %
+Taux de réussite    80 %
+Revenus par groupage
+Baskets homme        381 710 F CFA
+Huile de palme       142 800 F CFA
+Écouteurs filaires   121 600 F CFA
+Savon de Marseille   annulé
+D'où viennent vos commandes
+Agoè 38 (30 %)   Tokoin 29 (23 %)   Bè 24 (19 %)
+Ce que ça vous dit
+Vos groupages d'électronique aboutissent plus souvent que vos groupages alimentaires.
+Votre panier moyen baisse depuis deux mois.
+Voir mon portefeuille
+Vide : Vos statistiques apparaîtront ici après votre premier groupage.
+```
+
+---
+
+## Hors application
+
+### 22 — Tournée du livreur *(page web)*
+
+```
+Group Achat — Livraisons        7 octobre
+3 livrées sur 12
+Akosua D.
+Tokoin, rue des Cocotiers, près de la pharmacie Sodji
++228 90 12 34 56        Appeler
+Écouteurs filaires Pro avec micro — 1 part
+Code de livraison
+[  ][  ][  ] - [  ][  ][  ]
+Valider la livraison        Colis refusé
+Livrée à 10 h 32
+Code incorrect — vérifiez auprès de l'acheteur
+```
+
+### A1 — Tableau de bord administrateur *(1 280 × 800)*
+
+```
+Changement de compte Mobile Money — Mama Gro        Voir le dossier
+Dossiers KYC à valider              4   le plus ancien : 2 jours
+Justificatifs d'achat à contrôler   2   le plus ancien : 1 jour
+Contestations à arbitrer            1   le plus ancien : 4 jours
+Livraisons non confirmées (7 j)     3   le plus ancien : 9 jours
+Messages signalés                   6   le plus ancien : 1 jour
+Retours de colis                    0
+Argent détenu en ce moment     1 284 000 F CFA
+   Rapprochement : écart de 0 F
+Groupages en cours             11   dont 3 à échéance sous 48 h
+Taux de livraison (30 j)       94 %
+Commission encaissée (30 j)    72 400 F CFA
+Activité récente
+```
+
+---
+
 ## 4. Ce qu'il faut prototyper dans Figma
 
 Un enchaînement cliquable vaut dix écrans statiques. Quatre parcours :
@@ -1488,8 +1920,8 @@ Six détails qui font la différence devant un jury :
 - le **parcours libre jusqu'au paiement**, sans jamais demander de compte ;
 - la **reprise de l'action après connexion** : la feuille redescend, le paiement continue ;
 - l'**attente de validation Mobile Money**, qui est l'étape réelle du paiement ;
-- l'**écran de décision du groupeur** (16), avec son compte à rebours et son calcul avance/solde ;
-- la **validation d'un code par le livreur** (écran 22), qui est la preuve de livraison et le déclencheur du versement du solde ;
+- l'**écran de décision du groupeur** (16), avec son compte à rebours et le montant qui lui sera versé ;
+- la **validation d'un code par le livreur** (écran 22), qui est la preuve de livraison et ce qui alimente l'historique de fiabilité du groupeur ;
 - au moins un **cas d'erreur** cliquable — le reçu refusé à l'écran 17 est le plus parlant.
 
 ## 5. À vérifier avant de présenter
