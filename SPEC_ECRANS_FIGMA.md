@@ -672,7 +672,7 @@ Le bloc d'information et le bouton restent **ancrés en bas du média**, pas en 
 
 **Ma réserve sur l'emplacement, à lire avant de dessiner.** Un bandeau permanent en haut d'un fil est l'inventaire publicitaire le plus facile à vendre et **le moins performant** : on apprend très vite à ne plus le voir, et il coûte 9 % de la surface principale en continu. L'inventaire qui se vend cher dans un fil, c'est la **carte sponsorisée insérée dans le fil lui-même** — plein écran, au format d'une campagne, marquée « Sponsorisé », tous les cinq ou six contenus. Elle ne coûte aucun espace permanent et se regarde vraiment.
 
-Je garde le bandeau comme tu l'as demandé : il est visible, démontrable devant un jury, et vendable dès maintenant sans ciblage ni mesure. Mais si tu veux un jour monter tes tarifs, c'est la carte sponsorisée qu'il faudra construire — elle est notée en évolution au §19 du cahier des charges.
+Je garde le bandeau comme tu l'as demandé : il est visible, démontrable devant un jury, et vendable dès maintenant sans ciblage ni mesure. Mais si tu veux un jour monter tes tarifs, c'est la carte sponsorisée qu'il faudra construire — elle est notée en évolution au §20 du cahier des charges.
 
 **États à dessiner**
 
@@ -835,7 +835,7 @@ Le lien doit ouvrir **directement la campagne, consultable sans rien installer n
 1. En-tête « Paiement », retour.
 2. **Bandeau de démonstration**, `Encart` `info`, **tout en haut et à dessiner** : « **Démonstration** — aucun paiement réel n'est effectué. »
 
-   Ne le cache pas. Notre argument est la sécurité de l'argent : nous nous jugeons d'abord sur notre franchise. Un jury qui découvre seul que le paiement est faux le prend bien plus mal que s'il l'a lu. Il disparaîtra au branchement de l'agrégateur agréé (§17.2 du cahier des charges).
+   Ne le cache pas. Notre argument est la sécurité de l'argent : nous nous jugeons d'abord sur notre franchise. Un jury qui découvre seul que le paiement est faux le prend bien plus mal que s'il l'a lu. Il disparaîtra au branchement de l'agrégateur agréé (§18.2 du cahier des charges).
 3. **Montant** au centre : `5 000 F` en 32 Bold, puis « Écouteurs filaires avec micro — 1 part + livraison ». Une ligne dépliable « Détail » affiche 4 000 F + 1 000 F.
 4. **Moyen de paiement** : deux cartes sélectionnables 100 × 80, **T-Money** et **Flooz**.
 5. **Champ numéro**, pré-rempli, modifiable — le numéro de paiement peut différer du numéro du compte.
@@ -934,7 +934,7 @@ Ne promets pas ici que l'argent « reste détenu » : à ce stade, le groupeur a
 1. En-tête « Questions », retour, rappel de la campagne : vignette 48 + « Écouteurs filaires avec micro ».
 2. **Questions courantes d'abord**, pas le champ libre. Une rangée de pastilles tactiles à 36 px, défilables horizontalement : « Quelle marque ? » · « Quelle origine ? » · « Quand la livraison ? » · « Quelles variantes ? » · « Autre question ». Un appui envoie directement.
 
-   **C'est une mesure de sécurité autant qu'un confort** (§13.2 du cahier des charges) : la plupart des questions légitimes n'ont alors aucun texte libre, et le texte libre redevient l'exception.
+   **C'est une mesure de sécurité autant qu'un confort** (§14.2 du cahier des charges) : la plupart des questions légitimes n'ont alors aucun texte libre, et le texte libre redevient l'exception.
 
 3. **Champ de question libre**, sous les pastilles : « Posez votre question sur ce produit… », 2 lignes, bouton « Envoyer ».
 4. **Mention sous le champ**, 12 px : « Votre question et la réponse seront visibles par tout le monde. » À lire avant d'écrire.
@@ -958,7 +958,7 @@ Ne promets pas ici que l'argent « reste détenu » : à ce stade, le groupeur a
 
 ### Les états de modération — à dessiner
 
-Le filtre du §13.2 du cahier des charges a besoin de ses écrans, sinon il n'existe pas. **Trois états à maquetter**, et le premier est le plus important.
+Le filtre du §14.2 du cahier des charges a besoin de ses écrans, sinon il n'existe pas. **Trois états à maquetter**, et le premier est le plus important.
 
 **a) Message refusé — le cas courant, et le plus important à bien écrire.**
 
@@ -1261,7 +1261,7 @@ Une question sans réponse est une vente qui n'a pas lieu : c'est pourquoi elle 
 
 ### Le filtre s'applique ici aussi — et plus fermement
 
-**C'est le côté risqué du fil** (§13.2 du cahier des charges). L'acheteur n'a rien à gagner à sortir de la plateforme ; le groupeur, si. Les états de modération de l'écran 10 s'appliquent donc **à l'identique sur ses réponses**, et deux éléments s'ajoutent.
+**C'est le côté risqué du fil** (§14.2 du cahier des charges). L'acheteur n'a rien à gagner à sortir de la plateforme ; le groupeur, si. Les états de modération de l'écran 10 s'appliquent donc **à l'identique sur ses réponses**, et deux éléments s'ajoutent.
 
 **a) L'avertissement de première réponse.** Une feuille, affichée **une seule fois**, à sa toute première réponse. Fond blanc, icône bouclier en `confiance` :
 
@@ -1406,6 +1406,69 @@ Un tableau de bord qui donne un chiffre sans point de comparaison ne sert à rie
 | **Lien expiré** | Page simple : « Ce lien a expiré. Demandez un nouveau lien à Group Achat. » |
 
 **Sécurité à matérialiser dans la maquette :** le lien ne couvre **que la tournée du jour**, il expire le soir, et il n'affiche aucun montant. Une page qui liste des noms, des adresses et des numéros de téléphone est une page sensible — c'est à ce titre qu'elle se dessine, et pas comme un simple formulaire.
+
+---
+
+# Lot 5 — l'administration
+
+## Écran A1 — Tableau de bord administrateur
+
+**C'est la seule maquette côté administrateur.** Tout le reste — fiches, recherche, édition, actions — vit dans l'admin Django et ne se dessine pas (§13.6 du cahier des charges). Cette page-ci existe parce que c'est précisément ce que l'admin Django ne sait pas faire : donner une vue d'ensemble en un écran.
+
+**À dessiner en 1280 × 800**, et non en 390 : c'est le seul écran du produit destiné à un ordinateur. L'administrateur travaille assis, avec un clavier, pas dans un taxi.
+
+**Chrome neutre**, ni orange ni bleu. Fond `surface-douce`, cartes blanches. Les deux chromes de marque appartiennent aux deux publics ; l'outil interne n'en porte aucun, et cette neutralité est utile : elle évite de confondre une capture d'écran interne avec le produit.
+
+### L'ordre vertical, qui est tout le propos
+
+**1. Les alertes**, pleine largeur, en haut. Une ligne par alerte, la plus grave en premier. `Encart` `danger` pour un changement de compte Mobile Money, `attention` pour un plafond approché. **Rien quand il n'y a rien** — pas de bloc vide « aucune alerte », qui prend de la place et apprend à ignorer la zone.
+
+**2. Les six files de travail**, en grille de 3 × 2. Une carte par file :
+
+- le **nombre** en `Prix`, c'est ce qu'on lit de loin
+- le libellé en `Corps-fort`
+- **le plus ancien en attente** en `Petit` — « le plus ancien : 3 jours ». C'est cette ligne qui fait agir, pas le compteur
+- la carte entière est cliquable vers la vue filtrée de l'admin Django
+
+| File | Démonstration |
+|---|---|
+| Dossiers KYC à valider | **4** · le plus ancien : 2 jours |
+| Justificatifs d'achat à contrôler | **2** · le plus ancien : 1 jour |
+| Contestations à arbitrer | **1** · le plus ancien : 4 jours |
+| **Livraisons non confirmées (7 j)** | **3** · le plus ancien : 9 jours |
+| Messages signalés | **6** · le plus ancien : 1 jour |
+| Retours de colis | **0** |
+
+**La carte « Livraisons non confirmées » se distingue des cinq autres** : filet `danger` et non `bordure`. C'est la seule file où **notre propre argent** est exposé, puisque le groupeur a déjà été payé. Les autres coûtent de la confiance ; celle-ci coûte du cash — et un écran qui les traite à égalité ment sur les priorités.
+
+**Une file à zéro reste affichée**, en `texte-secondaire`, sans mise en avant. Faire disparaître une file vide déplace les cartes d'un jour à l'autre, et on ne retrouve plus rien.
+
+**3. Les quatre indicateurs**, en ligne, sous les files. Libellé, valeur, variation sur 30 jours :
+
+| Indicateur | Démonstration |
+|---|---|
+| **Argent détenu en ce moment** | **1 284 000 F** |
+| Campagnes en cours | **11** · dont 3 à échéance sous 48 h |
+| Taux de livraison (30 j) | **94 %** |
+| Commission encaissée (30 j) | **72 400 F** |
+
+Sous le premier, une ligne qui n'est pas décorative : « **Rapprochement : écart de 0 F** » en `succes`, ou l'écart en `danger` s'il y en a un. **C'est la ligne la plus sérieuse de l'écran** — le jour où l'argent détenu calculé et le solde réel divergent, quelque chose ne va pas, et il faut le voir tout de suite.
+
+**4. Activité récente**, en bas : dix lignes datées — campagne clôturée, versement effectué, dossier validé, litige tranché. C'est le seul bloc du tableau de bord qui regarde le passé, et c'est pour ça qu'il est en dernier.
+
+### Ce qui ne doit pas y figurer
+
+- **Le nombre d'inscrits en grand.** C'est la mesure qui flatte et n'engage à rien. Ce qui compte, c'est le nombre de campagnes allées jusqu'à la livraison.
+- **Aucun bouton qui déplace de l'argent.** Depuis le tableau de bord on *va vers* un dossier ; on ne rembourse pas en un clic depuis une vue d'ensemble, sans avoir ouvert le dossier. Toute action sur l'argent est tracée et motivée (§18.3 du cahier des charges).
+- **Aucune donnée personnelle.** Des compteurs et des montants. Un nom n'apparaît qu'une fois le dossier ouvert, et cet accès est journalisé (§13.5).
+
+### Les états à maquetter
+
+| État | Affichage |
+|---|---|
+| **Journée calme** — l'état le plus fréquent, et celui qu'on oublie | Pas d'alertes, files à zéro ou à un, indicateurs normaux. Il doit être agréable à regarder : un administrateur qui ouvre son écran tous les matins pour voir un mur rouge finit par ne plus l'ouvrir |
+| **Alerte sérieuse** | Un changement de compte Mobile Money en haut, en `danger`, avec le nom du groupeur et un lien vers son dossier |
+| **Écart de rapprochement** | La ligne sous l'argent détenu passe en `danger` : « Écart de 12 500 F — à instruire » |
 
 ---
 

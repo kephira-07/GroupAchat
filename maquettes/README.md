@@ -30,6 +30,7 @@ Un fichier par écran, numéroté comme dans [SPEC_ECRANS_FIGMA.md](../SPEC_ECRA
 20-questions-recues.png
 21-statistiques-groupeur.png
 22-tournee-livreur.png
+a1-tableau-bord-admin.png     1280 × 800, pas 390
 ```
 
 Les **états** vont dans un fichier séparé, suffixé :

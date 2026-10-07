@@ -1,7 +1,7 @@
 # Group Achat — cahier des charges
 
-> Version : 1.5 — dossier livraison ouvert
-> Lomé, Togo · interface en français · application mobile
+> Version : 1.6 — web d'abord, mobile ensuite
+> Lomé, Togo · interface en français · **web aujourd'hui, mobile pour le grand public**
 > Légende : **À définir** = volontairement vide. *(proposition)* = à valider par toi.
 > Documents liés : [contenu des écrans pour Figma](SPEC_ECRANS_FIGMA.md) — [le partenariat de livraison](LIVRAISON.md)
 
@@ -94,7 +94,7 @@ L'acheteur ne juge donc pas un groupeur : il fait confiance à Group Achat. C'es
 
    La raison est économique : un acheteur qui peut identifier et joindre le groupeur traite directement avec lui la fois suivante, sans la plateforme, sans garantie et sans commission. L'anonymat protège le modèle autant que l'acheteur.
 
-5. **Les échanges passent par la plateforme.** L'acheteur pose ses questions **publiquement** sous une campagne, le groupeur répond, et la réponse est visible de tous. **Il n'existe aucun canal privé.** Tout message est filtré avant publication pour en retirer les coordonnées et les tentatives de prise de contact direct — voir §13.2.
+5. **Les échanges passent par la plateforme.** L'acheteur pose ses questions **publiquement** sous une campagne, le groupeur répond, et la réponse est visible de tous. **Il n'existe aucun canal privé.** Tout message est filtré avant publication pour en retirer les coordonnées et les tentatives de prise de contact direct — voir §14.2.
 
 6. **Le groupeur est maître de sa campagne.** Il choisit le produit, le prix, la quantité par part, la durée, et c'est lui qui décide, à la clôture, si la commande passe ou non. La plateforme n'impose **aucun minimum de participants**.
 
@@ -210,7 +210,7 @@ Une plateforme dont l'argument est la sécurité ne peut pas se permettre une pu
 
 #### Le coût technique, à ne pas sous-estimer
 
-Le bandeau ajoute des images à charger **sur l'écran le plus coûteux en données de l'application** (§17.1). D'où trois contraintes : **images fixes uniquement, pas de vidéo publicitaire**, chargement différé après le contenu de la campagne, et désactivation en mode économie de données — où l'emplacement devient un simple texte avec le nom de l'annonceur. Ce point doit figurer dans le contrat de l'annonceur, pour qu'il ne découvre pas la règle après coup.
+Le bandeau ajoute des images à charger **sur l'écran le plus coûteux en données de l'application** (§18.1). D'où trois contraintes : **images fixes uniquement, pas de vidéo publicitaire**, chargement différé après le contenu de la campagne, et désactivation en mode économie de données — où l'emplacement devient un simple texte avec le nom de l'annonceur. Ce point doit figurer dans le contrat de l'annonceur, pour qu'il ne découvre pas la règle après coup.
 
 ## 10. Sécurisation du circuit — comment tenir la promesse de fiabilité
 
@@ -445,9 +445,92 @@ Je ne propose pas de rouvrir la fenêtre — ton choix se défend. Je propose de
 
 Délais de réponse du groupeur, durée maximale d'un litige : **À définir**
 
-## 13. Confiance et anonymat
+## 13. L'administrateur — le troisième rôle
 
-### 13.1 Ce qui remplace la réputation individuelle
+L'administrateur était jusqu'ici une ligne dans le tableau des acteurs. Il mérite mieux, parce qu'il **n'est pas un spectateur : il est l'opérateur dont dépend tout le circuit de l'argent.**
+
+### 13.1 Pourquoi ce rôle porte le produit
+
+Relis le §10 : la promesse de fiabilité ne tient pas par la technique, elle tient par **des décisions humaines prises à temps**. Valider un dossier KYC. Contrôler un justificatif d'achat. Arbitrer une contestation. Décider si on rembourse ou si on libère.
+
+Chacune de ces décisions a de l'argent derrière elle, et chacune a un **délai** au-delà duquel on perd — soit la confiance d'un acheteur, soit la trésorerie de Group Achat. **Un administrateur qui prend trois jours de retard coûte plus cher qu'un bug.**
+
+D'où le principe qui gouverne tout son écran :
+
+> **Son tableau de bord n'est pas un rapport, c'est une liste de travail.** Ce qui attend une décision passe avant ce qui s'est passé.
+
+C'est la même règle que le « À faire aujourd'hui » du groupeur, et pour la même raison : un écran qui ouvre sur des totaux flatteurs laisse pourrir ce qui est urgent.
+
+### 13.2 Ce qu'il voit — les files d'attente d'abord
+
+Six files, et chacune porte un compteur et un délai. Ce sont elles qui occupent le haut de l'écran.
+
+| File | Ce qui s'y décide | Ce qu'on perd en tardant |
+|---|---|---|
+| **Dossiers KYC à valider** | Un groupeur peut-il lancer des campagnes, et jusqu'à quel plafond (§10.5) | Du recrutement — notre vrai goulot d'étranglement |
+| **Justificatifs d'achat à contrôler** | La marchandise a-t-elle été commandée (§10.3) | Le seul point où l'on vérifie que l'argent versé est allé au produit |
+| **Contestations à arbitrer** | Rembourser l'acheteur ou libérer au groupeur (§12) | La confiance de l'acheteur, et vite |
+| **Livraisons non confirmées à 7 jours** | Instruction d'un dossier où le groupeur est déjà payé (§12) | **De la trésorerie** — c'est la file la plus coûteuse |
+| **Messages signalés** | Modération, et comptage des tentatives (§14.2) | L'anonymat, donc la commission |
+| **Retours de colis** | Qui reprend, qui stocke, qui paie ([LIVRAISON.md](LIVRAISON.md) §4) | De l'argent, et la patience d'un acheteur |
+
+**La quatrième file mérite d'être mise en avant visuellement**, et pas par goût de la couleur : c'est la seule où **notre propre argent** est exposé, puisque le groupeur a déjà été payé. Les autres coûtent de la confiance ; celle-ci coûte du cash.
+
+### 13.3 Ce qu'il voit ensuite — les indicateurs
+
+En dessous des files, et seulement en dessous. Quatre chiffres suffisent, chacun avec sa variation :
+
+- **Argent détenu en ce moment** — la somme des parts collectées sur des campagnes non clôturées. **C'est le chiffre le plus important du produit** : c'est l'argent des autres que nous détenons, et il doit toujours être rapproché du solde bancaire réel.
+- **Campagnes en cours**, et combien arrivent à échéance dans 48 h.
+- **Taux de livraison** sur 30 jours, et taux de contestation.
+- **Commission encaissée** sur la période.
+
+**Un indicateur à ne surtout pas afficher en grand : le nombre d'inscrits.** C'est la mesure qui flatte et qui n'engage à rien. Ce qui compte au démarrage, c'est le nombre de campagnes allées **jusqu'à la livraison**.
+
+### 13.4 Les alertes — ce qui remonte tout seul
+
+Le §10.5 définit une surveillance continue, mais une surveillance que personne ne regarde n'existe pas. Elle se matérialise ici, en haut de l'écran, et par ordre de gravité :
+
+1. **Changement de compte Mobile Money d'un groupeur** — le signal numéro un du §10.5
+2. **Groupeur approchant son plafond d'exposition**
+3. **Compteur de messages bloqués** au-delà du seuil (§14.2)
+4. **Campagne clôturée sans décision** à l'approche des 48 h
+5. **Écart de rapprochement** entre l'argent détenu calculé et le solde réel
+
+La cinquième n'a l'air de rien et c'est la plus sérieuse : **le jour où les deux chiffres divergent, quelque chose ne va pas**, et le découvrir tôt change tout.
+
+### 13.5 L'administrateur est le point faible de l'anonymat
+
+Toute l'architecture du §14 repose sur le fait que personne ne voit les deux côtés. **L'administrateur, lui, voit tout** : les noms des acheteurs, les pièces d'identité des groupeurs, les numéros, les adresses, les montants. C'est nécessaire — on ne peut pas arbitrer un litige à l'aveugle — mais c'est une concentration de risque qu'il faut traiter comme telle.
+
+**Quatre mesures, et elles ne coûtent presque rien si elles sont prises au début :**
+
+- **Deux profils, pas un.** Un profil *support* qui voit les commandes, les campagnes et les messages, sans accéder aux pièces d'identité ni déclencher un versement ; un profil *direction* qui a tout. Au démarrage une seule personne porte les deux — mais la séparation doit exister avant la première embauche, pas après.
+- **Un journal d'accès aux données sensibles.** Qui a ouvert quelle pièce d'identité, et quand. C'est ce qui transforme une promesse de confidentialité en engagement vérifiable.
+- **Toute action sur l'argent est tracée et motivée.** Un remboursement, une libération de fonds, un déblocage de plafond : qui, quand, pourquoi. Jamais de bouton qui déplace de l'argent sans laisser de trace (§18.3).
+- **Aucune suppression, jamais.** On annule, on rembourse, on suspend — on n'efface pas. Un enregistrement effacé est une preuve perdue le jour du litige.
+
+### 13.6 Django admin ou écran sur mesure — tranché
+
+**Les deux, et la répartition est nette.**
+
+| Quoi | Où | Pourquoi |
+|---|---|---|
+| Les six files de travail, la recherche, les fiches, les actions | **Admin Django** | C'est gratuit, immédiat, déjà sécurisé et déjà journalisé. Reconstruire un outil d'édition de données est le travail le plus inutile qu'on puisse s'infliger |
+| **Un seul écran de synthèse** : alertes, compteurs des six files, quatre indicateurs | **Page sur mesure** | C'est ce qui manque vraiment à l'admin Django, et c'est l'écran qu'on montre à un jury |
+
+Ce découpage donne le maximum d'effet pour le minimum de travail : **une page à écrire**, le reste étant de la configuration. Les files d'attente sont des vues filtrées de l'admin, et les actions sont des actions d'admin.
+
+### 13.7 Hors périmètre pour l'administrateur
+
+- Statistiques avancées, cohortes, entonnoirs de conversion
+- Export comptable automatisé
+- Notifications par SMS ou e-mail vers l'administrateur *(il ouvre son écran ; les alertes y sont)*
+- Gestion de plusieurs villes ou de plusieurs devises
+
+## 14. Confiance et anonymat
+
+### 14.1 Ce qui remplace la réputation individuelle
 
 Tu as retiré la certification : **tous les groupeurs présents sont sélectionnés par nous**, c'est la garantie. L'acheteur ne compare donc pas les groupeurs entre eux, et ne voit d'eux qu'un pseudonyme.
 
@@ -461,7 +544,7 @@ Ce qui remplace la réputation individuelle, côté acheteur :
 
 **Avis et notes :** retirés de l'interface acheteur, puisqu'il n'y a pas de profil à noter. Mais il serait dommage de ne pas mesurer la fiabilité **en interne** : taux de campagnes livrées, délais, litiges, c'est ce qui alimente les plafonds de 10.4. Affichage public d'un indicateur agrégé : **À définir**
 
-### 13.2 La modération des échanges publics
+### 14.2 La modération des échanges publics
 
 C'est le dernier endroit par où l'anonymat peut fuir. Les deux côtés sont anonymes (§13, §1.7 de la spec écrans), les identités ne circulent plus sur les colis — **il ne reste que le fil de questions**. Il doit être traité comme un point de sécurité, pas comme un espace de discussion.
 
@@ -528,21 +611,22 @@ Un groupeur qui s'y reprend à trois fois ne s'est pas trompé — il essaie. **
 | **MVP / compétition** | Niveau 1 + bouton Signaler + file de modération admin + compteur de tentatives. **Aucune dépendance réseau** — la démonstration fonctionne hors ligne |
 | **Phase 2** | Niveau 2, le classifieur IA, avec un état « en vérification » pour les cas incertains et une revue humaine derrière |
 
-## 14. Périmètre du MVP
+## 15. Périmètre du MVP
 
-- **Produit :** application mobile (Android et iOS), base de code unique.
-- **Démonstration de compétition :** prototype web reproduisant l'application, ouvrable depuis un lien, sans installation.
-- **Paiement simulé dans un premier temps.** Le parcours de paiement est complet et crédible, mais aucun argent réel ne circule : l'agrégateur agréé n'est pas encore en place (§17.2). Le branchement du paiement réel ne change ni les écrans, ni les statuts, ni la logique métier — seul le connecteur diffère.
+- **Produit, v1 :** **application web** (React), ouvrable depuis un lien, sans installation. C'est ce qui sert la compétition **et** les premiers vrais utilisateurs.
+- **Produit, ensuite :** **application mobile Android et iOS** — c'est la version destinée au grand public, parce que c'est là que vit notre utilisateur type (§5). Le web n'est pas un brouillon du mobile : il reste l'outil d'administration et le point d'entrée sans installation.
+- **Conséquence à tenir dès maintenant :** le web est conçu **mobile d'abord**, à 390 px de large, exactement comme les maquettes. Un web pensé pour un écran d'ordinateur ne se transforme pas en application mobile — il se refait.
+- **Paiement simulé dans un premier temps.** Le parcours de paiement est complet et crédible, mais aucun argent réel ne circule : l'agrégateur agréé n'est pas encore en place (§18.2). Le branchement du paiement réel ne change ni les écrans, ni les statuts, ni la logique métier — seul le connecteur diffère.
 - Ville : Lomé. Langue : français.
 
-### 14.1 Ordre de priorité
+### 15.1 Ordre de priorité
 
 1. **Commander une part dans une campagne et payer.** Le fil, la campagne, la quantité, l'adresse, le paiement, le suivi. Sans cela, il n'y a pas de produit.
 2. **Lancer et gérer une campagne, côté groupeur.** Créer, suivre les participants, clôturer, décider, déposer les justificatifs, être payé.
 3. **La demande de produit par l'acheteur.** Elle fait naître l'offre et rend le catalogue illimité sans gérer de stock.
 4. **Le contrôle administrateur.** Recrutement des groupeurs, vérification des justificatifs, déblocage des fonds, litiges.
 
-### 14.2 Hors périmètre, assumé
+### 15.2 Hors périmètre, assumé
 
 - Retrait sur place : attend le local.
 - Compte et application pour le livreur : le partenaire est un prestataire, pas un utilisateur.
@@ -550,9 +634,9 @@ Un groupeur qui s'y reprend à trois fois ne s'est pas trompé — il essaie. **
 - Langues locales et recherche vocale.
 - Abonnements et visibilité payante.
 
-## 15. Parcours
+## 16. Parcours
 
-### 15.1 Acheteur
+### 16.1 Acheteur
 
 Il ouvre l'application et **fait défiler** les campagnes en plein écran, photo ou vidéo, comme un fil de réseau social. Une campagne l'intéresse : il ouvre le détail, lit le prix, la quantité par part, le délai restant, les questions déjà posées. Il peut en poser une.
 
@@ -562,7 +646,7 @@ Il suit sa commande : *payée*, puis *campagne clôturée*, puis *commande en co
 
 Si la campagne est annulée, il est notifié et **remboursé intégralement**.
 
-### 15.2 Groupeur
+### 16.2 Groupeur
 
 Nous le recrutons, vérifions son identité, lui faisons signer un contrat et lui créons son accès. Il choisit un **pseudonyme**.
 
@@ -574,11 +658,15 @@ Il crée la campagne : produit détaillé — caractéristiques, état, garantie
 
 À la clôture, **il décide** : la commande passe, ou pas. S'il maintient, il dépose son devis fournisseur, reçoit l'avance, achète, dépose son reçu. La marchandise arrive, le partenaire livre. **Son solde lui est versé après les livraisons confirmées, moins la commission.**
 
-### 15.3 Administrateur
+### 16.3 Administrateur
 
-Il recrute et vérifie les groupeurs, fixe leur plafond, contrôle les devis et les reçus, débloque les avances et les soldes, surveille les campagnes en retard, arbitre les contestations et modère les questions.
+**Il ouvre son tableau de bord et regarde ce qui attend une décision**, pas ce qui s'est passé. Six files : dossiers KYC, justificatifs d'achat, contestations, livraisons non confirmées à 7 jours, messages signalés, retours de colis. Il traite en priorité la quatrième, la seule où notre propre trésorerie est exposée.
 
-## 16. Écrans
+Au-dessus des files, les alertes remontées toutes seules — changement de compte Mobile Money, plafond approché, écart de rapprochement. En dessous, quatre indicateurs, dont **l'argent détenu en ce moment**, qu'il rapproche du solde bancaire réel.
+
+Il recrute et vérifie les groupeurs, fixe leur plafond, contrôle les reçus, débloque les fonds, arbitre les contestations, modère, et gère les emplacements publicitaires. Détail complet au §13.
+
+## 17. Écrans
 
 **Acheteur**
 1. Fil des campagnes (défilement vertical plein écran)
@@ -603,26 +691,29 @@ Il recrute et vérifie les groupeurs, fixe leur plafond, contrôle les devis et 
 18. Portefeuille
 19. Fil des demandes
 20. Questions reçues
+21. Statistiques
 
 **Livreur** — page web, sans compte ni installation
-21. Tournée du livreur
+22. Tournée du livreur
 
-**Administrateur** — dans l'admin Django, sans maquette
-22. Recrutement et gestion des groupeurs
-23. Contrôle des justificatifs et déblocage des fonds
-24. Litiges et contestations
-25. Emplacements publicitaires : annonceur, visuel, période, lien, activation
+**Administrateur** — une seule maquette, le reste en admin Django (§13.6)
+- **A1. Tableau de bord** — *à maquetter* : alertes, les six files de travail, quatre indicateurs
+- A2. Recrutement, dossiers KYC et plafonds — admin Django
+- A3. Justificatifs d'achat et déblocage des fonds — admin Django
+- A4. Contestations et livraisons non confirmées — admin Django
+- A5. Modération et messages signalés — admin Django
+- A6. Emplacements publicitaires : annonceur, visuel, période, lien, activation — admin Django
 
-## 17. Contraintes non fonctionnelles
+## 18. Contraintes non fonctionnelles
 
-### 17.1 Interface et réseau
+### 18.1 Interface et réseau
 
 - Application légère, pensée pour une connexion lente et un forfait data limité.
 - **Le fil en défilement vidéo est le point de vigilance du projet** : c'est l'écran le plus coûteux en données, sur le public le plus sensible au coût des données. Les mesures à prendre sont détaillées au §1.6 du document Figma.
 - Gros boutons, textes lisibles, contraste élevé.
 - Aucune action engageant de l'argent ne doit pouvoir être exécutée deux fois à cause d'une coupure réseau : chaque requête de paiement porte une **clé d'idempotence**.
 
-### 17.2 Conformité et paiement
+### 18.2 Conformité et paiement
 
 **Phase 1 — paiement simulé.** Le parcours est complet de bout en bout, mais aucun argent réel ne circule. Le prototype l'**affiche honnêtement** : un bandeau « Démonstration — aucun paiement réel n'est effectué » sur l'écran de paiement et sur le portefeuille du groupeur. Une plateforme dont l'argument est la sécurité de l'argent se juge d'abord sur sa franchise : un jury qui découvre seul que le paiement est faux le prend bien plus mal que s'il l'a lu.
 
@@ -635,17 +726,21 @@ Il recrute et vérifie les groupeurs, fixe leur plafond, contrôle les devis et 
 
 Architecturalement, le passage de la phase 1 à la phase 2 ne touche qu'une seule couche : le connecteur de paiement. Statuts, écrans, calculs d'avance et de solde, journal des opérations sont identiques dans les deux cas. C'est à cette condition que le travail de la phase 1 n'est pas perdu.
 
-### 17.3 Traçabilité
+### 18.3 Traçabilité
 
 Journal horodaté de **tous** les mouvements d'argent et de **tous** les changements de statut : paiements, versements d'avance, dépôts de justificatifs, livraisons confirmées, remboursements, décisions d'arbitrage. C'est à la fois l'exigence comptable, la preuve en cas de litige, et la matière des plafonds de 10.4.
 
-## 18. Stack technique
+## 19. Stack technique
 
 **Architecture.** API séparée de l'interface. Le back-end expose une API indépendante que le prototype web consomme aujourd'hui et que l'application mobile consommera. **Toute la logique métier — détention des fonds, calcul de la commission, avances, soldes, statuts — vit côté serveur, jamais dans l'application.** Une application installée ne se corrige pas par un déploiement : ce qui est côté serveur se corrige le jour même.
 
 **Back-end :** Django + Django REST Framework, PostgreSQL. L'admin Django sert de back-office pour le recrutement, le contrôle des justificatifs, le déblocage des fonds et les litiges.
 
-**Front :** Flutter, compilé pour Android, iOS et le web — le prototype de compétition est ainsi le code de l'application, et non du travail jeté.
+**Front, v1 :** **React**, application web responsive conçue **mobile d'abord** (390 px). C'est le choix de la vitesse : on livre quelque chose d'utilisable sans passer par les magasins d'applications, et on corrige en déployant.
+
+**Front, ensuite :** une **application mobile Android et iOS** pour le grand public. Le travail n'est pas perdu : toute la logique métier vit côté serveur (voir ci-dessus), et l'application mobile consommera **la même API** que le web. Ce qui se refait, c'est l'interface — pas le produit.
+
+> **La décision à ne pas prendre trop vite :** React Native permettrait de partager du code entre le web et le mobile, Flutter donnerait une meilleure application mais aucun partage avec React. Ce choix ne se tranche pas maintenant — il se tranche quand le web aura des utilisateurs et qu'on saura ce qu'ils font. Choisir aujourd'hui, c'est choisir sans information.
 
 **Intégrité.** Toute opération touchant à l'argent passe par une transaction avec verrouillage de ligne (`SELECT FOR UPDATE`) : pas de double versement d'avance, pas de double validation de livraison, pas de double paiement.
 
@@ -660,7 +755,7 @@ MVP : commande de gestion Django appelée par un cron horaire. Plus tard : Celer
 
 **Stockage des médias.** Les vidéos du fil changent la nature du problème : il faut un stockage objet et une diffusion adaptée, pas des fichiers servis par le serveur applicatif. Solution retenue : **À définir**
 
-## 19. Évolutions
+## 20. Évolutions
 
 - Retrait sur place dès l'ouverture d'un local.
 - Intégration technique avec le service de livraison partenaire.
@@ -673,9 +768,9 @@ MVP : commande de gestion Django appelée par un cron horaire. Plus tard : Celer
 
 **Prérequis à mettre en place dès le MVP :** ces derniers usages supposent un historique qui n'existera pas au départ. Enregistrer proprement, dès maintenant, chaque changement de statut avec sa date, chaque justificatif avec son montant, chaque livraison avec son heure et chaque demande avec son quartier. C'est gratuit aujourd'hui et irrécupérable plus tard.
 
-## 20. État des décisions
+## 21. État des décisions
 
-### 20.1 Tranché
+### 21.1 Tranché
 
 | Sujet | Décision | Où |
 |---|---|---|
@@ -684,23 +779,23 @@ MVP : commande de gestion Django appelée par un cron horaire. Plus tard : Celer
 | Versement au groupeur | **Intégral, à la clôture**, avant la livraison | §10.1 |
 | Organisation de la livraison | **Group Achat et son partenaire** par défaut ; le groupeur s'il a son livreur | §11.2 |
 | Preuve de livraison | **Le livreur saisit le code de l'acheteur**, via un lien de tournée | §11.3 |
-| Paiement | **Simulé** en phase 1, réel dès l'agrégateur agréé | §17.2 |
+| Paiement | **Simulé** en phase 1, réel dès l'agrégateur agréé | §18.2 |
 | Vérification des groupeurs | **Sept contrôles, trois niveaux** selon l'exposition | §10.5 |
 | Caution | **Pas de caution obligatoire.** Paiement direct au fournisseur, plafond, garant et historique en tiennent le rôle | §10.6 |
 | Anonymat des groupeurs | Pseudonyme seul, aucune page de profil, aucun contact | §7 règle 4 |
 
-### 20.2 Rien ne bloque plus la maquette
+### 21.2 Rien ne bloque plus la maquette
 
 Les écrans peuvent être dessinés en entier. Les deux points ouverts qui restent — le barème hors Lomé et le seuil de paiement direct au fournisseur — n'empêchent aucun écran : le premier est une ligne de tarif, le second une règle interne invisible de l'acheteur.
 
-### 20.3 Bloquant avant d'encaisser réellement
+### 21.3 Bloquant avant d'encaisser réellement
 
 - Agrégateur de paiement, compte marchand, structure juridique constituée.
 - Avis juridique sur la détention de fonds et sur la promesse « livré ou remboursé ».
 - **Tarifs de l'agrégateur** — ils déterminent si 5 % de commission laissent une marge nette viable.
 - **Seuil de paiement direct au fournisseur** (§10.3). C'est désormais la seule mesure qui supprime le risque plutôt que de le borner : je recommande de le fixer bas.
 
-### 20.4 À traiter pendant la construction
+### 21.4 À traiter pendant la construction
 
 - Plafonds d'exposition par niveau *(propositions en §10.4 et §10.5)*.
 - **Barème des frais de livraison hors de Lomé.**
