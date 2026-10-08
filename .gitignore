@@ -1,0 +1,8 @@
+# Les variables de `docker-compose.yml` : mot de passe PostgreSQL, clé de
+# signature Django, jeton d'administration. Le dépôt ne contient que
+# `.env.exemple`, sans secret — un identifiant commité est un identifiant brûlé.
+.env
+
+# Les paquets construits par les images du front.
+frontend/dist/
+frontend/dist-admin/

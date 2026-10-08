@@ -64,9 +64,27 @@ function servirAdminALaRacine(): Plugin {
      * profonde (voir `src/admin/main.tsx`), donc la seule page legitime est
      * `admin.html` elle-meme.
      */
+    /*
+     * ⚠️ **Les chemins internes de Vite passent sans etre reecrits.**
+     *
+     * Sans cette exclusion, `/@vite/client` — dernier segment `client`, pas de
+     * point — etait pris pour une page et renvoye vers `admin.html`. Vite
+     * recevait alors du HTML la ou il attendait un module JavaScript, et
+     * echouait a l'analyse d'import : **le serveur de developpement de
+     * l'administration ne demarrait plus du tout**, avec un message parlant
+     * d'« invalid JS syntax » dans un fichier `.html` — qui ne designe pas la
+     * cause.
+     *
+     * Le meme piege guette `/@fs/`, `/@id/` et le client de rechargement a
+     * chaud. Tous commencent par `/@`, sauf le repertoire des dependances
+     * pre-bundlees.
+     */
+    const estInterneAVite =
+      chemin.startsWith("/@") || chemin.startsWith("/node_modules/");
+
     const dernierSegment = chemin.slice(chemin.lastIndexOf("/") + 1);
     const estUnFichier = dernierSegment.includes(".");
-    if (!estUnFichier || chemin === "/index.html") {
+    if (!estInterneAVite && (!estUnFichier || chemin === "/index.html")) {
       requete.url = "/admin.html";
     }
     suivant();
@@ -84,6 +102,22 @@ function servirAdminALaRacine(): Plugin {
 }
 
 export default defineConfig({
+  /**
+   * Le `.env` de la racine du depot, le meme que Docker Compose et Django.
+   *
+   * Par defaut Vite cherche ses `.env` dans `frontend/`. Il y avait donc un
+   * `frontend/.env.local` a cote de `backend/.env` et de `.env` — trois
+   * fichiers pour les memes valeurs, et `VITE_API_URL` devait rester d'accord
+   * avec le `CORS_ORIGINES` d'un autre fichier sans que rien ne le verifie.
+   *
+   * ⚠️ **Ce fichier contient des secrets, et ils ne partent pas dans le
+   * paquet.** Vite n'expose a `import.meta.env` que les variables prefixees
+   * `VITE_` : `POSTGRES_PASSWORD`, `DJANGO_SECRET_KEY` et `JETON_ADMIN` sont
+   * lues puis ignorees. C'est verifie par une recherche de leurs valeurs dans
+   * `dist/` apres construction, pas suppose.
+   */
+  envDir: "..",
+
   plugins: [react(), tailwindcss(), servirAdminALaRacine()],
 
   /**

@@ -1,0 +1,641 @@
+# -*- coding: utf-8 -*-
+"""Acheteurs, groupeurs et dossiers KYC.
+
+**La règle d'anonymat se joue ici, dans la forme même des modèles** (§1.7 de la
+spec des écrans). Un acheteur a un nom et un numéro ; un groupeur a un
+pseudonyme. Aucune relation ne permet à un groupeur de remonter d'une commande
+vers l'acheteur qui l'a passée : il ne voit que le code de livraison et le
+quartier, et c'est ce qui l'empêche de se constituer un fichier de clients à
+servir hors plateforme, au même prix, sans commission.
+"""
+
+from __future__ import annotations
+
+from datetime import timedelta
+from decimal import Decimal
+
+from django.core.exceptions import ValidationError
+from django.db import models
+from django.utils import timezone
+
+from .. import domaine, notifications
+
+
+class Acheteur(models.Model):
+    """Un acheteur. Créé au moment de payer, jamais avant (§1.5).
+
+    Il n'y a ni mot de passe ni e-mail : un numéro et un code SMS suffisent.
+    Chaque champ ajouté ici est un acheteur perdu à un écran du paiement.
+
+    ## L'adresse par défaut
+
+    ``quartier`` et ``repere`` sont **la dernière adresse de livraison
+    utilisée**, pas une adresse de facturation. Elle est enregistrée au moment
+    du premier paiement — l'acheteur vient de la saisir à l'écran précédent,
+    donc on ne lui demande rien de plus — et sert à pré-remplir les commandes
+    suivantes.
+
+    ⚠️ **Elle ne remplace jamais celle de la commande.** Chaque commande garde
+    sa propre copie de la position (§6 du PRD) : on se fait livrer ailleurs un
+    jour sur dix, et une commande qui lirait l'adresse du compte changerait
+    rétroactivement de destination le jour où l'acheteur déménage. Le livreur
+    doit voir l'adresse qui valait **au moment de la commande**.
+    """
+
+    telephone = models.CharField("téléphone", max_length=20, unique=True)
+    nom = models.CharField("nom", max_length=120, blank=True)
+
+    #: La dernière adresse de livraison, pour pré-remplir la prochaine commande.
+    quartier = models.CharField("quartier", max_length=40, blank=True)
+    repere = models.CharField("repère", max_length=200, blank=True)
+
+    cree_le = models.DateTimeField("créé le", auto_now_add=True)
+
+    #: ⚠️ **Présent pour DRF, qui place cet objet dans ``request.user``.**
+    #:
+    #: Un acheteur n'est pas un ``django.contrib.auth.User`` — il n'a ni mot de
+    #: passe, ni permissions, ni groupes, et il ne doit surtout pas en avoir :
+    #: ce sont deux populations différentes, et un acheteur ne doit jamais
+    #: pouvoir ouvrir l'admin Django. Mais DRF interroge
+    #: ``request.user.is_authenticated`` sur ce qu'une classe
+    #: d'authentification lui rend, et sans cet attribut la lecture lève.
+    #:
+    #: C'est la manière documentée d'employer un modèle qui n'est pas le modèle
+    #: utilisateur de Django. Elle vaut `True` en dur : une instance d'acheteur
+    #: n'existe dans ``request.user`` que si un jeton valide l'y a mise.
+    is_authenticated = True
+    is_anonymous = False
+
+    class Meta:
+        verbose_name = "acheteur"
+        verbose_name_plural = "acheteurs"
+        ordering = ("-cree_le",)
+
+    def __str__(self) -> str:
+        return self.nom or self.telephone
+
+
+class Groupeur(models.Model):
+    """Un groupeur. **Les acheteurs n'en voient que le pseudonyme.**
+
+    ``nom_complet`` existe pour le dossier KYC et l'administration ; il ne doit
+    jamais sortir par une API destinée aux acheteurs. Les sérialiseurs du
+    catalogue ne l'exposent pas, et un test le vérifie — c'est le genre de
+    fuite qui s'introduit par un ``fields = "__all__"`` distrait.
+    """
+
+    class Niveau(models.TextChoices):
+        ENTREE = "entree", "Entrée"
+        CONFIRME = "confirme", "Confirmé"
+        ETABLI = "etabli", "Établi"
+
+    class StatutKyc(models.TextChoices):
+        A_COMPLETER = "a-completer", "À compléter"
+        EN_VERIFICATION = "en-verification", "En vérification"
+        VALIDE = "valide", "Validé"
+        REFUSE = "refuse", "Refusé"
+
+    pseudonyme = models.CharField("pseudonyme", max_length=60, unique=True)
+    nom_complet = models.CharField("nom complet", max_length=120)
+    telephone = models.CharField("téléphone", max_length=20, unique=True)
+
+    #: Par où on lui annonce la décision sur son dossier.
+    #:
+    #: **Facultatif, et ce n'est pas un oubli.** Une partie du cœur de cible —
+    #: des commerçants de Lomé, souvent dans l'informel — n'a pas d'adresse de
+    #: messagerie consultée, mais répond au téléphone. Exiger un courriel pour
+    #: s'inscrire écarterait exactement ces gens-là, alors que le recrutement
+    #: est le goulot d'étranglement du lancement (§10.5).
+    #:
+    #: Le téléphone étant obligatoire, un groupeur reste toujours joignable par
+    #: au moins un canal : l'appel. Voir ``notifications.py``.
+    courriel = models.EmailField("courriel", blank=True)
+
+    niveau = models.CharField(
+        "niveau de vérification",
+        max_length=20,
+        choices=Niveau.choices,
+        default=Niveau.ENTREE,
+    )
+    statut_kyc = models.CharField(
+        "statut du dossier",
+        max_length=20,
+        choices=StatutKyc.choices,
+        default=StatutKyc.A_COMPLETER,
+    )
+
+    #: Le compte qui recevra les versements. Son titulaire doit porter le même
+    #: nom que la pièce d'identité — c'est le contrôle n° 2 du §10.5.
+    titulaire_mobile_money = models.CharField(
+        "titulaire du compte Mobile Money", max_length=120, blank=True
+    )
+    numero_mobile_money = models.CharField(
+        "numéro Mobile Money", max_length=20, blank=True
+    )
+
+    cree_le = models.DateTimeField("créé le", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "groupeur"
+        verbose_name_plural = "groupeurs"
+        ordering = ("pseudonyme",)
+
+    def __str__(self) -> str:
+        return self.pseudonyme
+
+    @property
+    def plafond(self) -> Decimal | None:
+        """Le plafond de collecte par campagne, déduit du niveau (§10.4).
+
+        ``None`` au niveau Établi : il se décide au cas par cas, et le
+        formulaire d'administration doit le demander plutôt que d'en inventer
+        un.
+        """
+        return domaine.PLAFONDS_KYC[self.niveau]
+
+    @property
+    def peut_lancer_une_campagne(self) -> bool:
+        """Un dossier non validé ne lance rien.
+
+        C'est ce qui donne son sens à la phrase « groupeurs sélectionnés par
+        Group Achat » affichée à l'acheteur sur presque chaque écran.
+        """
+        return self.statut_kyc == self.StatutKyc.VALIDE
+
+    @property
+    def dossier_en_attente(self) -> bool:
+        """Le dossier est déposé et attend un administrateur.
+
+        C'est l'état dans lequel un groupeur passe le plus de temps, et celui
+        que l'interface doit savoir dessiner : ni « validé », ni « refusé »,
+        mais « quelqu'un regarde, revenez ».
+        """
+        return self.statut_kyc == self.StatutKyc.EN_VERIFICATION
+
+    @property
+    def derniere_decision(self) -> "DecisionKyc | None":
+        """La dernière décision prise sur ce dossier, s'il y en a eu une.
+
+        Sert à l'écran du groupeur, qui doit pouvoir afficher le motif d'un
+        refus — un refus sans motif visible est une porte fermée sans poignée.
+        """
+        return self.decisions_kyc.first()
+
+    # ── Le cycle de vie du dossier ──────────────────────────────────────────
+    #
+    # À compléter ──soumettre()──▶ En vérification ──trancher()──▶ Validé
+    #      ▲                             │                        Refusé
+    #      └────── trancher("a-completer")┘
+    #
+    # **Aucune transition n'est automatique.** Le §10.5 confie la décision à un
+    # humain, et c'est le produit : « nous sélectionnons nos groupeurs » ne
+    # vaut que si quelqu'un a réellement regardé le dossier.
+
+    def soumettre_le_dossier(self) -> None:
+        """Le groupeur dépose son dossier : il part en file d'attente.
+
+        Idempotent sur un dossier déjà en vérification — un double appui sur
+        « Envoyer » ne doit pas créer deux entrées dans la file de
+        l'administrateur.
+        """
+        if self.statut_kyc == self.StatutKyc.VALIDE:
+            raise ValidationError(
+                "Ce dossier est déjà validé : il n'y a rien à soumettre."
+            )
+        if self.statut_kyc == self.StatutKyc.EN_VERIFICATION:
+            return
+        self.statut_kyc = self.StatutKyc.EN_VERIFICATION
+        self.save()
+
+    def trancher(
+        self,
+        issue: str,
+        decide_par: str,
+        canal: str,
+        motif: str | None = None,
+        niveau: str | None = None,
+    ) -> "DecisionKyc":
+        """Un administrateur décide, et la décision est tracée.
+
+        Trois issues et non deux : ``a-completer`` renvoie le dossier au
+        groupeur sans le refuser, et c'est l'issue la plus utile des trois — la
+        plupart des dossiers qui échouent le font sur une photo floue, et les
+        refuser définitivement pour cela ferait perdre des groupeurs
+        recrutables.
+
+        ⚠️ **Le motif est obligatoire dès que ce n'est pas une validation**, et
+        la règle est vérifiée dans ``notifications.verifier`` plutôt qu'ici :
+        l'interface d'administration l'applique avant même d'enregistrer, et
+        les deux chemins doivent dire la même chose.
+
+        La décision est enregistrée **sans être annoncée** : c'est
+        ``DecisionKyc.marquer_notifie`` qui l'acte. La raison est écrite au
+        long dans ``notifications.py`` — un refus annoncé par appel suppose que
+        quelqu'un ait décroché le téléphone, et le journal ne doit pas
+        prétendre le contraire.
+        """
+        if self.statut_kyc != self.StatutKyc.EN_VERIFICATION:
+            raise ValidationError(
+                "Seul un dossier en vérification peut être tranché."
+            )
+
+        notifications.verifier(issue, motif)
+
+        if issue == "valide":
+            self.niveau = niveau or self.Niveau.ENTREE
+            self.statut_kyc = self.StatutKyc.VALIDE
+        elif issue == "a-completer":
+            self.statut_kyc = self.StatutKyc.A_COMPLETER
+        elif issue == "refuse":
+            self.statut_kyc = self.StatutKyc.REFUSE
+        else:
+            raise ValidationError(f"Issue inconnue : {issue}")
+
+        # ⚠️ Voir `save` : sans ce drapeau, un dossier dont le compte Mobile
+        # Money n'est pas au bon nom ne peut pas être refusé — alors que c'est
+        # exactement le motif pour lequel on le refuse.
+        self.save(verifier_concordance=False)
+
+        return DecisionKyc.objects.create(
+            groupeur=self,
+            issue=issue,
+            motif=motif or "",
+            niveau_accorde=self.niveau if issue == "valide" else "",
+            decide_par=decide_par,
+            canal=canal,
+        )
+
+    def clean(self) -> None:
+        """Contrôle KYC n° 2 — la procédure s'arrête si les noms divergent.
+
+        ⚠️ **C'est une règle sur ce qu'un groupeur a le droit de *déposer*, pas
+        sur ce qu'un administrateur a le droit d'*enregistrer*.** La nuance a
+        coûté un bug sérieux, décrit dans ``save``.
+        """
+        super().clean()
+        if self._verifier_concordance and self.titulaire_mobile_money and not domaine.noms_concordent(
+            self.nom_complet, self.titulaire_mobile_money
+        ):
+            raise ValidationError(
+                {
+                    "titulaire_mobile_money": (
+                        "Le titulaire du compte Mobile Money doit porter le même "
+                        "nom que la pièce d'identité. L'argent des acheteurs ne "
+                        "peut partir que sur un compte au nom du groupeur."
+                    )
+                }
+            )
+
+    #: Drapeau interne lu par ``clean``. Voir ``save``.
+    _verifier_concordance = True
+
+    def save(self, *args, verifier_concordance: bool = True, **kwargs):
+        """Valide avant d'écrire — sauf quand on enregistre une sanction.
+
+        ``full_clean`` n'est pas appelé automatiquement par ``save`` : sur un
+        contrôle qui garde l'argent des acheteurs, on ne compte pas sur le fait
+        que tous les appelants penseront à valider.
+
+        ⚠️ **``verifier_concordance=False`` existe à cause d'un vrai bug, et
+        il faut comprendre lequel avant d'y toucher.** Le contrôle n° 2 refuse
+        un groupeur dont le compte Mobile Money n'est pas à son nom. Comme il
+        s'appliquait à *toute* écriture, il rendait la ligne **impossible à
+        modifier** une fois ce défaut présent — y compris pour y écrire
+        ``statut_kyc = refuse``.
+
+        Autrement dit : **le seul dossier qu'on ne pouvait pas refuser était
+        celui qui devait l'être.** L'administrateur recevait un 400 portant le
+        message du contrôle n° 2, ce qui avait toutes les apparences d'un refus
+        justifié — c'est ce qui rendait le défaut difficile à voir.
+
+        La règle reste donc entière là où elle sert, c'est-à-dire **à la
+        saisie** : ``api_kyc.InscriptionSerializer`` la vérifie avant de créer
+        quoi que ce soit, et l'interface d'administration la montre en rouge.
+        Elle est seulement levée pour ``trancher``, qui n'écrit ni le nom ni le
+        compte — seulement l'issue de l'examen.
+
+        Un dossier peut entrer dans cet état de deux façons : par une
+        modification du compte après le dépôt — qui est le signal d'alerte
+        numéro un du §10.5 — ou par une correction manuelle en base. Dans les
+        deux cas, il faut pouvoir le trancher.
+        """
+        self._verifier_concordance = verifier_concordance
+        try:
+            self.full_clean(exclude=None, validate_unique=False)
+        finally:
+            # Remis à la valeur sûre : l'objet peut être ré-enregistré plus
+            # tard par un tout autre chemin, qui, lui, doit être contrôlé.
+            self._verifier_concordance = True
+        return super().save(*args, **kwargs)
+
+
+class PieceKyc(models.Model):
+    """Une pièce déposée par un groupeur — recto, verso, selfie, étal.
+
+    ⚠️ **Aucun ``ImageField`` ici, et c'est délibéré.** Le §10.5 exige que les
+    pièces d'identité et les selfies ne se trouvent **pas dans le même
+    stockage que les photos de produits**, que l'accès soit restreint à
+    l'administrateur, et qu'une durée de conservation soit fixée. Un
+    ``ImageField`` les déposerait dans ``MEDIA_ROOT``, c'est-à-dire exactement
+    là où elles ne doivent pas être, et sous une URL devinable.
+
+    Ce modèle ne garde donc qu'une **référence opaque** vers un stockage à
+    accès restreint, qui reste à mettre en place. Tant qu'il n'existe pas, ce
+    champ porte un identifiant de démonstration : **la plateforme ne doit pas
+    recevoir de vraie pièce d'identité avant** que le stockage et la durée de
+    conservation soient tranchés.
+
+    Durée de conservation : **à définir** (§10.5). Elle conditionne une tâche
+    de purge qui n'est pas écrite.
+    """
+
+    class Nature(models.TextChoices):
+        PIECE_RECTO = "piece-recto", "Pièce d'identité — recto"
+        PIECE_VERSO = "piece-verso", "Pièce d'identité — verso"
+        SELFIE = "selfie", "Selfie tenant la pièce"
+        ETAL = "etal", "Lieu d'activité"
+        JUSTIFICATIF = "justificatif", "Justificatif d'activité"
+
+    groupeur = models.ForeignKey(
+        Groupeur,
+        on_delete=models.CASCADE,
+        related_name="pieces",
+        verbose_name="groupeur",
+    )
+    nature = models.CharField("nature", max_length=20, choices=Nature.choices)
+
+    #: La clé dans le stockage à accès restreint. Jamais une URL publique.
+    reference = models.CharField("référence de stockage", max_length=200)
+
+    depose_le = models.DateTimeField("déposée le", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "pièce KYC"
+        verbose_name_plural = "pièces KYC"
+        ordering = ("groupeur", "nature")
+        # Une pièce par nature : redéposer un recto remplace l'ancien, il ne
+        # s'ajoute pas. Sinon l'administrateur examine une pile et ne sait plus
+        # laquelle est la bonne.
+        constraints = [
+            models.UniqueConstraint(
+                fields=["groupeur", "nature"], name="une_piece_par_nature"
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.groupeur.pseudonyme} — {self.get_nature_display()}"
+
+
+class DecisionKyc(models.Model):
+    """Une décision d'administrateur sur un dossier KYC, et son annonce.
+
+    **C'est une pièce de journal, pas un champ d'état.** Le statut courant vit
+    sur le groupeur ; ce modèle garde *qui* a décidé, *quand*, *pourquoi*, et
+    *par quel canal* le groupeur l'a appris. Le §18.3 l'exige pour les
+    mouvements d'argent, et un dossier KYC relève de la même logique : c'est
+    lui qu'on relit le jour d'un litige, ou le jour où un groupeur écarté
+    revient demander pourquoi.
+
+    Les lignes ne sont **jamais modifiées ni supprimées** : un dossier repris
+    produit une nouvelle décision, qui n'effface pas la précédente. L'histoire
+    d'un dossier est ce qui permet de voir qu'un groupeur en est à sa troisième
+    tentative.
+    """
+
+    groupeur = models.ForeignKey(
+        Groupeur,
+        on_delete=models.CASCADE,
+        related_name="decisions_kyc",
+        verbose_name="groupeur",
+    )
+
+    class Issue(models.TextChoices):
+        VALIDE = "valide", "Validé"
+        A_COMPLETER = "a-completer", "À compléter"
+        REFUSE = "refuse", "Refusé"
+
+    class Canal(models.TextChoices):
+        COURRIEL = "courriel", "Courriel"
+        APPEL = "appel", "Appel téléphonique"
+
+    issue = models.CharField("issue", max_length=20, choices=Issue.choices)
+
+    #: Un des motifs de ``notifications.MOTIFS``. Vide sur une validation.
+    #:
+    #: Liste fermée plutôt que texte libre : au bout de six mois, un champ
+    #: libre contient quarante formulations du même refus, et on ne peut plus
+    #: compter pourquoi les dossiers échouent — donc plus corriger le
+    #: formulaire d'inscription qui les fait échouer.
+    motif = models.CharField("motif", max_length=40, blank=True)
+
+    niveau_accorde = models.CharField("niveau accordé", max_length=20, blank=True)
+
+    #: Qui a décidé.
+    #:
+    #: ⚠️ Un nom en clair, parce qu'il n'y a **pas encore d'authentification**
+    #: dans ce projet. Le jour où l'administration en aura une, ce champ
+    #: devient une clé étrangère vers l'utilisateur, et cette ligne disparaît.
+    #: En l'état, il repose sur la bonne foi de celui qui le remplit : ça
+    #: suffit pour une démonstration, **pas pour un journal opposable**.
+    decide_par = models.CharField("décidé par", max_length=120)
+
+    decide_le = models.DateTimeField("décidé le", auto_now_add=True)
+
+    canal = models.CharField(
+        "canal d'annonce", max_length=20, choices=Canal.choices
+    )
+
+    #: Quand le groupeur a réellement été prévenu. ``None`` = pas encore.
+    #:
+    #: Séparé de ``decide_le`` parce que les deux instants diffèrent : le
+    #: courriel part dans la seconde, l'appel attend qu'un humain décroche. Un
+    #: dossier tranché mais non annoncé est un dossier dont le groupeur ne sait
+    #: rien — l'administration doit pouvoir les lister.
+    notifie_le = models.DateTimeField("annoncé le", null=True, blank=True)
+
+    class Meta:
+        verbose_name = "décision KYC"
+        verbose_name_plural = "décisions KYC"
+        ordering = ("-decide_le",)
+
+    def __str__(self) -> str:
+        return f"{self.groupeur.pseudonyme} — {self.get_issue_display()}"
+
+    @property
+    def libelle_motif(self) -> str:
+        """Le motif tel que l'administrateur le lit. Vide sur une validation."""
+        return notifications.libelle_interne(self.motif) if self.motif else ""
+
+    def composer(self) -> tuple[str, str] | str:
+        """Le message à envoyer, ou le script à lire au téléphone.
+
+        Le texte n'est **pas stocké**. Le stocker figerait une formulation
+        qu'on corrige encore, et ferait croire qu'on peut relire mot pour mot
+        ce qui a été envoyé — ce qui serait faux pour un appel. Ce qui est
+        tracé, c'est la décision et son motif ; le texte s'en déduit.
+        """
+        plafond = self.groupeur.plafond
+        plafond_entier = int(plafond) if plafond is not None else None
+
+        if self.canal == self.Canal.APPEL:
+            return notifications.script_appel(
+                self.groupeur.pseudonyme, self.issue, self.motif or None, plafond_entier
+            )
+        if self.issue == self.Issue.VALIDE:
+            return notifications.message_validation(
+                self.groupeur.pseudonyme, plafond_entier
+            )
+        return notifications.message_decision_negative(
+            self.groupeur.pseudonyme, self.issue, self.motif
+        )
+
+    def marquer_notifie(self) -> None:
+        """Acte que le groupeur a été prévenu.
+
+        ⚠️ **À n'appeler qu'après l'avoir réellement été** — courriel parti, ou
+        téléphone décroché. Cocher cette case sans appeler produirait un
+        journal qui dit le contraire de ce qui s'est passé, et c'est ce journal
+        qu'on produira le jour d'un litige.
+        """
+        self.notifie_le = timezone.now()
+        self.save(update_fields=["notifie_le"])
+
+
+# ── Les comptes acheteurs : code SMS et session ─────────────────────────────
+
+
+class CodeConnexion(models.Model):
+    """Le code à quatre chiffres envoyé par SMS, et ses garde-fous.
+
+    ## Pourquoi un modèle, et pas une constante
+
+    Parce qu'un code de connexion a trois propriétés que seule une ligne en
+    base peut porter : il **expire**, il se **consomme**, et il n'autorise
+    qu'un **nombre fini d'essais**. Un code figé dans le code source n'en a
+    aucune — et c'est exactement ce qui faisait de l'écran 4 une simulation.
+
+    **Ce qui manque encore est l'envoi**, pas la vérification. Group Achat n'a
+    pas de fournisseur SMS (§18.2) : le code est généré, stocké et contrôlé
+    pour de bon, mais il ne part nulle part. En développement il vaut
+    ``CODE_SMS_DEMONSTRATION`` et l'écran le dit, plutôt que de laisser
+    chercher.
+
+    ⚠️ **Le serveur refuse de servir ce code quand ``DEBUG`` est faux.** Mettre
+    en ligne avec un code fixe donnerait à n'importe qui le compte de n'importe
+    quel numéro — c'est le genre de réglage de développement qui part en
+    production parce que rien ne l'arrête. Ici, quelque chose l'arrête.
+
+    ## Sur le hachage
+
+    Le code est haché, et il faut dire franchement ce que ça vaut : **quatre
+    chiffres, c'est dix mille possibilités**, qu'un attaquant ayant la base
+    épuise instantanément. Le hachage ne protège donc pas d'une fuite de base,
+    il évite seulement que des codes en vol traînent en clair dans des
+    sauvegardes et des journaux. **La vraie protection est le compteur
+    d'essais** : trois, puis le code est mort.
+    """
+
+    #: Dix minutes. Assez pour recevoir un SMS et le recopier, trop court pour
+    #: qu'un code lu par-dessus l'épaule serve le lendemain.
+    DUREE_MINUTES = 10
+
+    #: Trois essais, puis le code est mort et il faut en redemander un.
+    ESSAIS_MAXIMUM = 3
+
+    telephone = models.CharField("téléphone", max_length=20, db_index=True)
+    code_hache = models.CharField("code haché", max_length=128)
+    essais = models.PositiveSmallIntegerField("essais", default=0)
+    #: Mis à `True` dès qu'il a ouvert une session : un code ne sert qu'une fois.
+    consomme = models.BooleanField("consommé", default=False)
+    cree_le = models.DateTimeField("créé le", auto_now_add=True)
+    expire_le = models.DateTimeField("expire le")
+
+    class Meta:
+        verbose_name = "code de connexion"
+        verbose_name_plural = "codes de connexion"
+        ordering = ("-cree_le",)
+
+    def __str__(self) -> str:
+        return f"{self.telephone} — {self.cree_le:%d/%m %H:%M}"
+
+    @property
+    def utilisable(self) -> bool:
+        return (
+            not self.consomme
+            and self.essais < self.ESSAIS_MAXIMUM
+            and timezone.now() < self.expire_le
+        )
+
+
+class SessionAcheteur(models.Model):
+    """La session qui reconnaît l'acheteur à sa prochaine visite.
+
+    ## Pourquoi un jeton, et pas le numéro de téléphone
+
+    Jusqu'ici l'API identifiait l'acheteur par **son numéro, passé en paramètre
+    d'URL**. C'était commode et c'était un trou : qui connaît un numéro lit les
+    commandes qui vont avec. Retenir ce numéro dans le navigateur pour
+    reconnecter les gens automatiquement aurait rendu ce trou permanent.
+
+    Un jeton change trois choses, et les trois comptent :
+
+    | | Le numéro | Le jeton |
+    |---|---|---|
+    | Se devine | **oui**, huit chiffres | non, 256 bits |
+    | Expire | jamais | oui |
+    | Se révoque | impossible | oui, et sans changer de numéro |
+
+    C'est le minimum qu'on doive à quelqu'un dont on garde l'adresse et
+    l'historique d'achats.
+
+    ⚠️ **Ce n'est toujours pas un mot de passe.** Le jeton vit dans le
+    navigateur ; qui a l'appareil déverrouillé a le compte. C'est le compromis
+    assumé d'un produit dont le §1.5 interdit le mur d'authentification — on ne
+    peut pas à la fois ne rien demander à l'entrée et exiger un secret à chaque
+    visite.
+    """
+
+    #: Trente jours **glissants** : chaque usage repousse l'échéance. Un acheteur
+    #: qui commande tous les mois n'a jamais à refaire le code SMS ; un appareil
+    #: abandonné finit par ne plus ouvrir le compte.
+    DUREE_JOURS = 30
+
+    acheteur = models.ForeignKey(
+        Acheteur,
+        on_delete=models.CASCADE,
+        related_name="sessions",
+        verbose_name="acheteur",
+    )
+    #: Le jeton lui-même. **Indexé et unique** : il est lu à chaque requête.
+    jeton = models.CharField("jeton", max_length=64, unique=True, db_index=True)
+
+    cree_le = models.DateTimeField("ouverte le", auto_now_add=True)
+    expire_le = models.DateTimeField("expire le")
+    dernier_usage = models.DateTimeField("dernier usage", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "session acheteur"
+        verbose_name_plural = "sessions acheteurs"
+        ordering = ("-dernier_usage",)
+
+    def __str__(self) -> str:
+        return f"{self.acheteur} — jusqu'au {self.expire_le:%d/%m/%Y}"
+
+    @property
+    def valide(self) -> bool:
+        return timezone.now() < self.expire_le
+
+    def prolonger(self) -> None:
+        """Repousse l'échéance — la fenêtre glissante.
+
+        ⚠️ **Au plus une écriture par heure.** Prolonger à chaque requête
+        ferait un `UPDATE` par appel d'API, soit une écriture pour chaque
+        vignette affichée. L'heure est un compromis : la session glisse bien,
+        et la base n'est pas sollicitée pour rien.
+        """
+        maintenant = timezone.now()
+        if maintenant - self.dernier_usage < timedelta(hours=1):
+            return
+        self.dernier_usage = maintenant
+        self.expire_le = maintenant + timedelta(days=self.DUREE_JOURS)
+        self.save(update_fields=["dernier_usage", "expire_le"])

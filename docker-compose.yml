@@ -1,0 +1,176 @@
+# ╭──────────────────────────────────────────────────────────────────────────╮
+# │ Group Achat — les cinq services                                          │
+# ╰──────────────────────────────────────────────────────────────────────────╯
+#
+#   docker compose up --build
+#
+# | Service | Adresse | Ce que c'est |
+# |---|---|---|
+# | `boutique` | http://localhost:5173 | Acheteur, groupeur, livreur |
+# | | http://localhost:5173/presentation/ | **Le site de presentation** |
+# | `admin` | http://localhost:5174 | Ecrans A1 et A2 |
+# | `api` | http://localhost:8000 | Django + DRF, et l'admin Django sur `/admin/` |
+# | `base` | *(interne)* | PostgreSQL 17 |
+#
+# **Le site de presentation n'a plus ni service ni port a lui.** Il vit dans
+# `frontend/public/presentation/`, donc Vite le recopie dans le paquet de la
+# boutique, qui le sert depuis le meme port. Un fichier de moins a
+# deployer, un conteneur de moins a surveiller, et surtout : plus de port a
+# retenir.
+#
+# ⚠️ **La boutique reste a la racine**, la presentation est sous un
+# sous-chemin. C'est le §1.5 qui tranche : « un site marchand s'ouvre sur son
+# catalogue ». Mettre la presentation a `/` reviendrait a poser une page
+# d'explications entre le visiteur et les groupages.
+#
+# **Les ports publies sont ceux du developpement local** (5173, 5174, 8000) et
+# ce n'est pas un hasard : les valeurs par defaut de `CORS_ORIGINES` et de
+# `VITE_API_URL` les visent deja. Passer en conteneurs ne demande donc de
+# reconfigurer ni le navigateur, ni les origines autorisees.
+#
+# Avant le premier lancement : `cp .env.exemple .env`, puis renseigner les
+# trois secrets. Compose lit `.env` automatiquement.
+
+name: groupachat
+
+services:
+  # ── PostgreSQL ───────────────────────────────────────────────────────────
+  #
+  # **Le moteur du cahier des charges.** SQLite reste le secours hors
+  # conteneur ; ici la base est fournie, donc autant que les tests et la
+  # production tournent sur le meme moteur — les deux diffèrent sur les
+  # transactions, les contraintes et les types.
+  base:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-groupachat}
+      POSTGRES_USER: ${POSTGRES_USER:-groupachat}
+      # Sans valeur par defaut, et volontairement : une base de donnees avec un
+      # mot de passe devinable est une base ouverte. Compose s'arrete avec un
+      # message clair si `.env` ne le fournit pas.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?renseignez POSTGRES_PASSWORD dans .env}
+    volumes:
+      # ⚠️ **Le volume nomme est ce qui empeche de perdre la base.** Sans lui,
+      # les donnees vivent dans la couche ecrivable du conteneur et
+      # disparaissent au premier `docker compose down`.
+      - donnees-postgres:/var/lib/postgresql/data
+    healthcheck:
+      # `-U` et `-d` sont necessaires : sans eux, `pg_isready` interroge la
+      # base `postgres` avec l'utilisateur du systeme, et peut se declarer
+      # pret alors que la base de l'application n'existe pas encore.
+      test:
+        ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-groupachat} -d ${POSTGRES_DB:-groupachat}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+    # Aucun `ports:` — **et c'est voulu.** La base n'a aucune raison d'etre
+    # joignable depuis la machine hote : seule l'API lui parle, par le reseau
+    # interne de Compose. Publier 5432 l'exposerait au reseau local.
+
+  # ── L'API Django ─────────────────────────────────────────────────────────
+  api:
+    build:
+      context: ./backend
+    environment:
+      # `base` est le nom du service : Compose le resout en son adresse sur le
+      # reseau interne. C'est bien `base` et non `localhost` — dans un
+      # conteneur, `localhost` designe le conteneur lui-meme.
+      DATABASE_URL: postgres://${POSTGRES_USER:-groupachat}:${POSTGRES_PASSWORD}@base:5432/${POSTGRES_DB:-groupachat}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?renseignez DJANGO_SECRET_KEY dans .env}
+      # ⚠️ **`0` par defaut.** `DEBUG=1` affiche la trace complete et les
+      # reglages — donc les identifiants — sur la moindre erreur 500. Le
+      # defaut d'un fichier de deploiement doit etre le reglage sur.
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-0}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}
+      # Le jeton de l'ecran A2. Sans lui, `/api/dossiers/` echoue **fermee**,
+      # ce qui est le bon comportement : l'ecran affiche une erreur, il ne
+      # montre pas de dossiers.
+      JETON_ADMIN: ${JETON_ADMIN:?renseignez JETON_ADMIN dans .env}
+      # Le code SMS qui ouvre un compte acheteur. **Sans lui, la
+      # connexion repond 503 et personne ne peut commander** : Group
+      # Achat n'a pas de fournisseur SMS, et un code fixe mis en ligne
+      # pour de vrai donnerait a n'importe qui le compte de n'importe
+      # quel numero. `demonstration` est l'opt-in explicite qui rend
+      # une demonstration deployee utilisable. Voir `.env.exemple`.
+      SMS_FOURNISSEUR: ${SMS_FOURNISSEUR:-}
+      CORS_ORIGINES: ${CORS_ORIGINES:-http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174}
+      # Le jeu du §3, au premier demarrage. A passer a `0` ensuite : la
+      # commande reecrit les donnees de demonstration a chaque lancement.
+      CHARGER_DEMO: ${CHARGER_DEMO:-1}
+      # Laisses vides par defaut : le point d'entree ne cree alors aucun
+      # compte. Voir `.env.exemple` pour la mise en garde sur les mots de
+      # passe passes par l'environnement.
+      DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME:-}
+      DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-}
+      DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-admin@groupachat.tg}
+    ports:
+      - "${PORT_API:-8000}:8000"
+    depends_on:
+      base:
+        # ⚠️ **`service_healthy`, pas `service_started`.** Un conteneur
+        # PostgreSQL « demarre » n'accepte pas encore de connexion : au premier
+        # lancement il initialise son repertoire de donnees. Sans cette
+        # condition, les migrations partiraient dans le vide.
+        #
+        # Le point d'entree attend **en plus** la base par lui-meme : la
+        # verification de sante et l'attente applicative ne couvrent pas tout
+        # a fait la meme chose (voir `backend/entrypoint.sh`).
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── La boutique ──────────────────────────────────────────────────────────
+  boutique:
+    build:
+      context: ./frontend
+      target: boutique
+      args:
+        # ⚠️⚠️ **Lu a la CONSTRUCTION, et vu depuis le NAVIGATEUR.**
+        #
+        # Deux pieges d'un coup, et aucun des deux ne produit de message
+        # d'erreur :
+        #
+        # 1. Vite inscrit cette valeur **en clair dans le JavaScript produit**.
+        #    La changer demande `docker compose build boutique`, pas un
+        #    redemarrage. La mettre dans `environment:` n'aurait aucun effet ;
+        # 2. c'est le **navigateur** qui appellera cette adresse, pas le
+        #    conteneur. `http://api:8000/api` marche entre conteneurs et
+        #    echoue dans le navigateur, qui ne resout pas `api`.
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000/api}
+    ports:
+      - "${PORT_BOUTIQUE:-5173}:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  # ── L'administration ─────────────────────────────────────────────────────
+  #
+  # ⚠️ **Elle ne demande aucun mot de passe.** L'ecran A1 n'affiche que des
+  # compteurs, mais l'ecran A2 affiche des noms, des numeros et des references
+  # de pieces d'identite. Ce qui protege ces donnees aujourd'hui, c'est le
+  # jeton `X-Jeton-Admin` exige par `/api/dossiers/` cote backend : la page
+  # s'ouvre, les donnees ne viennent pas sans le jeton.
+  #
+  # **Avant une mise en ligne reelle** : retirer la publication de ce port et
+  # joindre ce service par un reseau prive ou un VPN. Tel quel, il convient a
+  # une machine de developpement et a une demonstration, pas a un VPS ouvert.
+  admin:
+    build:
+      context: ./frontend
+      target: admin
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000/api}
+    ports:
+      # `127.0.0.1:` devant le port — et c'est la difference avec la boutique.
+      # Ainsi ecrit, le port n'ecoute **que sur la machine locale** et non sur
+      # toutes ses interfaces : il n'est pas joignable depuis le reseau, meme
+      # si le pare-feu est permissif. C'est le garde-fou minimal pour une
+      # interface interne sans mot de passe.
+      - "127.0.0.1:${PORT_ADMIN:-5174}:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  donnees-postgres:

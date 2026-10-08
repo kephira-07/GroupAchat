@@ -1,0 +1,219 @@
+# Intégration continue — ce qui doit être vrai avant toute fusion.
+#
+# Trois travaux indépendants, qui tournent en parallèle. Le dernier construit
+# les images Docker **sans les publier** : c'est la seule façon de savoir que
+# les `Dockerfile` tiennent encore, et c'est précisément ce qu'une machine de
+# développement sous Windows sans démon Docker ne peut pas vérifier.
+
+name: Intégration continue
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  # Permet de relancer à la main depuis l'onglet Actions, utile quand un
+  # travail échoue pour une raison extérieure au code.
+  workflow_dispatch:
+
+# Une seule exécution par branche : un nouveau poussé annule le précédent.
+# Sans cela, trois poussés d'affilée font tourner neuf travaux dont sept ne
+# servent plus à rien.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Le backend ───────────────────────────────────────────────────────────
+  backend:
+    name: Backend — 160 tests sur PostgreSQL
+    runs-on: ubuntu-latest
+
+    # ⚠️ **PostgreSQL, et non SQLite.** Le cahier des charges impose
+    # PostgreSQL, et `backend/README.md` le dit : les deux moteurs diffèrent
+    # sur les transactions, les contraintes et les types, donc une suite verte
+    # sur SQLite ne prouve pas qu'elle passera en production. L'intégration
+    # continue est le seul endroit où ce moteur est garanti présent — c'est
+    # donc ici que la promesse « la suite tourne au moins une fois sur
+    # PostgreSQL » se tient, à chaque poussé plutôt qu'une fois avant la mise
+    # en ligne.
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: groupachat
+          POSTGRES_USER: groupachat
+          POSTGRES_PASSWORD: motdepasse-de-test
+        ports: ["5432:5432"]
+        # Sans cette vérification, les étapes démarrent avant que la base
+        # accepte les connexions, et `migrate` échoue une fois sur trois.
+        options: >-
+          --health-cmd "pg_isready -U groupachat -d groupachat"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgres://groupachat:motdepasse-de-test@localhost:5432/groupachat
+      # ⚠️ `DJANGO_DEBUG: 0` est délibéré : c'est le réglage de production, et
+      # il exerce le chemin strict des réglages — celui où l'absence de
+      # `DJANGO_SECRET_KEY` fait refuser le démarrage. En `1`, ce garde-fou ne
+      # serait jamais testé.
+      DJANGO_DEBUG: "0"
+      DJANGO_SECRET_KEY: cle-jetable-d-integration-continue-sans-valeur
+      JETON_ADMIN: jeton-jetable-d-integration-continue
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          # Met en cache les paquets pip d'un passage à l'autre, en se fiant à
+          # l'empreinte de `requirements.txt`.
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Installer les dépendances
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Vérifier les réglages de déploiement
+        # `--deploy` signale les réglages absents pour une mise en ligne. Les
+        # avertissements restants concernent tous HTTPS, qui se règle au
+        # reverse-proxy et non ici : on les affiche sans faire échouer, pour
+        # qu'ils restent visibles sans bloquer.
+        run: python manage.py check --deploy || true
+
+      - name: Les migrations s'appliquent
+        run: python manage.py migrate --noinput
+
+      - name: La suite de tests
+        run: python manage.py test groupachat --verbosity 2
+
+  # ── Le front ─────────────────────────────────────────────────────────────
+  front:
+    name: Front — typage et construction des deux paquets
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # `npm ci` et non `npm install` : il installe exactement les versions du
+      # verrou et échoue si `package.json` et `package-lock.json` ne
+      # concordent pas.
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Le typage
+        run: npm run typecheck
+
+      # `npm run build` enchaîne `tsc -b` puis les deux `vite build`, et
+      # produit `dist/` et `dist-admin/`.
+      #
+      # `VITE_API_URL` n'a pas d'importance ici : on vérifie que ça construit,
+      # pas que l'adresse est la bonne. Celle de production est passée au
+      # moment de publier les images (voir `deploiement.yml`).
+      - name: Construire les deux paquets
+        run: npm run build
+        env:
+          VITE_API_URL: http://127.0.0.1:8000/api
+
+      # ⚠️ **Le contrôle qui compte vraiment ici.** `.env` est lu par Vite
+      # (`envDir: ".."`), donc une variable mal préfixée ou un
+      # `import.meta.env` ajouté par distraction pourrait inscrire un secret
+      # en clair dans le JavaScript servi à tous les visiteurs. Vite ne doit
+      # exposer que les variables `VITE_`.
+      #
+      # On fabrique un `.env` avec des valeurs reconnaissables, on reconstruit,
+      # et on les cherche dans le paquet. Si l'une s'y trouve, le travail
+      # échoue.
+      - name: Aucun secret ne doit partir dans le paquet
+        run: |
+          cat > ../.env <<'FIN'
+          POSTGRES_PASSWORD=SENTINELLE-MOT-DE-PASSE-NE-DOIT-PAS-FUIR
+          DJANGO_SECRET_KEY=SENTINELLE-CLE-NE-DOIT-PAS-FUIR
+          JETON_ADMIN=SENTINELLE-JETON-NE-DOIT-PAS-FUIR
+          VITE_API_URL=http://127.0.0.1:8000/api
+          FIN
+          npm run build
+          if grep -rq "SENTINELLE-" dist dist-admin; then
+            echo "::error::Un secret du .env se retrouve dans le paquet construit."
+            grep -rl "SENTINELLE-" dist dist-admin
+            exit 1
+          fi
+          echo "Aucune sentinelle dans dist/ ni dist-admin/."
+          rm -f ../.env
+
+  # ── Les images ───────────────────────────────────────────────────────────
+  images:
+    name: Images Docker — construction à blanc
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      # `push: false` : on construit pour savoir que ça construit, on ne
+      # publie rien. La publication est le travail de `deploiement.yml`.
+      #
+      # Le cache GitHub Actions évite de réinstaller les dépendances à chaque
+      # passage ; `mode=max` garde aussi les étapes intermédiaires, ce qui
+      # compte pour une construction en deux étapes.
+      - name: L'image de l'API
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: false
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,scope=api,mode=max
+
+      - name: L'image de la boutique
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          target: boutique
+          push: false
+          build-args: |
+            VITE_API_URL=http://127.0.0.1:8000/api
+          cache-from: type=gha,scope=front
+          cache-to: type=gha,scope=front,mode=max
+
+      - name: L'image de l'administration
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          target: admin
+          push: false
+          build-args: |
+            VITE_API_URL=http://127.0.0.1:8000/api
+          cache-from: type=gha,scope=front
+
+      # Le fichier Compose doit rester lisible et ses variables résolubles.
+      # Une faute de syntaxe ou une variable obligatoire oubliée se verrait
+      # sinon au déploiement, c'est-à-dire trop tard.
+      - name: Le fichier Compose est valide
+        run: |
+          cp .env.exemple .env
+          sed -i 's/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=verification/' .env
+          sed -i 's/^DJANGO_SECRET_KEY=.*/DJANGO_SECRET_KEY=verification/' .env
+          sed -i 's/^JETON_ADMIN=.*/JETON_ADMIN=verification/' .env
+          docker compose config --quiet
+          docker compose -f docker-compose.prod.yml config --quiet
+          rm -f .env
+          echo "docker-compose.yml et docker-compose.prod.yml sont valides."

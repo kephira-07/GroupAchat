@@ -263,6 +263,50 @@ Puisque nous recrutons les groupeurs nous-mêmes, nous disposons d'une informati
 
 Un plafond n'empêche pas la fraude, il **borne le montant maximal d'un sinistre** — ce qui, pour une jeune structure, est la différence entre un incident et une fermeture. Il ne coûte rien à mettre en place et remplace utilement la certification abandonnée : la fiabilité se construit en livrant, pas en déposant des pièces.
 
+### 10.4 bis Le compte acheteur — créé au moment de payer
+
+**On navigue sans compte.** Le §1.5 l'interdit à l'entrée, et pour une raison économique : tout écran placé entre quelqu'un et le produit fait perdre des visiteurs. Le compte est demandé **au moment de rejoindre un groupage**, c'est-à-dire au bouton « Payer » — et pas avant.
+
+Le moment compte. À « Commander », l'acheteur n'a encore rien choisi : abandonner ne lui coûte rien. À « Payer », il a choisi sa quantité, sa variante et son adresse : il va au bout. Déplacer la demande plus tôt coûterait des commandes sans rien protéger.
+
+#### Ce qu'on lui demande, et ce qu'on ne lui demande pas
+
+| Demandé | Pas demandé |
+|---|---|
+| Son **numéro**, vérifié par code SMS | Un mot de passe |
+| Son **nom**, après le code | Une adresse de messagerie |
+| Rien d'autre | Une date de naissance, un genre, une « confirmation » |
+
+**Son adresse est enregistrée sans être demandée.** Au moment où la feuille de connexion s'ouvre, il vient de saisir son quartier et son repère à l'écran précédent : ils partent avec le code et deviennent son adresse par défaut. Ses commandes suivantes arrivent pré-remplies, modifiables — on se fait livrer ailleurs un jour sur dix.
+
+⚠️ **L'adresse du compte ne remplace jamais celle de la commande.** Chaque commande garde sa propre copie de la position (§6 du PRD) : le livreur doit voir l'adresse qui valait au moment de la commande, pas celle du compte si l'acheteur déménage entre-temps.
+
+#### Le nom vient après le code, et c'est délibéré
+
+Prouver qu'on a le téléphone est la seule chose qui engage. Un formulaire posé avant cette preuve serait rempli par n'importe qui, et le compte ainsi créé ne vaudrait rien. Le code validé ouvre donc la session, **puis** l'écran demande le nom.
+
+#### La session — pourquoi un jeton et pas le numéro
+
+L'acheteur est reconnu à sa visite suivante sans refaire de code. Ce qui le reconnaît est **un jeton délivré par le serveur**, et non son numéro de téléphone. La différence n'est pas technique :
+
+| | Le numéro | Le jeton |
+|---|---|---|
+| Se devine | **oui**, huit chiffres | non, 256 bits |
+| Expire | jamais | 30 jours glissants |
+| Se révoque | impossible sans changer de numéro | oui |
+
+Identifier quelqu'un par son numéro — ce que faisait l'API jusqu'ici — revenait à donner ses commandes à qui connaît ce numéro : un reçu, un répertoire, ou simplement huit chiffres essayés au hasard. C'est le minimum qu'on doive à quelqu'un dont on garde l'adresse et l'historique d'achats.
+
+⚠️ **Ce n'est toujours pas un mot de passe.** Le jeton vit dans le navigateur : qui a l'appareil déverrouillé a le compte. C'est le compromis assumé d'un produit qui interdit le mur d'authentification — on ne peut pas à la fois ne rien demander à l'entrée et exiger un secret à chaque visite.
+
+#### Le code SMS
+
+Quatre chiffres, valables **dix minutes**, **trois essais**, et il ne sert qu'une fois. Le code est généré et contrôlé pour de bon ; ce qui manque est **son envoi** — Group Achat n'a pas de fournisseur SMS (§18.2).
+
+⚠️ **Le serveur refuse de servir un code fixe hors développement.** Sans fournisseur configuré, la demande de code répond 503 plutôt que d'ouvrir un compte à qui connaît le code de démonstration. Un réglage de développement ne doit pas pouvoir partir en production par simple oubli : il faut que quelque chose l'arrête.
+
+Sur le hachage du code, il faut être franc : quatre chiffres, c'est dix mille possibilités qu'un attaquant ayant la base épuise instantanément. Le hachage évite seulement que des codes en vol traînent en clair dans des sauvegardes. **La vraie protection est le compteur d'essais.**
+
 ### 10.5 Vérifier les groupeurs — la procédure KYC
 
 **KYC**, pour *Know Your Customer*, désigne l'ensemble des contrôles qui permettent d'établir qu'une personne est bien celle qu'elle prétend être, et qu'on sait où la retrouver. Deux KYC différents interviennent dans ce projet, et il faut les distinguer :
@@ -311,7 +355,30 @@ Signalement automatique, **décision humaine**.
 
 #### Outils et conservation
 
-**Dans le MVP, tout se fait à la main**, dans l'admin Django : dépôt des pièces par le groupeur, examen par un administrateur, validation, attribution du niveau et du plafond. À ce volume, c'est le bon choix — et c'est aussi ce qui nous apprend à qui nous avons affaire.
+**Dans le MVP, tout se fait à la main** : dépôt des pièces par le groupeur, examen par un administrateur, validation, attribution du niveau et du plafond. À ce volume, c'est le bon choix — et c'est aussi ce qui nous apprend à qui nous avons affaire.
+
+Deux outils le permettent, et ils font le même travail. L'**admin Django** reste disponible et donne accès aux références des pièces déposées, avec un accès journalisé. L'**écran A2** du produit a été construit parce que l'admin Django ne sait pas faire trois choses dont dépend ce parcours : trier la file par ancienneté d'attente plutôt que par date de création, montrer d'un coup d'œil si les noms concordent sans ouvrir chaque fiche, et **afficher le texte que le groupeur recevra avant qu'on tranche**.
+
+#### Annoncer la décision — par écrit ou de vive voix
+
+Un dossier tranché dont l'intéressé ne sait rien ne vaut pas mieux qu'un dossier non tranché : il a quitté la file d'attente, donc plus personne ne le reprend, et le groupeur attend une réponse qui ne viendra jamais. **C'est la panne silencieuse de ce parcours**, et l'écran A2 lui réserve une section en tête de file.
+
+La décision part donc par l'un des deux canaux, qui sont **de rang égal** :
+
+| Canal | Quand | Ce que fait la plateforme |
+|---|---|---|
+| **Courriel** | Le groupeur en a déposé un | Il part dans la seconde, et la décision est marquée annoncée |
+| **Appel téléphonique** | Sinon, ou si on préfère | La plateforme fournit **un script à lire**, et la décision reste *à annoncer* jusqu'à ce qu'un administrateur ait confirmé avoir appelé |
+
+L'appel n'est pas un pis-aller. Une partie du cœur de cible — des commerçants de Lomé, souvent dans l'informel — n'a pas d'adresse de messagerie consultée mais répond au téléphone. **Le courriel est donc facultatif à l'inscription, le téléphone obligatoire** : ainsi aucun groupeur n'est injoignable, et il n'existe aucune décision impossible à annoncer.
+
+Le script d'appel n'est pas une formalité bureaucratique : sans lui, deux administrateurs annoncent le même refus de deux manières différentes, et l'un des deux le dit mal un jour de fatigue.
+
+**Trois issues, et non deux.** Un dossier peut être validé, refusé, ou **renvoyé à compléter**. La troisième est la plus utile : la plupart des dossiers qui échouent le font sur une photo floue ou une pièce prise de travers, et les refuser définitivement pour cela ferait perdre des groupeurs recrutables — alors que le recrutement est le goulot d'étranglement du lancement. Un dossier renvoyé conserve tout le reste de ce qui a été déposé.
+
+**Un motif est obligatoire dès que la décision n'est pas une validation**, et il se choisit dans une liste fermée. Un champ libre contiendrait au bout de six mois quarante formulations du même refus : on ne pourrait plus compter *pourquoi* les dossiers échouent, donc plus corriger le formulaire d'inscription qui les fait échouer. Le motif a deux rédactions — celle que l'administrateur lit, et celle que le groupeur reçoit. Elles diffèrent : « doute sérieux sur l'identité » est une note interne, et la dire à l'intéressé lui apprendrait quoi corriger pour recommencer.
+
+**Tant que le dossier n'est pas validé, le groupeur ne peut pas lancer de groupage.** Le verrou est dans le modèle, pas dans l'interface : un bouton masqué ne protège de rien, il suffit d'une requête directe pour le contourner. Son tableau de bord s'ouvre quand même, en lecture, pour qu'il découvre l'outil pendant l'attente — mais il n'y engage l'argent de personne.
 
 **Plus tard**, des services de vérification d'identité automatisée couvrent l'Afrique de l'Ouest (Smile ID, Youverify, Dojah et d'autres). Leur couverture réelle pour les pièces togolaises, leur tarif et leur fiabilité sont **à vérifier directement auprès d'eux** : je ne peux pas te les garantir.
 
@@ -698,9 +765,9 @@ Il recrute et vérifie les groupeurs, fixe leur plafond, contrôle les reçus, d
 **Livreur** — page web, sans compte ni installation
 22. Tournée du livreur
 
-**Administrateur** — une seule maquette, le reste en admin Django (§13.6)
+**Administrateur** — deux écrans, le reste en admin Django (§13.6)
 - **A1. Tableau de bord** — *à maquetter* : alertes, les six files de travail, quatre indicateurs
-- A2. Recrutement, dossiers KYC et plafonds — admin Django
+- **A2. Recrutement — dossiers KYC** : la file d'attente, l'examen d'un dossier, la décision et son annonce
 - A3. Justificatifs d'achat et déblocage des fonds — admin Django
 - A4. Contestations et livraisons non confirmées — admin Django
 - A5. Modération et messages signalés — admin Django

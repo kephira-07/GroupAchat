@@ -94,6 +94,22 @@ function masquerAdmin(): Plugin {
 }
 
 export default defineConfig({
+  /**
+   * Le `.env` de la racine du depot, le meme que Docker Compose et Django.
+   *
+   * Par defaut Vite cherche ses `.env` dans `frontend/`. Il y avait donc un
+   * `frontend/.env.local` a cote de `backend/.env` et de `.env` — trois
+   * fichiers pour les memes valeurs, et `VITE_API_URL` devait rester d'accord
+   * avec le `CORS_ORIGINES` d'un autre fichier sans que rien ne le verifie.
+   *
+   * ⚠️ **Ce fichier contient des secrets, et ils ne partent pas dans le
+   * paquet.** Vite n'expose a `import.meta.env` que les variables prefixees
+   * `VITE_` : `POSTGRES_PASSWORD`, `DJANGO_SECRET_KEY` et `JETON_ADMIN` sont
+   * lues puis ignorees. C'est verifie par une recherche de leurs valeurs dans
+   * `dist/` apres construction, pas suppose.
+   */
+  envDir: "..",
+
   plugins: [react(), tailwindcss(), masquerAdmin(), servirLaPresentation()],
 
   build: {
@@ -119,6 +135,23 @@ export default defineConfig({
      */
     assetsInlineLimit: 12 * 1024,
   },
+
+  /**
+   * ⚠️ **`qrcode-generator` doit etre pre-bundle au demarrage.**
+   *
+   * Vite ne pre-bundle d'emblee que les dependances qu'il trouve en partant de
+   * l'entree. Celle-ci n'est importee que par l'ecran du code de livraison —
+   * atteint apres un paiement — donc il la decouvre **en cours de session**,
+   * re-bundle, et invalide les modules deja servis. La page en cours recoit
+   * alors un `504 Outdated Optimize Dep` et reste blanche jusqu'a un
+   * rechargement.
+   *
+   * C'est sans consequence quand on developpe a la main — on recharge sans y
+   * penser — et c'est bloquant pour un test automatise, qui ne recharge pas.
+   * La declarer ici la fait pre-bundler avec les autres, une fois, au
+   * demarrage.
+   */
+  optimizeDeps: { include: ["qrcode-generator"] },
 
   server: {
     port: 5173,

@@ -1,0 +1,174 @@
+# Backend — Group Achat
+
+Django 5.2 + DRF. Il porte les règles que le cahier des charges verrouille :
+l'argent, l'anonymat, l'idempotence du paiement et le filtre des messages.
+
+```bash
+cd backend
+python -m venv .venv
+.venv/Scripts/python -m pip install -r requirements.txt
+
+.venv/Scripts/python manage.py migrate
+.venv/Scripts/python manage.py charger_demo    # le jeu du §3
+.venv/Scripts/python manage.py runserver       # http://127.0.0.1:8000
+
+.venv/Scripts/python manage.py test groupachat # 64 tests
+```
+
+## La base de données
+
+**PostgreSQL dès que `DATABASE_URL` est renseignée, y compris pour les tests.**
+Le moteur de test doit être celui de la production : SQLite et PostgreSQL
+diffèrent sur les transactions, les contraintes et les types, et une suite
+verte sur l'un peut échouer sur l'autre.
+
+SQLite reste le **secours** quand aucune `DATABASE_URL` n'existe, pour qu'on
+puisse cloner le dépôt et lancer les tests sans rien installer. Mais un secours
+silencieux est un piège — on pourrait valider pendant des semaines en croyant
+tester PostgreSQL. D'où :
+
+```bash
+.venv/Scripts/python manage.py verifier_base
+```
+
+Elle affiche le moteur, la base, le serveur et la version, et **avertit
+explicitement** quand on est sur SQLite.
+
+### L'instance de développement, port 5433
+
+La machine porte déjà PostgreSQL 17, mais son serveur exige un mot de passe et
+tourne sous un compte de service : sans droits administrateur, on ne peut ni y
+créer un rôle, ni recharger sa configuration. Plutôt que de modifier un serveur
+auquel on n'a pas droit, l'outillage en monte un second :
+
+```bash
+python outils/instance_postgres.py
+```
+
+- **les mêmes binaires PostgreSQL 17**, donc c'est le vrai moteur de production
+  qui exécute les tests, pas une approximation ;
+- données dans `backend/.pgdata`, ignoré par git ;
+- écoute sur **127.0.0.1:5433** : ne touche ni au port ni aux données du
+  serveur installé, qui continue de tourner sans rien savoir de lui ;
+- rôle avec **mot de passe généré**, pas `trust` — une instance de
+  développement sans authentification est une mauvaise habitude qui finit par
+  se retrouver ailleurs ;
+- écrit `backend/.env`, ignoré par git.
+
+Pour travailler sur le serveur installé (port 5432), il suffit de remplacer
+`DATABASE_URL` dans `.env` : rien d'autre dans le code ne dépend du port.
+
+⚠️ **Piège Windows, déjà payé une fois.** Un serveur démarré par `pg_ctl` hérite
+des descripteurs du parent. Avec `subprocess.run(capture_output=True)`, le
+script attend une fin de flux qui n'arrive jamais et se bloque indéfiniment,
+alors que le serveur tourne très bien. Toutes les commandes `pg_ctl` de
+l'outillage utilisent donc `DEVNULL`.
+
+## Vérifier l'API de bout en bout
+
+```bash
+python outils/verifier_api.py
+```
+
+Il remet la base à neuf, recharge le jeu de démonstration, démarre un serveur
+**sur un port libre** — pour ne pas interroger par mégarde un serveur resté en
+route sur une autre base, ce qui est exactement l'erreur commise en écrivant
+cet outil — puis vérifie douze points : catalogue public, montants du fil
+rouge, absence d'identité côté groupeur, idempotence du paiement, zone non
+desservie, modération.
+
+## L'architecture
+
+```
+backend/
+├── config/              Réglages, routes
+├── groupachat/
+│   ├── domaine.py         L'argent, le code de livraison, le KYC — zéro Django
+│   ├── moderation.py      Le filtre des messages publics (§14.2)
+│   ├── api.py             Sérialiseurs et vues DRF
+│   ├── comptes/           Acheteur, Groupeur, dossier KYC
+│   ├── catalogue/         Campagne (« groupage » à l'écran)
+│   ├── commandes/         Commande, Versement, paiement, clôture
+│   ├── echanges/          Question, Demande
+│   └── tests/             63 tests, nommés d'après la règle qu'ils protègent
+```
+
+`domaine.py` et `moderation.py` **ne connaissent ni Django ni la base**. Ce
+sont les règles que le cahier des charges verrouille, et elles doivent pouvoir
+se lire et se tester sans monter une application.
+
+Ils ont un **pendant côté React**, dans `frontend/src/domaine/`. Les deux
+implémentations sont volontairement redondantes : le client calcule pour
+afficher, le serveur calcule pour encaisser, et **c'est le serveur qui fait
+foi**. Quand une règle change d'un côté, elle change de l'autre.
+
+## Ce que les tests protègent
+
+Les tests portent le nom de **la règle**, pas celui de la fonction : quand l'un
+casse, on doit savoir ce qui ne tient plus.
+
+### L'argent
+
+- 128 000 − 6 400 = **121 600** et 401 800 − 20 090 = **381 710** — un jury
+  refait ces calculs ;
+- **la commission ne porte jamais sur les frais de livraison.** Un test
+  compare les deux assiettes et chiffre l'écart (1 600 F sur le fil rouge) :
+  c'est la règle la plus facile à casser par distraction ;
+- 4 000 + 1 000 = **5 000 F payés** — l'erreur la plus facile de ce produit
+  est d'afficher 4 000 là où l'acheteur paie 5 000 ;
+- les frais **ne se multiplient pas** par la quantité : un colis, des frais ;
+- **aucune commission sur une campagne annulée** : la fonction ne crée aucun
+  `Versement`, pas même une ligne à zéro.
+
+### L'anonymat (§1.7)
+
+Les tests sont volontairement **méfiants** : ils ne vérifient pas que l'API
+renvoie les bons champs, ils vérifient qu'elle ne renvoie **aucun** champ
+interdit — nom, numéro, repère, référence à l'acheteur. Un
+`fields = "__all__"` ajouté par distraction les fait tomber, ce qui est le but.
+
+- ce que le groupeur voit d'une commande : **un code et un quartier** ;
+- ce que l'acheteur voit du groupeur : **un pseudonyme** ;
+- on ne voit pas les commandes d'un autre.
+
+### Le paiement
+
+- **deux appels avec la même clé d'idempotence ne créent qu'une commande**, et
+  le code de livraison ne change pas au rejeu. L'API répond 201 puis 200 ;
+- un total fabriqué par le client est refusé : le serveur recalcule ;
+- on ne commande pas dans une campagne fermée, ni dans une zone non desservie.
+
+### La modération (§14.2)
+
+- « 20 litres » et « 2 paires » passent ; un numéro de téléphone non ;
+- le **passage en cause** est renvoyé, et c'est le numéro qui est signalé, pas
+  le « Appelez-moi » qui le précède — c'est le numéro qu'il faut effacer ;
+- la copie de refus ne contient ni « interdit », ni « violation », ni
+  « contournement » côté acheteur ; côté groupeur elle est plus ferme et parle
+  de suspension ;
+- **le serveur refait le contrôle que le client a déjà fait.** Un appel direct
+  à l'API est bloqué comme le reste.
+
+### Le KYC (§10.5)
+
+- le **contrôle n° 2** bloque le prête-nom à l'enregistrement, et tolère
+  « MENSAH Akossiwa » pour « Akossiwa Mensah » ;
+- un groupeur sans dossier validé ne lance aucune campagne ;
+- les plafonds suivent les niveaux, et celui du niveau Établi reste `None` —
+  au cas par cas, et on n'invente pas de valeur.
+
+## Ce qui n'est pas encore là
+
+- **Le paiement réel.** `enregistrer_paiement` enregistre la commande comme si
+  l'encaissement avait réussi. L'appel à l'agrégateur viendra entre la
+  vérification de la clé d'idempotence et la création de la commande (§18.2).
+- **L'authentification.** L'acheteur est identifié par son numéro, comme dans
+  la feuille de connexion de l'écran 4. Il n'y a ni jeton ni session : à
+  brancher avant toute mise en ligne.
+- **Les écrans groupeur et admin côté serveur.** Les modèles sont là ; les
+  points d'entrée du portefeuille, des statistiques et des files
+  d'administration restent à écrire. L'essentiel du travail d'administration
+  vit de toute façon dans l'admin Django (§13.6).
+- **Le front ne parle pas encore à cette API** : il lit ses propres constantes.
+  Les champs portent les mêmes noms des deux côtés pour que la bascule soit un
+  `fetch`.
