@@ -98,7 +98,47 @@ export interface Groupage {
   photo?: string;
   /** Texte alternatif : ce que la photo montre vraiment. */
   photoAlt?: string;
+  /**
+   * Tous les medias de la fiche, **dans l'ordre d'affichage** : jusqu'a
+   * {@link MAX_IMAGES} images et {@link MAX_VIDEOS} videos.
+   *
+   * `photo` reste a cote et n'est pas une redite : c'est la **couverture**,
+   * celle des cartes, des lignes de liste et du fil. Ces trois endroits n'ont
+   * besoin que d'elle, et leur faire parcourir la liste pour retrouver la
+   * premiere image reviendrait a repeter la meme regle dans cinq composants.
+   */
+  medias?: MediaProduit[];
 }
+
+/**
+ * Un media de la fiche produit — une image, ou une video.
+ *
+ * ⚠️ **Une video porte toujours une affiche**, l'image qu'on voit avant de la
+ * lancer. Sans elle, l'emplacement reste vide pendant le chargement, ce qui
+ * est precisement ce que le §1.6 interdit : « une image d'abord, toujours ».
+ */
+export interface MediaProduit {
+  type: "image" | "video";
+  url: string;
+  /** Ce que le media montre. Vide, l'interface retombe sur le nom du produit. */
+  alt?: string;
+  /** Video seulement : l'image montree avant la lecture. */
+  affiche?: string;
+}
+
+/**
+ * Combien de medias une fiche porte au plus.
+ *
+ * ⚠️ **Ces deux nombres sont aussi ecrits dans `catalogue/models.py`, et c'est
+ * le serveur qui fait foi.** Ici, ils ne servent qu'a arreter le formulaire
+ * avant l'aller-retour reseau — pas a garantir quoi que ce soit.
+ *
+ * Quatre images, parce qu'une seule photo ne vend pas. Deux videos, parce que
+ * le public vise a un forfait de donnees limite (§18.1) et que c'est lui qui
+ * paie le depassement.
+ */
+export const MAX_IMAGES = 4;
+export const MAX_VIDEOS = 2;
 
 /** Les six quartiers du jeu de demonstration (§3), dans l'ordre de la spec. */
 export const QUARTIERS: readonly Quartier[] = [

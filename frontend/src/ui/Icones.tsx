@@ -353,3 +353,17 @@ export function IconeTri(proprietes: ProprietesIcone) {
     </Svg>
   );
 }
+
+/**
+ * Lecture — le bouton pose sur l'affiche d'une video.
+ *
+ * Un triangle en trait, comme les autres : pas de pastille pleine, pas de
+ * logo de plateforme. Il dit « ca se lance », rien de plus.
+ */
+export function IconeLecture(proprietes: ProprietesIcone) {
+  return (
+    <Svg {...proprietes}>
+      <path d="M8 5.5l11 6.5-11 6.5v-13z" />
+    </Svg>
+  );
+}

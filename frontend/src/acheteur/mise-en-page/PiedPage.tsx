@@ -19,7 +19,7 @@ import Logo from "../../ui/Logo";
 export default function PiedPage() {
   return (
     <footer className="mt-16 border-t border-bordure bg-surface-douce">
-      <div className="mx-auto max-w-[1280px] px-4 py-12 lg:px-8">
+      <div className="px-4 py-12 lg:px-8">
         <div className="flex flex-wrap gap-12">
           <div className="max-w-xs">
             <Logo variante="couleur" disposition="cote" hauteur={30} />

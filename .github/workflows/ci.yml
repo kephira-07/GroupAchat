@@ -183,26 +183,22 @@ jobs:
           cache-from: type=gha,scope=api
           cache-to: type=gha,scope=api,mode=max
 
-      - name: L'image de la boutique
+      # ⚠️ **Une seule image pour le front, et elle ne sert rien.**
+      # `frontend/Dockerfile` n'a plus que son etape de construction : les deux
+      # cibles nginx ont ete retirees, le serveur web reste a choisir. Ce qui
+      # se verifie ici, c'est donc que `npm ci` puis `npm run build` tiennent
+      # dans une image Linux propre — ou le travail « Front » ci-dessus les
+      # fait tourner sur le coureur lui-meme.
+      - name: L'image du front
         uses: docker/build-push-action@v6
         with:
           context: ./frontend
-          target: boutique
+          target: construction
           push: false
           build-args: |
             VITE_API_URL=http://127.0.0.1:8000/api
           cache-from: type=gha,scope=front
           cache-to: type=gha,scope=front,mode=max
-
-      - name: L'image de l'administration
-        uses: docker/build-push-action@v6
-        with:
-          context: ./frontend
-          target: admin
-          push: false
-          build-args: |
-            VITE_API_URL=http://127.0.0.1:8000/api
-          cache-from: type=gha,scope=front
 
       # Le fichier Compose doit rester lisible et ses variables résolubles.
       # Une faute de syntaxe ou une variable obligatoire oubliée se verrait

@@ -2,7 +2,13 @@ import { creerUneCampagne } from "../../api/espaceGroupeur";
 import { useAction } from "../../api/useRequete";
 import { useState } from "react";
 import { formaterFrancs } from "../../domaine/format";
-import { CATEGORIES, LIBELLE_CATEGORIE, type Categorie } from "../../domaine/groupage";
+import {
+  CATEGORIES,
+  LIBELLE_CATEGORIE,
+  type Categorie,
+  type MediaProduit,
+} from "../../domaine/groupage";
+import DepotMedias from "../composants/DepotMedias";
 import { TAUX_COMMISSION, calculerVersement } from "../../domaine/groupeur";
 import { FRAIS_PROVISOIRES } from "../../domaine/livraison";
 import { EnTeteGroupeur } from "../mise-en-page/ChromeGroupeur";
@@ -64,6 +70,7 @@ export default function CreerCampagne({
   const [categorie, setCategorie] = useState<Categorie | "">("");
   const [contenuPart, setContenuPart] = useState("");
   const [description, setDescription] = useState("");
+  const [medias, setMedias] = useState<MediaProduit[]>([]);
   const [garantie, setGarantie] = useState("");
   const [prixPiece, setPrixPiece] = useState("");
   const [coutPiece, setCoutPiece] = useState("");
@@ -103,6 +110,10 @@ export default function CreerCampagne({
       caracteristiques: garantie.trim()
         ? [{ cle: "Garantie", valeur: garantie.trim() }]
         : [],
+      /* Les lignes laissees vides ne partent pas : un media sans adresse
+         produirait une image cassee sur la fiche, et le serveur le refuserait
+         de toute facon. */
+      medias: medias.filter((media) => media.url.trim() !== ""),
     });
     if (creee) {
       onPubliee();
@@ -119,6 +130,15 @@ export default function CreerCampagne({
       fait: description.trim().length >= 200,
     },
     { libelle: "Garantie renseignée", fait: garantie.trim() !== "" },
+    /* ⚠️ **Au moins une photo**, et c'est la seule ligne de la liste qui porte
+       sur ce que l'acheteur verra avant d'ouvrir la fiche. Un groupage sans
+       photo n'est pas incomplet : il est invisible. */
+    {
+      libelle: "Au moins une photo",
+      fait: medias.some(
+        (media) => media.type === "image" && media.url.trim() !== "",
+      ),
+    },
   ];
   const etape1Complete = controles.every((c) => c.fait);
 
@@ -181,23 +201,7 @@ export default function CreerCampagne({
               </p>
             </div>
 
-            <div className="rounded-xl border border-dashed border-bordure p-4 text-center">
-              <p className="font-medium text-texte">Photos ou vidéo</p>
-              <p className="mt-1 text-sm text-texte-secondaire">
-                Jusqu&apos;à 3 photos, ou une vidéo verticale de 15 s.
-              </p>
-              {/* Les groupeurs sans moyens de tournage ne doivent pas se sentir
-                  exclus du fil (§1.6). */}
-              <p className="mt-2 text-xs text-texte-secondaire">
-                Une vidéo filmée au téléphone marche très bien. Une photo nette
-                suffit aussi.
-              </p>
-              <div className="mx-auto mt-3 max-w-56">
-                <Bouton role="groupeur" style="secondaire">
-                  Ajouter un média
-                </Bouton>
-              </div>
-            </div>
+            <DepotMedias medias={medias} onChanger={setMedias} />
 
             <Champ
               libelle="Ce que contient une part"

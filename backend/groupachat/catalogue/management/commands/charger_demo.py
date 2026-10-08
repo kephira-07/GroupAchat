@@ -139,6 +139,52 @@ def _texte_de_la_reponse(valeur) -> str:
     return ""
 
 
+def _medias(donnees: dict) -> list[dict]:
+    """La liste des médias d'un groupage de démonstration.
+
+    Le fichier de données garde `photo` et `photoAlt` — la couverture, qui
+    existait avant que la fiche en accepte plusieurs — et peut ajouter
+    `photosSupplementaires` et `videos`. Les anciennes entrées continuent donc
+    de se charger sans être réécrites, ce qui évite de toucher seize produits
+    pour en illustrer deux.
+
+    ⚠️ **La couverture passe en premier**, et c'est tout l'intérêt de la
+    construire ici : `Campagne.media` prend la première image de la liste, donc
+    l'ordre décide de ce qui s'affiche sur les cartes et dans le fil.
+    """
+    medias: list[dict] = []
+
+    if donnees.get("photo"):
+        medias.append(
+            {
+                "type": "image",
+                "url": donnees["photo"],
+                "alt": donnees.get("photoAlt", ""),
+            }
+        )
+
+    for photo in donnees.get("photosSupplementaires", []):
+        medias.append(
+            {
+                "type": "image",
+                "url": photo["url"],
+                "alt": photo.get("alt", ""),
+            }
+        )
+
+    for video in donnees.get("videos", []):
+        medias.append(
+            {
+                "type": "video",
+                "url": video["url"],
+                "alt": video.get("alt", ""),
+                "affiche": video.get("affiche", ""),
+            }
+        )
+
+    return medias
+
+
 class Command(BaseCommand):
     help = "Charge le jeu de démonstration du §3 de la spec des écrans."
 
@@ -209,8 +255,7 @@ class Command(BaseCommand):
                 "contenu_part": donnees["contenuPart"],
                 "categorie": donnees["categorie"],
                 "prix_part": Decimal(str(donnees["prixPart"])),
-                "media": donnees.get("photo", ""),
-                "media_alt": donnees.get("photoAlt", ""),
+                "medias": _medias(donnees),
                 "caracteristiques": donnees.get("caracteristiques", []),
                 "variante_libelle": variante.get("libelle", ""),
                 "variante_options": variante.get("options", []),

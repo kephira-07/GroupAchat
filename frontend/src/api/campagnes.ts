@@ -1,6 +1,11 @@
 import type { Commande } from "../domaine/commande";
 import type { Demande, Question } from "../domaine/demande";
-import type { Categorie, Groupage, Quartier } from "../domaine/groupage";
+import type {
+  Categorie,
+  Groupage,
+  MediaProduit,
+  Quartier,
+} from "../domaine/groupage";
 import { appeler, type Page } from "./client";
 
 /**
@@ -35,6 +40,9 @@ export interface CampagneApi {
   categorie: Categorie;
   /** DRF serialise les decimaux en **chaine**, pour ne pas perdre de precision. */
   prix_part: string;
+  /** Tous les medias, dans l'ordre. */
+  medias: MediaProduit[];
+  /** La couverture, **deduite de la liste par le serveur**. */
   media: string;
   media_alt: string;
   date_fin: string;
@@ -85,6 +93,7 @@ export function adapterGroupage(campagne: CampagneApi): Groupage {
     remiseLe: campagne.remise_le ?? "",
     photo: campagne.media,
     photoAlt: campagne.media_alt,
+    medias: campagne.medias ?? [],
   };
 }
 

@@ -1,9 +1,11 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import BandeauConfiance from "../composants/BandeauConfiance";
 import BandeauPartenaires from "../composants/BandeauPartenaires";
+import CarteUrgente from "../composants/CarteUrgente";
+import PucesFiltresActifs from "../composants/PucesFiltresActifs";
+import TiroirFiltres from "../composants/TiroirFiltres";
 import CarteGroupage from "../composants/CarteGroupage";
 import LigneGroupage from "../composants/LigneGroupage";
-import PanneauFiltres from "../composants/PanneauFiltres";
 import RechercheEtFiltres from "../composants/RechercheEtFiltres";
 import {
   compterParCategorie,
@@ -20,7 +22,7 @@ import PiedPage from "../mise-en-page/PiedPage";
 import Bouton from "../../ui/Bouton";
 import Carrousel from "../../ui/Carrousel";
 import EtatVide from "../../ui/EtatVide";
-import { IconeCarton, IconeLieu } from "../../ui/Icones";
+import { IconeCarton, IconeFiltre } from "../../ui/Icones";
 
 /**
  * Le catalogue — ecran 2 sur telephone, page d'accueil du site sur ordinateur.
@@ -81,6 +83,23 @@ export default function GroupagesOuverts({
     [filtres, groupages],
   );
   const nombre = resultats.length;
+
+  /** Le tiroir de filtres. Ferme par defaut : on arrive pour voir, pas pour regler. */
+  const [tiroirOuvert, setTiroirOuvert] = useState(false);
+
+  /**
+   * Combien de filtres sont poses, pour la pastille du bouton.
+   *
+   * ⚠️ **La recherche en fait partie, et le tri non.** Un tri ne retire aucun
+   * groupage de la liste — annoncer « 1 filtre » parce qu'on a choisi « prix
+   * croissant » ferait chercher un filtrage qui n'existe pas. La recherche, à
+   * l'inverse, cache des résultats : elle compte.
+   */
+  const nombreFiltresActifs =
+    (filtres.recherche.trim() ? 1 : 0) +
+    (filtres.categorie !== "toutes" ? 1 : 0) +
+    (filtres.termineBientot ? 1 : 0) +
+    (filtres.petitPrix ? 1 : 0);
 
   const etatVide = (
     <EtatVide
@@ -192,10 +211,24 @@ export default function GroupagesOuverts({
              * change avec son fond au lieu de perdre son contraste.
              */}
             <div className="border-b border-bordure bg-gradient-to-b from-primaire-fond to-white">
-              <div className="mx-auto max-w-[1280px] px-4 lg:px-8">
-                <BandeauPartenaires />
+              {/*
+               * ⚠️ **Plus de `max-w-[1280px]`, et c'est voulu.** La page etait
+               * posee dans une colonne centree de 1 280 px : sur un ecran de
+               * 1 920, cela laissait **320 px de vide de chaque cote**, et la
+               * banniere partenaires — une image — s'arretait au milieu de
+               * nulle part.
+               *
+               * Les conteneurs prennent donc toute la largeur, et il ne reste
+               * que la gouttiere qui empeche le texte de toucher le bord.
+               *
+               * La banniere, elle, n'a meme pas de gouttiere : elle va d'un
+               * bord a l'autre. Une image qui touche les bords est une image ;
+               * une image avec 32 px de blanc autour est une vignette.
+               */}
+              <BandeauPartenaires />
 
-                <div className="max-w-2xl py-10 lg:py-14">
+              <div className="px-4 py-10 lg:px-8 lg:py-14">
+                <div className="max-w-2xl">
                   {/*
                    * L'exergue bleu. Le §1.2 reserve le bleu a la confiance cote
                    * acheteur, et il travaille ici pour la meme raison qu'au
@@ -205,11 +238,6 @@ export default function GroupagesOuverts({
                    * teintes tres claires cote a cote ne dessinent plus de
                    * forme.
                    */}
-                  <p className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-sm font-semibold text-confiance ring-1 ring-confiance/15">
-                    <IconeLieu taille={14} className="shrink-0" />
-                    Lomé, Togo
-                  </p>
-
                   {/*
                    * ⚠️ **Ecart assume au §1.3**, qui fixe `Titre-ecran` a 24 px.
                    * Cette echelle est celle d'un ecran de 390 px ; a 1 280 px
@@ -228,7 +256,7 @@ export default function GroupagesOuverts({
                    * avec le jeton `Titre-ecran` de la spec. Elle reste comme
                    * garde-fou, pas comme palier reel.
                    */}
-                  <h1 className="mt-5 text-[clamp(1.5rem,4.2vw,3rem)] leading-[1.06] font-semibold tracking-tight text-texte">
+                  <h1 className="text-[clamp(1.5rem,4.2vw,3rem)] leading-[1.06] font-semibold tracking-tight text-texte">
                     Le prix de gros,{" "}
                     <span className="text-primaire-texte-sur-fond">
                       à plusieurs
@@ -258,9 +286,6 @@ export default function GroupagesOuverts({
                     sélectionnés, paiement détenu jusqu&apos;à la clôture.
                   </p>
 
-                  <div className="mt-6 max-w-md">
-                    <BandeauConfiance />
-                  </div>
                 </div>
               </div>
             </div>
@@ -269,19 +294,51 @@ export default function GroupagesOuverts({
                 de pression de l'application (§2.4). Sur fond blanc, pour que
                 la couleur reste au bandeau de tete. */}
             {presqueClotures.length > 0 ? (
-              <div className="mx-auto max-w-[1280px] px-4 pt-10 lg:px-8 lg:pt-12">
+              <div className="px-4 pt-10 lg:px-8 lg:pt-12">
                 <Carrousel
                   titre="Se termine bientôt"
                   sousTitre={`${presqueClotures.length} groupage${
                     presqueClotures.length > 1 ? "s" : ""
                   } ferme${presqueClotures.length > 1 ? "nt" : ""} dans moins de 48 h`}
+                  /* ⚠️ La seule rangee du site qui tourne seule. Son argument
+                     est le temps : ce qui ferme dans 48 h et n'est jamais vu
+                     est definitivement perdu. Les quatre garde-fous sont dans
+                     l'en-tete de `ui/Carrousel.tsx`. */
+                  automatique
+                  action={
+                    /*
+                     * « Voir plus » ne mene pas vers une page de plus : il
+                     * **pose le filtre** `termineBientot` sur le catalogue qui
+                     * est deja en dessous.
+                     *
+                     * Une page separee aurait fallu l'ecrire, la router et la
+                     * tenir a jour, pour montrer exactement ce que la grille
+                     * sait deja montrer. Et le resultat est meilleur : on
+                     * arrive sur une liste **filtrable**, ou le filtre pose
+                     * apparait en puce et se retire d'un clic.
+                     */
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onFiltres({ ...filtres, termineBientot: true });
+                        /* Sans ce defilement, le filtre s'applique a une
+                           grille restee hors champ : on clique et rien ne
+                           semble se passer. */
+                        document
+                          .getElementById("catalogue")
+                          ?.scrollIntoView({ behavior: "smooth" });
+                      }}
+                      className="rounded-full px-3 py-2 text-sm font-semibold text-primaire underline underline-offset-2 hover:text-primaire-presse"
+                    >
+                      Voir plus
+                    </button>
+                  }
                 >
                   {presqueClotures.map((groupage) => (
-                    <CarteGroupage
+                    <CarteUrgente
                       key={groupage.id}
                       groupage={groupage}
                       onOuvrir={onOuvrirGroupage}
-                      enCarrousel
                     />
                   ))}
                 </Carrousel>
@@ -290,21 +347,11 @@ export default function GroupagesOuverts({
           </>
         )}
 
-        <div className="mx-auto max-w-[1280px] border-t border-bordure px-4 py-6 lg:px-8 lg:py-8">
-          <div className="flex gap-8 xl:gap-10">
-            {/* La colonne de filtres demande de la place : en dessous de
-                1024 px, les memes filtres reviennent en puces au-dessus de la
-                grille. Jamais derriere un bouton « Filtres » — ce serait un
-                menu cache (§1.0, simple 5). */}
-            <div className="hidden lg:block">
-              <PanneauFiltres
-                filtres={filtres}
-                onChanger={onFiltres}
-                comptesCategories={comptesCategories}
-                total={groupages.length}
-              />
-            </div>
-
+        <div
+          id="catalogue"
+          className="border-t border-bordure px-4 py-6 lg:px-8 lg:py-8"
+        >
+          <div>
             <div className="min-w-0 flex-1">
               <div>
                 <h2 className="text-2xl font-semibold tracking-tight text-texte lg:text-[28px]">
@@ -330,13 +377,38 @@ export default function GroupagesOuverts({
                 </p>
               </div>
 
-              <div className="-mx-4 mt-5 lg:hidden">
-                <RechercheEtFiltres
-                  filtres={filtres}
-                  onChanger={onFiltres}
-                  comptesCategories={comptesCategories}
-                  nombreResultats={nombre}
-                />
+              {/*
+               * ⚠️ **La colonne de filtres est devenue un bouton**, ce que le
+               * §2 interdisait : « Jamais derriere un bouton "Filtres" — ce
+               * serait un menu cache. » La demande est explicite et
+               * posterieure, donc elle s'applique ; la raison du §2 reste
+               * vraie, et deux choses la ramenent a peu de chose :
+               *
+               * - **le bouton porte le nombre de filtres actifs**, lisible
+               *   sans ouvrir ;
+               * - **les filtres actifs restent affiches a cote**, en puces,
+               *   et se retirent d'un clic. Ce qui est range, c'est le choix
+               *   des filtres ; leur etat ne l'est jamais.
+               *
+               * Si l'une des deux saute, le tiroir redevient le menu cache que
+               * le §2 decrit.
+               */}
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setTiroirOuvert(true)}
+                  className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full border border-bordure px-4 font-medium text-texte hover:border-primaire hover:text-primaire"
+                >
+                  <IconeFiltre taille={18} />
+                  Filtrer
+                  {nombreFiltresActifs > 0 ? (
+                    <span className="flex size-5 items-center justify-center rounded-full bg-primaire text-xs font-bold text-white">
+                      {nombreFiltresActifs}
+                    </span>
+                  ) : null}
+                </button>
+
+                <PucesFiltresActifs filtres={filtres} onChanger={onFiltres} />
               </div>
 
               {nombre === 0 ? (
@@ -358,6 +430,16 @@ export default function GroupagesOuverts({
             </div>
           </div>
         </div>
+
+        <TiroirFiltres
+          ouvert={tiroirOuvert}
+          onFermer={() => setTiroirOuvert(false)}
+          filtres={filtres}
+          onChanger={onFiltres}
+          comptesCategories={comptesCategories}
+          total={groupages.length}
+          nombreResultats={nombre}
+        />
 
         <PiedPage />
       </>

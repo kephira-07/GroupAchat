@@ -37,7 +37,10 @@ export default function EnTeteBureau({
 }) {
   return (
     <header className="sticky top-0 z-20 border-b border-bordure bg-white">
-      <div className="mx-auto flex h-20 max-w-[1280px] items-center gap-4 px-4 lg:gap-8 lg:px-8">
+      {/* Pleine largeur, comme le reste de la page : un en-tete arrete a
+          1 280 px au-dessus d'un contenu qui va d'un bord a l'autre laisse le
+          logo flotter au milieu de nulle part sur un grand ecran. */}
+      <div className="flex h-20 items-center gap-4 px-4 lg:gap-8 lg:px-8">
         <button
           type="button"
           onClick={onAccueil}

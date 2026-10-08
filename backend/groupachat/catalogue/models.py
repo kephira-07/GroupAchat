@@ -17,6 +17,28 @@ from django.utils import timezone
 
 from .. import domaine
 
+#: Combien de medias une fiche produit peut porter.
+#:
+#: **Quatre images et deux videos.** Ce ne sont pas des reglages techniques :
+#: ce sont deux decisions de produit, et elles vont dans deux directions
+#: opposees.
+#:
+#: Quatre images, parce qu'un acheteur qui ne voit qu'une photo ne demande pas
+#: la deuxieme — il passe au groupage suivant. Les faces, l'echelle, le
+#: contenu reel d'une part : c'est ce qui fait acheter.
+#:
+#: Deux videos, parce que le public vise a un **forfait data limite** (§18.1).
+#: Une video pese cent fois une photo, et la troisieme ne convainc plus
+#: personne : elle ne fait que couter de l'argent a celui qui la regarde.
+#: C'est pour cette raison qu'aucune ne se lance toute seule ici.
+MAX_IMAGES = 4
+MAX_VIDEOS = 2
+
+#: Les deux natures de media. Rien d'autre n'est accepte.
+TYPE_IMAGE = "image"
+TYPE_VIDEO = "video"
+TYPES_MEDIA = (TYPE_IMAGE, TYPE_VIDEO)
+
 
 class Campagne(models.Model):
     """Une campagne de groupage.
@@ -68,8 +90,24 @@ class Campagne(models.Model):
         validators=[MinValueValidator(Decimal("1"))],
     )
 
-    media = models.URLField("média", blank=True)
-    media_alt = models.CharField("description du média", max_length=200, blank=True)
+    #: Les medias de la fiche, **dans l'ordre d'affichage**.
+    #:
+    #: Chaque entree vaut `{"type": "image"|"video", "url": ..., "alt": ...}`,
+    #: et une video peut porter en plus `"affiche"` — l'image montree avant
+    #: qu'on la lance.
+    #:
+    #: ⚠️ **Des adresses, pas des fichiers deposes.** Le stockage objet reste a
+    #: choisir (§18 du cahier des charges, « Stockage des medias : a definir »),
+    #: et tant qu'il n'existe pas un depot de fichier n'aurait nulle part ou
+    #: aller. Le jour ou il existera, c'est cette liste qui portera les
+    #: adresses produites par le depot : **sa forme ne changera pas**.
+    #:
+    #: Du JSON plutot qu'une table liee, pour la raison qui vaut deja pour
+    #: `caracteristiques` : ces lignes ne sont **jamais interrogees ni
+    #: filtrees**, seulement affichees avec leur campagne, et l'ordre compte.
+    #: Une table imposerait une jointure, un champ de rang a maintenir et une
+    #: page d'administration de plus, pour un gain nul.
+    medias = models.JSONField("médias", default=list, blank=True)
 
     # ── Ce que l'ecran 3 affiche, et que le modele ne portait pas ──────────
     #
@@ -180,6 +218,102 @@ class Campagne(models.Model):
     def est_ouverte(self) -> bool:
         return self.statut == self.Statut.OUVERTE and self.heures_restantes > 0
 
+    # ── Les medias ──────────────────────────────────────────────────────────
+
+    @property
+    def images(self) -> list[dict]:
+        return [m for m in self.medias if m.get("type") == TYPE_IMAGE]
+
+    @property
+    def videos(self) -> list[dict]:
+        return [m for m in self.medias if m.get("type") == TYPE_VIDEO]
+
+    @property
+    def media(self) -> str:
+        """L'image de couverture — celle des cartes, du fil et des listes.
+
+        ⚠️ **Toujours une image, jamais une video**, et c'est le §1.6 qui le
+        veut : « une image d'abord, toujours ». Une carte dont la couverture
+        serait une video resterait vide le temps du chargement, c'est-a-dire
+        exactement pendant la seconde ou l'acheteur decide de s'arreter ou de
+        faire defiler.
+
+        A defaut d'image, l'affiche de la premiere video fait l'affaire : c'est
+        une image, elle aussi.
+        """
+        images = self.images
+        if images:
+            return images[0].get("url", "")
+        for video in self.videos:
+            if video.get("affiche"):
+                return video["affiche"]
+        return ""
+
+    @property
+    def media_alt(self) -> str:
+        """Ce que la couverture montre vraiment.
+
+        Vide plutot qu'invente : l'interface retombe alors sur le titre du
+        produit, qui est toujours plus juste qu'un texte alternatif devine.
+        """
+        images = self.images
+        return images[0].get("alt", "") if images else ""
+
+    def _verifier_les_medias(self) -> None:
+        """Les regles de la fiche produit. Voir `MAX_IMAGES` et `MAX_VIDEOS`.
+
+        ⚠️ **Ici et pas dans le formulaire.** Un champ grise ne protege de
+        rien : il suffit d'une requete directe pour deposer trente videos, et
+        c'est la facture de donnees des acheteurs qui les payerait.
+        """
+        if not isinstance(self.medias, list):
+            raise ValidationError({"medias": "Les médias doivent être une liste."})
+
+        for rang, media in enumerate(self.medias, start=1):
+            if not isinstance(media, dict):
+                raise ValidationError(
+                    {"medias": f"Le média n° {rang} n'est pas un objet."}
+                )
+            if media.get("type") not in TYPES_MEDIA:
+                raise ValidationError(
+                    {
+                        "medias": f"Le média n° {rang} doit être une image "
+                        f"ou une vidéo."
+                    }
+                )
+            if not str(media.get("url", "")).strip():
+                raise ValidationError(
+                    {"medias": f"Le média n° {rang} n'a pas d'adresse."}
+                )
+
+        images, videos = len(self.images), len(self.videos)
+
+        if images > MAX_IMAGES:
+            raise ValidationError(
+                {
+                    "medias": f"Une fiche porte au plus {MAX_IMAGES} images — "
+                    f"celle-ci en a {images}."
+                }
+            )
+        if videos > MAX_VIDEOS:
+            raise ValidationError(
+                {
+                    "medias": f"Une fiche porte au plus {MAX_VIDEOS} vidéos — "
+                    f"celle-ci en a {videos}."
+                }
+            )
+
+        # ⚠️ Une video sans image laisse les cartes et le fil sans couverture
+        # (§1.6). On accepte l'affiche de la video a la place : c'est une
+        # image, et elle remplit le meme office.
+        if videos and not images and not any(v.get("affiche") for v in self.videos):
+            raise ValidationError(
+                {
+                    "medias": "Une vidéo ne suffit pas seule : ajoutez une "
+                    "photo, sinon les cartes et le fil restent sans image."
+                }
+            )
+
     def clean(self) -> None:
         super().clean()
         if self.groupeur_id and not self.groupeur.peut_lancer_une_campagne:
@@ -187,6 +321,7 @@ class Campagne(models.Model):
                 "Ce groupeur n'a pas de dossier KYC validé : il ne peut pas "
                 "lancer de campagne."
             )
+        self._verifier_les_medias()
 
     # ⚠️ **Le plafond de collecte n'est plus contrôlé ici**, et c'est une
     # correction, pas un relâchement.

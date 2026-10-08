@@ -1,16 +1,20 @@
 # Group Achat en conteneurs
 
-Quatre services : la base, l'API, la boutique et l'administration.
-
-Le **site de présentation** n'a plus ni service ni port à lui : il vit dans
-`frontend/public/presentation/`, donc Vite le recopie dans le paquet de la boutique et il est
-servi depuis le même port. Voir [frontend/PRESENTATION.md](frontend/PRESENTATION.md).
+Deux services : la base et l'API. **Le front n'est pas conteneurisé.**
 
 > ⚠️ **Le serveur web a été retiré.** `frontend/Dockerfile` ne contient plus
 > que l'étape de construction : il produit `dist/` et `dist-admin/`, et plus
-> rien n'écoute sur un port. Les cibles `boutique` et `admin` n'existent donc
-> plus, et les deux `target:` de `docker-compose.yml` pointent dans le vide
-> jusqu'à ce qu'un serveur soit choisi.
+> rien n'écoute sur un port. Les cibles `boutique` et `admin` n'existent plus,
+> et plus rien ne les demande — ni les deux fichiers Compose, ni
+> l'intégration continue, ni le déploiement.
+>
+> **Conséquence à ne pas perdre de vue : la mise en ligne est incomplète.** Le
+> serveur reçoit la base et l'API, rien d'autre. Servir `dist/` et
+> `dist-admin/` est la pièce qui reste à choisir.
+
+Le **site de présentation** vit dans `frontend/public/presentation/`, donc Vite
+le recopie dans le paquet de la boutique et il part avec lui, quel que soit le
+serveur retenu. Voir [frontend/PRESENTATION.md](frontend/PRESENTATION.md).
 
 ```bash
 cp .env.exemple .env      # puis renseigner les trois secrets
@@ -19,16 +23,21 @@ docker compose up --build
 
 | Service | Adresse | Ce que c'est |
 |---|---|---|
-| `boutique` | <http://localhost:5173> | Acheteur, groupeur, livreur — écrans 1 à 22 |
-| | <http://localhost:5173/presentation/> | **Le site de présentation** |
-| `admin` | <http://localhost:5174> | Écrans A1 et A2 — **lié à 127.0.0.1 seulement** |
 | `api` | <http://localhost:8000> | Django + DRF. L'admin Django est sur `/admin/` |
 | `base` | *(interne)* | PostgreSQL 17 — aucun port publié |
 
+Le front, lui, tourne à côté et hors Docker :
+
+```bash
+cd frontend
+npm run dev          # la boutique, sur 5173
+npm run dev:admin    # l'administration, sur 5174
+```
+
 **Les ports sont ceux du développement local**, et ce n'est pas un hasard : les
 valeurs par défaut de `CORS_ORIGINES` et de `VITE_API_URL` les visent déjà.
-Passer en conteneurs ne demande donc de reconfigurer ni le navigateur ni les
-origines autorisées.
+Lancer l'API en conteneur ne demande donc de reconfigurer ni le navigateur ni
+les origines autorisées.
 
 ## Les trois secrets
 
@@ -53,8 +62,8 @@ démarrage, seulement des fichiers déjà écrits.
 
 ```bash
 # Changer l'adresse de l'API :
-docker compose build boutique admin && docker compose up -d
-#        ↑ reconstruire, pas redémarrer
+cd frontend && VITE_API_URL=https://api.exemple.tg/api npm run build
+#                                                      ↑ reconstruire le paquet
 ```
 
 La mettre dans `environment:` n'aurait **aucun effet, et aucun message
@@ -104,10 +113,9 @@ Le backend, lui, compile ses dépendances dans une première étape dont l'image
 finale ne reçoit que le résultat.
 
 **Une seule construction pour les deux fronts.** `npm run build` produit
-`dist/` et `dist-admin/` d'un coup ; `--target boutique` et `--target admin`
-en font deux images. Les dépendances ne s'installent qu'une fois, et les deux
-images sortent du même arbre de fichiers — donc elles ne peuvent pas diverger
-par accident.
+`dist/` et `dist-admin/` d'un coup. Les dépendances ne s'installent qu'une
+fois, et les deux paquets sortent du même arbre de fichiers — donc ils ne
+peuvent pas diverger par accident.
 
 **`gunicorn` et `whitenoise` ont été ajoutés à `requirements.txt`**, et deux
 réglages à `config/settings.py` (`STATIC_ROOT` et le stockage compressé). Ce
@@ -141,15 +149,14 @@ développement et à une démonstration locale, **pas à un VPS exposé**.
 des compteurs et des montants, mais **l'écran A2 affiche des noms, des numéros
 et des références de pièces d'identité**. Ce qui protège ces données
 aujourd'hui, c'est le jeton `X-Jeton-Admin` exigé par `/api/dossiers/` côté
-backend : la page s'ouvre, les données ne viennent pas sans le jeton. C'est
-pour cette raison que son port est lié à `127.0.0.1` et non à toutes les
-interfaces — il n'est pas joignable depuis le réseau, même avec un pare-feu
-permissif. Avant une mise en ligne réelle, ce service doit passer derrière un
-réseau privé, un VPN, ou à défaut une authentification HTTP posée dans la
-configuration du serveur web qui servira `dist-admin/`.
+backend : la page s'ouvre, les données ne viennent pas sans le jeton, et c'est
+la seule chose qui les protège. **Le serveur web qui servira
+`dist-admin/` devra donc poser quelque chose de plus** : un réseau privé, un
+VPN, ou à défaut une authentification HTTP. Tant que ce choix n'est pas fait,
+l'administration ne s'ouvre qu'en local, par `npm run dev:admin`.
 
-**Le paiement reste simulé** (§18.2) et **l'authentification des acheteurs
-n'existe pas** : ce sont des manques du produit, pas du conteneur. Voir
+**Le paiement reste simulé** (§18.2) : c'est un manque du produit, pas du
+conteneur, et il dure jusqu'à l'agrément d'un agrégateur. Voir
 `backend/README.md`.
 
 **Une seule réplique d'API.** Les migrations tournent au démarrage de chaque

@@ -108,7 +108,6 @@ Les valeurs qui **doivent** changer par rapport au développement :
 | `CORS_ORIGINES` | l'origine publique de la boutique, `https://votredomaine.tg` |
 | `CHARGER_DEMO` | `0` — sinon le jeu de démonstration réécrit les données à chaque redémarrage |
 | `IMAGE_PREFIXE` | `ghcr.io/<proprietaire>/<depot>`, **en minuscules** |
-| `PORT_BOUTIQUE` | `80` derrière un reverse-proxy, ou `8080` si le proxy écoute déjà sur 80 |
 
 `CORS_ORIGINES` et `VITE_API_URL` vont **toujours par paire** : si le front change d'adresse, il
 faut l'ajouter aux origines autorisées, sinon le navigateur bloque tous les appels sans que le
@@ -171,16 +170,18 @@ seul, Traefik aussi, nginx demande certbot. **Tant que ce n'est pas fait, ne pas
 devant de vrais acheteurs** : les numéros de téléphone et les adresses de livraison passeraient en
 clair.
 
+**Le front n'est pas déployé par ces fichiers.** Les deux images nginx qui servaient `dist/` et
+`dist-admin/` ont été retirées : le serveur web reste à choisir. Le serveur reçoit donc la base et
+l'API, rien d'autre, et **c'est la pièce qui manque avant une mise en ligne complète**. Les deux
+paquets se construisent par `npm run build` ; `VITE_API_URL` est lue à ce moment-là et inscrite en
+clair dans le JavaScript, donc changer l'adresse de l'API demandera toujours de reconstruire.
+
 **L'administration n'a aucun mot de passe.** L'écran A1 n'affiche que des compteurs, mais l'écran
 A2 affiche des noms, des numéros et des références de pièces d'identité. Ce qui protège ces
 données, c'est le jeton `X-Jeton-Admin` exigé par `/api/dossiers/` : la page s'ouvre, les données
-ne viennent pas sans le jeton. Son port est lié à `127.0.0.1`, donc injoignable depuis Internet ;
-on y accède par un tunnel :
-
-```bash
-ssh -L 5174:127.0.0.1:5174 utilisateur@serveur
-# puis http://localhost:5174 dans le navigateur
-```
+ne viennent pas sans le jeton, et c'est la seule chose qui les protège. **Le serveur web retenu
+devra donc poser quelque chose de plus** — un réseau privé, un VPN, ou à défaut une
+authentification HTTP — et surtout ne pas publier `dist-admin/` sur une interface ouverte.
 
 **Aucune sauvegarde de la base n'est configurée.** Le volume `donnees-postgres` survit aux
 redémarrages et aux `down`, mais pas à une panne de disque ni à un `down -v`. À mettre en place

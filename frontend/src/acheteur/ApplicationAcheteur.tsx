@@ -12,6 +12,7 @@ import {
   lireLeJeton,
   lireMonProfil,
   oublierLeJeton,
+  seDeconnecter,
   type Profil,
 } from "../api/session";
 import {
@@ -31,6 +32,7 @@ import GroupagesOuverts from "./pages/GroupagesOuverts";
 import MesCommandes from "./pages/MesCommandes";
 import MesDemandes from "./pages/MesDemandes";
 import Paiement from "./pages/Paiement";
+import PageProfil from "./pages/Profil";
 import Questions from "./pages/Questions";
 
 /**
@@ -57,6 +59,7 @@ import Questions from "./pages/Questions";
  * | 10 | Questions publiques | `pages/Questions` |
  * | 11 | Demander un produit | `pages/DemanderProduit` |
  * | 12 | Mes demandes | `pages/MesDemandes` |
+ * | — | Profil *(4e onglet, « 12 et reglages »)* | `pages/Profil` |
  *
  * Les ecrans 13 a 22 et A1 vivent ailleurs : `ApplicationGroupeur` pour le
  * cote groupeur, `pages/TourneeLivreur` pour le livreur et
@@ -104,7 +107,8 @@ type Ecran =
   | { nom: "commande"; commande: Commande }
   | { nom: "questions"; groupage: Groupage }
   | { nom: "demander" }
-  | { nom: "mes-demandes" };
+  | { nom: "mes-demandes" }
+  | { nom: "profil" };
 
 /** Les ecrans de premier niveau, ceux qui gardent la barre du bas. */
 const ECRANS_AVEC_BARRE_NAV: Ecran["nom"][] = [
@@ -112,6 +116,7 @@ const ECRANS_AVEC_BARRE_NAV: Ecran["nom"][] = [
   "catalogue",
   "mes-commandes",
   "mes-demandes",
+  "profil",
 ];
 
 /**
@@ -189,9 +194,37 @@ function RouteurAcheteur() {
   /** Commande en attente de connexion : le paiement reprend seul apres. */
   const [enAttenteDeConnexion, setEnAttenteDeConnexion] =
     useState<BrouillonPaiement>();
+  /**
+   * Connexion demandee **sans rien a reprendre ensuite**.
+   *
+   * Le §1.5 impose sous chaque onglet protege un lien « J'ai deja un compte —
+   * me connecter ». Il n'avait rien pour s'ouvrir : la feuille ne se montait
+   * que s'il y avait un paiement en attente, donc le lien ne faisait rien.
+   * Deux etats distincts plutot qu'un seul, parce que les deux fins
+   * diffferent — l'une reprend le paiement, l'autre reste ou elle est.
+   */
+  const [connexionDemandee, setConnexionDemandee] = useState(false);
   const [commandesPassees, setCommandesPassees] = useState(0);
 
   const connecte = identite !== undefined;
+
+  /**
+   * Relit le profil complet apres une connexion.
+   *
+   * ⚠️ Indispensable : `onConnecte` ne renvoie qu'une `Identite` — numero et
+   * nom. Sans cet appel, `profil` reste vide jusqu'au prochain chargement de
+   * page, et l'onglet Profil affiche son squelette de chargement indefiniment
+   * alors que la session est ouverte.
+   */
+  const rafraichirLeProfil = () => {
+    lireMonProfil()
+      .then(setProfil)
+      .catch(() => {
+        /* La session vient de s'ouvrir, donc l'echec est reseau. L'identite
+           suffit a tout le parcours d'achat ; l'adresse par defaut
+           reapparaitra au prochain lancement. */
+      });
+  };
 
   /** Sur ordinateur, le fil n'existe pas : « accueil » montre le catalogue. */
   const vue: Ecran =
@@ -377,7 +410,7 @@ function RouteurAcheteur() {
             setEcran({ nom: "commande", commande })
           }
           onVoirGroupages={ouvrirCatalogue}
-          onSeConnecter={() => setEnAttenteDeConnexion(undefined)}
+          onSeConnecter={() => setConnexionDemandee(true)}
         />
       ) : null}
 
@@ -403,7 +436,7 @@ function RouteurAcheteur() {
           onRetour={() => setEcran({ nom: "groupage", groupage: vue.groupage })}
           /* Poser une question demande un compte, le lire non (§1.5). La
              feuille de connexion s'ouvre donc au moment de l'envoi. */
-          onSeConnecter={() => setEnAttenteDeConnexion(undefined)}
+          onSeConnecter={() => setConnexionDemandee(true)}
         />
       ) : null}
 
@@ -426,7 +459,38 @@ function RouteurAcheteur() {
               ouvrirGroupage(groupage);
             }
           }}
-          onSeConnecter={() => setEnAttenteDeConnexion(undefined)}
+          onSeConnecter={() => setConnexionDemandee(true)}
+        />
+      ) : null}
+
+      {vue.nom === "profil" ? (
+        <PageProfil
+          estBureau={estBureau}
+          connecte={connecte}
+          profil={profil}
+          onVoirCampagnes={ouvrirCatalogue}
+          onMesDemandes={() => setEcran({ nom: "mes-demandes" })}
+          onDemanderProduit={ouvrirDemande}
+          onSeConnecter={() => setConnexionDemandee(true)}
+          onProfilMisAJour={(misAJour: Profil) => {
+            setProfil(misAJour);
+            /* L'identite porte le nom affiche ailleurs dans l'application :
+               la laisser en arriere ferait reapparaitre l'ancien nom a
+               l'ecran de commande. */
+            setIdentite({
+              telephone: misAJour.telephone,
+              nom: misAJour.nom || undefined,
+            });
+          }}
+          onSeDeconnecter={() => {
+            void seDeconnecter();
+            poserLeJetonAcheteur("");
+            setIdentite(undefined);
+            setProfil(undefined);
+            /* On reste sur l'onglet : il montre alors son etat vide du §1.5,
+               ce qui est la reponse honnete a « je viens de me deconnecter ».
+               Renvoyer au fil ferait croire a une erreur. */
+          }}
         />
       ) : null}
 
@@ -448,8 +512,22 @@ function RouteurAcheteur() {
             setIdentite(nouvelleIdentite);
             const brouillon = enAttenteDeConnexion;
             setEnAttenteDeConnexion(undefined);
+            rafraichirLeProfil();
             // L'action reprend seule : la feuille redescend sur le paiement.
             setEcran({ nom: "paiement", brouillon });
+          }}
+        />
+      ) : null}
+
+      {/* Ecran 4, sans rien a reprendre : le lien du §1.5. */}
+      {connexionDemandee && !enAttenteDeConnexion ? (
+        <FeuilleConnexion
+          rappelContexte="Connectez-vous pour retrouver vos commandes, vos demandes et votre adresse de livraison."
+          onFermer={() => setConnexionDemandee(false)}
+          onConnecte={(nouvelleIdentite) => {
+            setIdentite(nouvelleIdentite);
+            setConnexionDemandee(false);
+            rafraichirLeProfil();
           }}
         />
       ) : null}
@@ -470,7 +548,7 @@ function RouteurAcheteur() {
               case "commandes":
                 return setEcran({ nom: "mes-commandes" });
               case "profil":
-                return setEcran({ nom: "mes-demandes" });
+                return setEcran({ nom: "profil" });
             }
           }}
         />

@@ -5,7 +5,11 @@ import type {
   StatutCampagne,
   Tache,
 } from "../domaine/groupeur";
-import type { Categorie, Quartier } from "../domaine/groupage";
+import type {
+  Categorie,
+  MediaProduit,
+  Quartier,
+} from "../domaine/groupage";
 import { appeler } from "./client";
 
 /**
@@ -103,8 +107,8 @@ export interface NouvelleCampagne {
   duree_heures: number;
   quartier_remise: string;
   point_remise: string;
-  media?: string;
-  media_alt?: string;
+  /** Jusqu'a 4 images et 2 videos. Le serveur refuse au-dela. */
+  medias?: MediaProduit[];
   caracteristiques?: { cle: string; valeur: string }[];
   variante_libelle?: string;
   variante_options?: string[];

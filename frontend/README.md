@@ -170,6 +170,7 @@ grep -rn "⚠️" src/
 | 10 — Questions publiques et modération | `acheteur/pages/Questions.tsx` | écran 10 |
 | 11 — Demander un produit | `acheteur/pages/DemanderProduit.tsx` | écran 11 |
 | 12 — Mes demandes | `acheteur/pages/MesDemandes.tsx` | écran 12 |
+| **Profil** *(4e onglet : mes informations, mes demandes, économie de données, aide)* | `acheteur/pages/Profil.tsx` | écran 1, « les onglets » — « 12 et réglages » |
 
 ### Côté groupeur — chrome **bleu** (§1.2)
 

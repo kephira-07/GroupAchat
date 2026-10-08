@@ -76,6 +76,14 @@ class CampagneSerializer(serializers.ModelSerializer):
             "contenu_part",
             "categorie",
             "prix_part",
+            # La liste complete : jusqu'a 4 images et 2 videos, dans l'ordre
+            # ou le groupeur les a posees.
+            "medias",
+            # ⚠️ **Et la couverture a part, qui en est deduite.** Elle n'est
+            # pas une redite : les cartes, le fil et les listes n'ont besoin
+            # que d'elle, et leur faire parcourir la liste pour retrouver la
+            # premiere image serait repeter la meme regle dans cinq ecrans.
+            # Le serveur la calcule une fois (voir `Campagne.media`).
             "media",
             "media_alt",
             "date_fin",

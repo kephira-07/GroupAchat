@@ -181,3 +181,56 @@ export function oublierTelephoneGroupeur(): void {
     /* Rien a retirer s'il n'a jamais pu etre ecrit. */
   }
 }
+
+// ── Le mode economie de donnees ─────────────────────────────────────────────
+
+const CLE_ECONOMIE = "groupachat.economie-donnees";
+
+/**
+ * Le mode « economie de donnees » — SPEC_ECRANS_FIGMA.md §1.6 regle 4.
+ *
+ * La spec le reclame explicitement comme **argument produit**, et pas comme un
+ * reglage de confort : le fil en defilement plein ecran est « l'ecran le plus
+ * couteux en donnees, destine au public le plus sensible au cout des
+ * donnees » (§1.6). Images seulement, aucune video automatique ; et au §2.14,
+ * les logos du bandeau partenaires cedent la place a du texte.
+ *
+ * ## Pourquoi il est lu ici et pas sur le compte
+ *
+ * C'est une preference d'**appareil**, pas de personne. Le meme utilisateur a
+ * besoin du mode sur son telephone en 3G et pas sur l'ordinateur partage du
+ * cybercafe. Le rattacher au compte le suivrait d'un appareil a l'autre, ce
+ * qui est exactement l'inverse de ce qu'on veut.
+ *
+ * **Consequence voulue : il fonctionne sans compte.** Un visiteur qui fait
+ * defiler le fil sans s'etre connecte est precisement celui a qui ce mode
+ * sert. Le mettre derriere un compte contredirait le §1.5 et viderait la
+ * regle 4 de son interet.
+ *
+ * ## ⚠️ Stocke, pas encore honore
+ *
+ * `pages/Profil` ecrit cette preference et la relit. **Ni `pages/Fil` ni
+ * `composants/BandeauPartenaires` ne la consultent encore** : la bascule est
+ * donc fidele a ce qu'elle enregistre, mais le fil charge toujours ses
+ * videos. Brancher les deux lecteurs est un travail distinct, et le signaler
+ * ici evite de croire la fonction terminee en voyant l'interrupteur bouger.
+ */
+export function lireEconomieDonnees(): boolean {
+  try {
+    return window.localStorage.getItem(CLE_ECONOMIE) === "oui";
+  } catch {
+    /* Stockage inaccessible : on repart du defaut. Le mode est **desactive**
+       par defaut, parce qu'un fil sans video n'est pas le produit qu'on
+       presente — c'est un choix que l'utilisateur fait, pas un etat subi. */
+    return false;
+  }
+}
+
+export function ecrireEconomieDonnees(actif: boolean): void {
+  try {
+    window.localStorage.setItem(CLE_ECONOMIE, actif ? "oui" : "non");
+  } catch {
+    /* La bascule tiendra le temps de l'onglet et repartira a zero ensuite.
+       Degrade, jamais casse — comme le reste de ce module. */
+  }
+}

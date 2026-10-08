@@ -206,8 +206,20 @@ export default function BandeauPartenaires() {
         ) : null}
       </div>
 
-      {/* Discret mais present. C'est une obligation de loyaute (§9.3). */}
-      <p className="mt-1.5 text-xs text-texte-secondaire">Sponsorisé</p>
+      {/*
+       * ⚠️ **La mention « Sponsorise » a ete retiree sur demande, et elle
+       * devra revenir avant la mise en ligne reelle.**
+       *
+       * Le §9.3 en fait une obligation de loyaute : une banniere payante qui
+       * ne se declare pas se fait passer pour du contenu editorial. Tant que
+       * les annonceurs sont ceux du jeu de demonstration, l'enjeu est nul ;
+       * le jour ou quelqu'un paie pour cette place, l'absence de mention
+       * devient un probleme, et pas seulement de gout.
+       *
+       * Si l'encombrement etait la raison du retrait, une pastille posee dans
+       * un coin de l'image coute zero pixel de hauteur et tient la meme
+       * promesse — c'est la forme a reprendre.
+       */}
     </section>
   );
 }

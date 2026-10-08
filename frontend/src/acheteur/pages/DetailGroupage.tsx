@@ -11,6 +11,7 @@ import {
   IconeVerifie,
 } from "../../ui/Icones";
 import PiedPage from "../mise-en-page/PiedPage";
+import GalerieMedia from "../../ui/GalerieMedia";
 import { type Groupage } from "../../domaine/groupage";
 import {
   decrireTempsRestant,
@@ -70,18 +71,24 @@ export default function DetailGroupage({
   const [descriptionDepliee, setDescriptionDepliee] = useState(false);
   const temps = decrireTempsRestant(groupage.heuresRestantes);
 
-  const media = (
-    <div className="relative aspect-4/5 w-full overflow-hidden bg-surface-douce lg:rounded-xl">
-      {groupage.photo ? (
-        <img
-          src={groupage.photo}
-          alt={groupage.photoAlt ?? groupage.produit}
-          fetchPriority="high"
-          decoding="async"
-          className="size-full object-cover"
-        />
-      ) : null}
+  /* La couverture reste en tete : c'est elle que l'acheteur a vue sur la
+     carte, et la retrouver en premier sur la fiche confirme qu'il a ouvert le
+     bon groupage. `photo` sert de repli pour les campagnes d'avant la liste. */
+  const medias =
+    groupage.medias && groupage.medias.length > 0
+      ? groupage.medias
+      : groupage.photo
+        ? [
+            {
+              type: "image" as const,
+              url: groupage.photo,
+              alt: groupage.photoAlt,
+            },
+          ]
+        : [];
 
+  const media = (
+    <GalerieMedia medias={medias} titre={groupage.produit}>
       {/* Les boutons en surimpression sont la pour le pouce. Sur ordinateur,
           le retour est dans le fil d'Ariane et le partage dans le bloc
           d'achat : deux retours a l'ecran seraient un de trop. */}
@@ -110,7 +117,7 @@ export default function DetailGroupage({
         <span aria-hidden="true" className="size-2 rounded-full bg-marque" />
         Groupage en cours
       </span>
-    </div>
+    </GalerieMedia>
   );
 
   /** Titre, prix, compteurs, groupeur. Identique dans les deux mises en page. */

@@ -134,35 +134,15 @@ jobs:
           cache-from: type=gha,scope=api
           cache-to: type=gha,scope=api,mode=max
 
-      - name: La boutique
-        uses: docker/build-push-action@v6
-        with:
-          context: ./frontend
-          target: boutique
-          push: true
-          # C'est **ici** que l'adresse publique de l'API entre dans le
-          # produit : Vite l'inscrit dans le JavaScript. L'image en porte donc
-          # une copie définitive, et changer l'adresse demande de republier.
-          build-args: |
-            VITE_API_URL=${{ vars.VITE_API_URL }}
-          tags: |
-            ${{ steps.prefixe.outputs.valeur }}/boutique:${{ steps.version.outputs.etiquette }}
-            ${{ steps.prefixe.outputs.valeur }}/boutique:latest
-          cache-from: type=gha,scope=front
-          cache-to: type=gha,scope=front,mode=max
-
-      - name: L'administration
-        uses: docker/build-push-action@v6
-        with:
-          context: ./frontend
-          target: admin
-          push: true
-          build-args: |
-            VITE_API_URL=${{ vars.VITE_API_URL }}
-          tags: |
-            ${{ steps.prefixe.outputs.valeur }}/admin:${{ steps.version.outputs.etiquette }}
-            ${{ steps.prefixe.outputs.valeur }}/admin:latest
-          cache-from: type=gha,scope=front
+      # ⚠️ **Le front n'est plus publie.** Les deux images nginx ont ete
+      # retirees de `frontend/Dockerfile` : il n'y a plus rien a publier tant
+      # qu'un serveur web n'est pas choisi. `dist/` et `dist-admin/` se
+      # construisent par `npm run build` et doivent etre deposes autrement.
+      #
+      # ⚠️ **`VITE_API_URL` reste une variable de construction** : Vite
+      # l'inscrit en clair dans le JavaScript. Quel que soit le serveur retenu,
+      # changer l'adresse de l'API demandera de reconstruire le paquet, jamais
+      # de redemarrer quoi que ce soit.
 
   # ── Installer sur le serveur ─────────────────────────────────────────────
   installer:

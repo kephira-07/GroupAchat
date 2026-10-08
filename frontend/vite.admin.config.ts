@@ -135,6 +135,26 @@ export default defineConfig({
    */
   publicDir: "public-admin",
 
+  /**
+   * ⚠️ **Son propre cache de dependances, et c'est indispensable.**
+   *
+   * Par defaut, Vite pre-construit les dependances dans
+   * `node_modules/.vite/deps`, **le meme dossier pour les deux
+   * configurations**. Or il y ecrit aussi l'empreinte de la configuration qui
+   * les a produites : quand les deux serveurs de developpement tournent
+   * ensemble — et ils tournent toujours ensemble — le second constate que
+   * l'empreinte a change, re-optimise, et reecrit le dossier partage.
+   *
+   * Le premier continue alors de reclamer des fichiers portant l'ancienne
+   * empreinte (`?v=b5b293f5`), que le serveur ne connait plus : il repond
+   * **504 Outdated Optimize Dep**, le module n'arrive jamais, et la page reste
+   * **entierement blanche**. Rien dans le terminal ne le signale, et le
+   * symptome ressemble a une panne du code.
+   *
+   * Un dossier par application, et les deux cessent de se marcher dessus.
+   */
+  cacheDir: "node_modules/.vite-admin",
+
   build: {
     /**
      * Le paquet de l'administration, a part. Sans cette ligne, `vite build`

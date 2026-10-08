@@ -721,7 +721,11 @@ Ce ne sont pas des oublis de dessin, ce sont **deux décisions antérieures que 
 
 **Objectif :** donner tout ce qu'il faut pour décider de payer.
 
-1. **Média** pleine largeur, ratio 4:5, flèche de retour à gauche et **icône de partage à droite**. Si vidéo : lecture au toucher, son coupé par défaut.
+1. **Galerie** pleine largeur, ratio 4:5, flèche de retour à gauche et **icône de partage à droite**. Jusqu'à **4 photos et 2 vidéos** (écran 14), la couverture en premier.
+
+   **Les vignettes n'apparaissent qu'à partir de deux médias.** Une galerie d'un seul élément est une galerie qui ment sur ce qu'elle contient, et ses commandes ne mènent nulle part.
+
+   **Aucune vidéo ne se charge avant qu'on appuie.** On voit l'affiche et un bouton de lecture ; la vidéo elle-même n'est demandée qu'au toucher, son coupé par défaut. Sur un forfait limité, précharger une vidéo qui ne sera pas regardée est une dépense prise à l'acheteur sans le lui demander — c'est le §1.6 et le §18.1 pris ensemble. La vignette d'une vidéo porte donc un repère de lecture **avant** le clic : on doit savoir ce qu'on déclenche.
 2. **Titre :** « Écouteurs filaires avec micro »
 3. **Prix :** `4 000 F` en `Prix`, seul. En dessous, en `Corps` `texte-secondaire` : « par part ». **Ni prix barré, ni pastille de réduction.**
 4. **`CompteurTemps`** : « 🕐 Plus que 2 jours — se termine le 7 octobre à 23 h 59 ».
@@ -1091,7 +1095,7 @@ C'est l'étape qui décide si une campagne se vend. Un acheteur qui ne trouve pa
 |---|---|---|
 | **Nom du produit** | Oui | Avec la marque si elle existe |
 | **Catégorie** | Oui | Pilote les filtres de l'écran 2 |
-| **Média** | Oui | Jusqu'à 3 photos **ou une vidéo verticale de 15 s** |
+| **Médias** | Oui | Jusqu'à **4 photos et 2 vidéos** — au moins une photo |
 | **Ce que contient une part** | Oui | La question que tout acheteur se pose en premier |
 | **Description** | Oui, 200 caractères minimum | Voir ci-dessous |
 | **Caractéristiques** | Recommandé | Liste de paires *libellé / valeur* — voir ci-dessous |
@@ -1107,6 +1111,14 @@ C'est l'étape qui décide si une campagne se vend. Un acheteur qui ne trouve pa
 **Une liste de contrôle avant publication**, à dessiner comme un bloc à cocher plutôt qu'une suite d'erreurs : « Photo nette ✓ · Contenu d'une part ✓ · Garantie ✓ · Caractéristiques — *3 recommandées, 0 remplie* ». Un formulaire qui guide obtient de meilleures fiches qu'un formulaire qui refuse.
 
 Sur le média, une consigne à afficher dans le formulaire : « Une vidéo verticale filmée au téléphone marche très bien. Une photo nette suffit aussi. » Les groupeurs sans moyens de tournage ne doivent pas se sentir exclus du fil (§1.6).
+
+**Quatre photos et deux vidéos, et les deux nombres ne protègent pas la même chose.** Quatre photos est une limite de confort, large exprès : les faces, l'échelle, ce que contient réellement une part. Un acheteur qui ne trouve pas une information ne demande pas la photo suivante, il passe au groupage suivant. Deux vidéos est une limite de coût : l'acheteur est sur un forfait de données limité (§18.1), une vidéo pèse cent fois une photo, et la troisième ne convainc plus personne — elle ne fait que coûter de l'argent à celui qui la regarde.
+
+**Au moins une photo, même quand il y a une vidéo.** C'est le §1.6 appliqué au formulaire : les cartes, les lignes de liste et le fil affichent une image, et une fiche qui n'en porte aucune reste vide le temps que la vidéo charge — c'est-à-dire pendant la seconde où l'acheteur décide de s'arrêter ou de faire défiler. L'affiche d'une vidéo est acceptée à la place : c'en est une.
+
+**La première photo est la couverture**, celle qui part dans les listes. À dire dans le formulaire, sinon le groupeur ne sait pas que l'ordre compte.
+
+**Les adresses, pas les fichiers — pour l'instant.** Le stockage des médias reste à définir (§18 du cahier des charges). Tant qu'il n'existe pas, le formulaire demande une adresse et le dit franchement : un bouton « Choisir un fichier » qui ne mène nulle part est pire qu'un champ honnête. Le jour où le stockage existe, seul ce formulaire change — ni le modèle, ni l'API.
 
 **Étape 2 — le prix, les paliers et la durée**
 

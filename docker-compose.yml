@@ -120,57 +120,19 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  # ── La boutique ──────────────────────────────────────────────────────────
-  boutique:
-    build:
-      context: ./frontend
-      target: boutique
-      args:
-        # ⚠️⚠️ **Lu a la CONSTRUCTION, et vu depuis le NAVIGATEUR.**
-        #
-        # Deux pieges d'un coup, et aucun des deux ne produit de message
-        # d'erreur :
-        #
-        # 1. Vite inscrit cette valeur **en clair dans le JavaScript produit**.
-        #    La changer demande `docker compose build boutique`, pas un
-        #    redemarrage. La mettre dans `environment:` n'aurait aucun effet ;
-        # 2. c'est le **navigateur** qui appellera cette adresse, pas le
-        #    conteneur. `http://api:8000/api` marche entre conteneurs et
-        #    echoue dans le navigateur, qui ne resout pas `api`.
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000/api}
-    ports:
-      - "${PORT_BOUTIQUE:-5173}:80"
-    depends_on:
-      - api
-    restart: unless-stopped
-
-  # ── L'administration ─────────────────────────────────────────────────────
+  # ── Le front ── pas ici ───────────────────────────────────────
   #
-  # ⚠️ **Elle ne demande aucun mot de passe.** L'ecran A1 n'affiche que des
-  # compteurs, mais l'ecran A2 affiche des noms, des numeros et des references
-  # de pieces d'identite. Ce qui protege ces donnees aujourd'hui, c'est le
-  # jeton `X-Jeton-Admin` exige par `/api/dossiers/` cote backend : la page
-  # s'ouvre, les donnees ne viennent pas sans le jeton.
+  # **La boutique et l'administration ne sont pas conteneurisees.** Le serveur
+  # web qui servira `dist/` et `dist-admin/` n'est pas encore choisi, et
+  # `frontend/Dockerfile` ne contient donc que l'etape de construction.
   #
-  # **Avant une mise en ligne reelle** : retirer la publication de ce port et
-  # joindre ce service par un reseau prive ou un VPN. Tel quel, il convient a
-  # une machine de developpement et a une demonstration, pas a un VPS ouvert.
-  admin:
-    build:
-      context: ./frontend
-      target: admin
-      args:
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000/api}
-    ports:
-      # `127.0.0.1:` devant le port — et c'est la difference avec la boutique.
-      # Ainsi ecrit, le port n'ecoute **que sur la machine locale** et non sur
-      # toutes ses interfaces : il n'est pas joignable depuis le reseau, meme
-      # si le pare-feu est permissif. C'est le garde-fou minimal pour une
-      # interface interne sans mot de passe.
-      - "127.0.0.1:${PORT_ADMIN:-5174}:80"
-    depends_on:
-      - api
-    restart: unless-stopped
+  # En developpement, le front tourne hors Docker :
+  #
+  #   cd frontend && npm run dev          # la boutique, sur 5173
+  #   cd frontend && npm run dev:admin    # l'administration, sur 5174
+  #
+  # Ce sont les ports que `CORS_ORIGINES` autorise par defaut : l'API
+  # ci-dessus accepte donc leurs appels sans reglage supplementaire.
 
 volumes:
   donnees-postgres:

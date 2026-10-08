@@ -69,43 +69,15 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  boutique:
-    # ⚠️ **`VITE_API_URL` n'apparaît pas ici, et ce n'est pas un oubli.** Vite
-    # l'inscrit en clair dans le JavaScript **au moment de construire** :
-    # l'image porte donc déjà l'adresse. La passer au lancement n'aurait aucun
-    # effet. Elle est fixée par la variable de dépôt `VITE_API_URL` quand
-    # l'intégration continue publie l'image — voir `DEPLOIEMENT.md`.
-    #
-    # Conséquence pratique : **changer l'adresse de l'API demande de republier
-    # les images**, pas de modifier ce fichier.
-    image: ${IMAGE_PREFIXE}/boutique:${ETIQUETTE:-latest}
-    ports:
-      - "${PORT_BOUTIQUE:-80}:80"
-    depends_on:
-      - api
-    restart: unless-stopped
-
-  admin:
-    # ⚠️ **Elle ne demande aucun mot de passe.** L'écran A1 n'affiche que des
-    # compteurs, mais l'écran A2 affiche des noms, des numéros et des
-    # références de pièces d'identité. Ce qui protège ces données, c'est le
-    # jeton `X-Jeton-Admin` exigé par `/api/dossiers/` : la page s'ouvre, les
-    # données ne viennent pas sans le jeton.
-    #
-    # D'où le `127.0.0.1:` devant le port — il n'écoute **que sur la machine
-    # elle-même**, et n'est donc pas joignable depuis Internet même si le
-    # pare-feu est permissif. On l'atteint par un tunnel SSH :
-    #
-    #   ssh -L 5174:127.0.0.1:5174 utilisateur@serveur
-    #
-    # **Ne pas publier ce port sur une interface publique** avant que
-    # l'authentification soit branchée.
-    image: ${IMAGE_PREFIXE}/admin:${ETIQUETTE:-latest}
-    ports:
-      - "127.0.0.1:${PORT_ADMIN:-5174}:80"
-    depends_on:
-      - api
-    restart: unless-stopped
+  # ⚠️ **Le front n'est pas servi par ce fichier.** Les deux images nginx ont
+  # ete retirees : le serveur web reste a choisir. En attendant, seules la base
+  # et l'API tournent ici, et `dist/` et `dist-admin/` doivent etre deposes
+  # par un autre moyen — c'est la piece manquante avant une mise en ligne.
+  #
+  # ⚠️ Quel que soit ce serveur, **l'administration ne doit pas etre publiee
+  # telle quelle** : l'ecran A2 affiche des noms, des numeros et des references
+  # de pieces d'identite, et la page s'ouvre sans mot de passe. On l'atteint
+  # par un tunnel SSH, ou derriere une authentification posee par le serveur.
 
 volumes:
   donnees-postgres:
