@@ -1,31 +1,28 @@
 # syntax=docker/dockerfile:1
 
 # ╭──────────────────────────────────────────────────────────────────────────╮
-# │ Le front — deux applications, une seule construction                     │
+# │ Le front — deux applications, deux cibles, une seule construction        │
 # ╰──────────────────────────────────────────────────────────────────────────╯
 #
 # `npm run build` produit les deux paquets d'un coup : `dist/` pour la boutique
 # et `dist-admin/` pour l'administration (voir `vite.config.ts` et
-# `vite.admin.config.ts`).
+# `vite.admin.config.ts`). Ce fichier les emballe dans deux images distinctes,
+# choisies par `--target` :
+#
+#   docker build --target boutique .
+#   docker build --target admin .
 #
 # Une seule construction Node pour les deux : les dependances ne s'installent
-# qu'une fois, et les deux paquets sortent du meme arbre de fichiers — donc la
+# qu'une fois, et les deux images sortent du meme arbre de fichiers — donc la
 # boutique et l'administration ne peuvent pas diverger par accident.
 #
-# ⚠️ **Ce fichier ne sert plus que les paquets.** Les deux etapes nginx qui les
-# servaient ont ete retirees : le serveur sera choisi autrement. Il n'y a donc
-# plus de cible `boutique` ni `admin`, et plus rien ici n'ecoute sur un port.
-#
-# Pour recuperer les paquets construits sans lancer de serveur :
-#
-#   docker build --target construction -t groupachat-front:construction .
-#   docker create --name extraction groupachat-front:construction
-#   docker cp extraction:/app/dist ./dist
-#   docker cp extraction:/app/dist-admin ./dist-admin
-#   docker rm extraction
+# ⚠️ **Node n'est pas dans les images finales.** Ce sont des fichiers statiques
+# servis par nginx. Embarquer le constructeur dans l'image servie, c'est
+# multiplier sa taille par dix et exposer un interpreteur qui n'a plus rien a
+# faire.
 
 
-# ── Construire les deux paquets ────────────────────────────────────────────
+# ── Etape 1 : construire les deux paquets ──────────────────────────────────
 FROM node:22-alpine AS construction
 
 WORKDIR /app
@@ -61,3 +58,36 @@ ENV VITE_API_URL=$VITE_API_URL
 # donc verifie ici : **une erreur de type arrete la construction de l'image**,
 # ce qui est exactement ou l'on veut l'apprendre.
 RUN npm run build
+
+
+# ── Etape 2a : la boutique — acheteur, groupeur, livreur ───────────────────
+FROM nginx:1.29-alpine AS boutique
+
+COPY --from=construction /app/dist /usr/share/nginx/html
+COPY nginx.boutique.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+# Verification de sante : nginx repond-il vraiment ? Un conteneur « demarre »
+# dont le serveur a renonce ressemble, pour Compose, a un conteneur en bonne
+# sante — jusqu'a ce qu'un visiteur s'en apercoive.
+#
+# `wget` est present dans l'image Alpine de nginx ; `curl` ne l'est pas.
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD wget --quiet --tries=1 --spider http://localhost/ || exit 1
+
+
+# ── Etape 2b : l'administration — ecrans A1 et A2 ──────────────────────────
+FROM nginx:1.29-alpine AS admin
+
+# ⚠️ **`dist-admin/`, et la page s'appelle `admin.html`, pas `index.html`.**
+# La configuration nginx ci-dessous doit donc nommer `admin.html` comme page
+# d'index, sinon la racine du site renvoie 403 — nginx cherchant un
+# `index.html` qui n'existe pas dans ce paquet.
+COPY --from=construction /app/dist-admin /usr/share/nginx/html
+COPY nginx.admin.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD wget --quiet --tries=1 --spider http://localhost/ || exit 1
