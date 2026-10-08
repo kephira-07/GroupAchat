@@ -1,0 +1,8 @@
+node_modules
+dist
+.verif
+tsconfig.tsbuildinfo
+dist-admin
+
+# Adresse de l API, propre a chaque machine.
+.env.local
