@@ -1,3 +1,5 @@
+import { creerUneCampagne } from "../../api/espaceGroupeur";
+import { useAction } from "../../api/useRequete";
 import { useState } from "react";
 import { formaterFrancs } from "../../domaine/format";
 import { CATEGORIES, LIBELLE_CATEGORIE, type Categorie } from "../../domaine/groupage";
@@ -46,11 +48,14 @@ interface Palier {
 
 export default function CreerCampagne({
   prerempli,
+  telephone = "",
   onRetour,
   onPubliee,
 }: {
   /** Arrivee depuis l'ecran 19 : la demande agregee qui a declenche la creation. */
   prerempli?: { produit: string; quantite: number; quartier: string };
+  /** Le numero du groupeur : c'est lui qui l'identifie (§1.5). */
+  telephone?: string;
   onRetour: () => void;
   onPubliee: () => void;
 }) {
@@ -68,9 +73,41 @@ export default function CreerCampagne({
     "partenaire",
   );
 
+  const publication = useAction(creerUneCampagne);
+
   const prix = Number(prixPiece) || 0;
   const cout = Number(coutPiece) || 0;
   const { commission, verse } = calculerVersement(prix);
+
+  /**
+   * Publie le groupage. **C'est le moment ou il devient visible des acheteurs.**
+   *
+   * ⚠️ Le serveur peut refuser, et pour deux raisons qui ne sont pas des
+   * fautes de saisie : un dossier KYC non valide (§10.5) et un depassement du
+   * plafond de collecte (§10.4). Les deux vivent dans le modele, donc une
+   * interface qui masquerait le bouton ne protegerait de rien — il suffit
+   * d'une requete directe. Le message du refus est explicite, on l'affiche tel
+   * quel.
+   */
+  const publier = async () => {
+    const creee = await publication.executer({
+      telephone,
+      titre: produit.trim(),
+      description: description.trim() || produit.trim(),
+      contenu_part: contenuPart.trim() || produit.trim(),
+      categorie: categorie as Categorie,
+      prix_part: prix,
+      duree_heures: duree * 24,
+      quartier_remise: prerempli?.quartier ?? "Tokoin",
+      point_remise: "Point de remise à préciser",
+      caracteristiques: garantie.trim()
+        ? [{ cle: "Garantie", valeur: garantie.trim() }]
+        : [],
+    });
+    if (creee) {
+      onPubliee();
+    }
+  };
 
   /** La liste de controle : un bloc a cocher, pas une suite d'erreurs. */
   const controles = [
@@ -421,9 +458,28 @@ export default function CreerCampagne({
             Continuer
           </Bouton>
         ) : (
-          <Bouton role="groupeur" onClick={onPubliee}>
-            Publier la campagne
-          </Bouton>
+          <>
+            {/* Le refus du serveur, colle au bouton : en haut de l'ecran, il
+                serait hors champ au moment ou l'on appuie. C'est ici
+                qu'atterrissent le dossier KYC non valide (§10.5) et le
+                depassement de plafond (§10.4) — deux refus qui s'expliquent,
+                et dont le message du modele dit la raison. */}
+            {publication.erreur ? (
+              <p role="alert" className="mb-2 text-sm font-medium text-danger">
+                {publication.erreur.estRefusDeSaisie
+                  ? Object.values(publication.erreur.champs)[0]?.[0]
+                  : publication.erreur.messageLisible}
+              </p>
+            ) : null}
+
+            <Bouton
+              role="groupeur"
+              chargement={publication.enCours}
+              onClick={publier}
+            >
+              Publier le groupage
+            </Bouton>
+          </>
         )}
       </div>
     </div>

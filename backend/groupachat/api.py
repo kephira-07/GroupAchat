@@ -24,7 +24,11 @@ from rest_framework.response import Response
 
 from . import domaine
 from .catalogue.models import Campagne
-from .commandes.models import Commande, enregistrer_paiement
+from .commandes.models import (
+    Commande,
+    PlafondAtteint,
+    enregistrer_paiement,
+)
 from .comptes.sessions import AuthentificationSession, acheteur_de_la_requete
 from .comptes.models import Groupeur
 from .echanges.models import Demande, Question
@@ -365,6 +369,11 @@ class CommandeViewSet(viewsets.GenericViewSet):
             )
         except domaine.ZoneNonDesservie as erreur:
             raise ValidationError({"quartier": str(erreur)}) from erreur
+        except PlafondAtteint as erreur:
+            # ⚠️ Sur `campagne`, et non `detail` : le refus porte sur le
+            # groupage, pas sur la saisie de l'acheteur — qui n'a rien fait de
+            # mal. L'écran l'affiche à côté du produit, pas sous un champ.
+            raise ValidationError({"campagne": str(erreur)}) from erreur
         except DjangoValidationError as erreur:
             raise ValidationError(erreur.message_dict or erreur.messages) from erreur
 

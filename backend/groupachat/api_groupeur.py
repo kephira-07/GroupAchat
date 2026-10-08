@@ -49,7 +49,13 @@ from rest_framework.response import Response
 
 from . import domaine
 from .catalogue.models import Campagne
-from .commandes.models import Commande, Versement, cloturer_campagne
+from .commandes.models import (
+    Commande,
+    Justificatif,
+    Versement,
+    annuler_campagne,
+    cloturer_campagne,
+)
 from .comptes.models import Groupeur
 from .echanges.models import Demande, Question
 
@@ -151,6 +157,22 @@ class CreationCampagneSerializer(serializers.ModelSerializer):
             "remise_le",
             "duree_heures",
         )
+
+
+class DepotJustificatifSerializer(serializers.Serializer):
+    """Ce que l'écran 17 envoie.
+
+    ``fournisseur`` et ``montant`` ne sont pas décoratifs : ce sont les deux
+    seules choses que l'administrateur regarde pour décider de libérer
+    l'argent, et les deux qu'on recoupera plus tard avec le relevé bancaire.
+    """
+
+    nature = serializers.ChoiceField(choices=Justificatif.Nature.choices)
+    fournisseur = serializers.CharField(max_length=160)
+    montant = serializers.DecimalField(max_digits=12, decimal_places=0)
+    reference = serializers.CharField(
+        max_length=200, required=False, allow_blank=True
+    )
 
 
 class GroupeurViewSet(viewsets.GenericViewSet):
@@ -336,6 +358,80 @@ class GroupeurViewSet(viewsets.GenericViewSet):
                 "frais_livraison_collectes": int(versement.frais_livraison_collectes),
             }
         )
+
+    # ── Écran 17 — le justificatif d'achat ─────────────────────────────────
+
+    @action(detail=True, methods=["post"], url_path="justificatif")
+    def justificatif(self, request, pk=None):
+        """Dépose le devis fournisseur, puis le reçu de paiement (§10.3).
+
+        **Le devis est sa demande de virement.** Tant qu'il n'est pas déposé,
+        l'argent de la campagne reste détenu par Group Achat : le §10.3 exige
+        de savoir chez qui le groupeur achète *avant* que l'argent ne sorte,
+        parce que c'est le dernier moment où un contrôle sert encore à quelque
+        chose.
+
+        Le reçu vient après l'achat. Son absence entraîne l'annulation de la
+        campagne — et c'est pour ça qu'il est demandé ici plutôt que laissé à
+        la bonne volonté.
+
+        ⚠️ **Aucun fichier n'est téléversé.** Le stockage à accès restreint
+        n'existe pas encore (même raison que pour les pièces d'identité) : ce
+        qui est enregistré, c'est **le fournisseur et le montant**, c'est-à-dire
+        ce que l'administrateur lit pour décider.
+        """
+        groupeur = groupeur_depuis_la_requete(request)
+        campagne = groupeur.campagnes.filter(pk=pk).first()
+        if campagne is None:
+            raise NotFound("Cette campagne n'est pas la vôtre.")
+
+        entree = DepotJustificatifSerializer(data=request.data)
+        entree.is_valid(raise_exception=True)
+        donnees = entree.validated_data
+
+        # Redéposer remplace : sinon l'administrateur examine une pile et ne
+        # sait plus lequel fait foi.
+        justificatif, _ = Justificatif.objects.update_or_create(
+            campagne=campagne,
+            nature=donnees["nature"],
+            defaults={
+                "fournisseur": donnees["fournisseur"],
+                "montant": donnees["montant"],
+                "reference": donnees.get("reference", ""),
+                "etat": Justificatif.Etat.EN_ATTENTE,
+                "motif_refus": "",
+            },
+        )
+
+        return Response(
+            {
+                "id": justificatif.pk,
+                "nature": justificatif.nature,
+                "fournisseur": justificatif.fournisseur,
+                "montant": int(justificatif.montant),
+                "etat": justificatif.etat,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+    # ── Écran 16 — annuler ─────────────────────────────────────────────────
+
+    @action(detail=True, methods=["post"], url_path="annuler")
+    def annuler(self, request, pk=None):
+        """Le groupeur renonce : **tous les acheteurs sont remboursés**.
+
+        ⚠️ **Aucune commission n'est prélevée sur une campagne annulée** (§7).
+        La fonction ne crée donc aucun versement, et annule celui qui attendait
+        — un groupage qui n'aboutit pas ne rapporte rien à personne, et c'est
+        ce qui rend la promesse « vous êtes livré, ou remboursé » tenable.
+        """
+        groupeur = groupeur_depuis_la_requete(request)
+        campagne = groupeur.campagnes.filter(pk=pk).first()
+        if campagne is None:
+            raise NotFound("Cette campagne n'est pas la vôtre.")
+
+        annuler_campagne(campagne)
+        return Response({"statut": campagne.statut})
 
     # ── Écran 18 — le portefeuille ──────────────────────────────────────────
 

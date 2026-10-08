@@ -261,6 +261,8 @@ Puisque nous recrutons les groupeurs nous-mêmes, nous disposons d'une informati
 | Confirmé | 3 campagnes livrées sans litige | 600 000 F |
 | Établi | 10 campagnes livrées sans litige | Sans plafond, au cas par cas |
 
+⚠️ **Le plafond se contrôle au paiement, pas à la création du groupage.** Le contrôler à la création reviendrait à ne rien contrôler — la collecte y vaut zéro. C'est donc un paiement qui ferait dépasser le plafond qui est refusé, et l'acheteur lit « ce groupage est complet » : il n'a rien fait de mal, et nos règles internes ne le regardent pas.
+
 Un plafond n'empêche pas la fraude, il **borne le montant maximal d'un sinistre** — ce qui, pour une jeune structure, est la différence entre un incident et une fermeture. Il ne coûte rien à mettre en place et remplace utilement la certification abandonnée : la fiabilité se construit en livrant, pas en déposant des pièces.
 
 ### 10.4 bis Le compte acheteur — créé au moment de payer
@@ -358,6 +360,24 @@ Signalement automatique, **décision humaine**.
 **Dans le MVP, tout se fait à la main** : dépôt des pièces par le groupeur, examen par un administrateur, validation, attribution du niveau et du plafond. À ce volume, c'est le bon choix — et c'est aussi ce qui nous apprend à qui nous avons affaire.
 
 Deux outils le permettent, et ils font le même travail. L'**admin Django** reste disponible et donne accès aux références des pièces déposées, avec un accès journalisé. L'**écran A2** du produit a été construit parce que l'admin Django ne sait pas faire trois choses dont dépend ce parcours : trier la file par ancienneté d'attente plutôt que par date de création, montrer d'un coup d'œil si les noms concordent sans ouvrir chaque fiche, et **afficher le texte que le groupeur recevra avant qu'on tranche**.
+
+#### Quand l'argent part réellement
+
+Deux règles coexistent, et il faut les lire ensemble plutôt que de les opposer :
+
+- le **§7** : « le groupeur est payé intégralement à la clôture ». Le montant est arrêté ce jour-là. Rien n'est retenu « en attendant de voir », rien ne dépend de la livraison — et c'est cette règle qui interdit la formulation « bloqué jusqu'à la livraison » ;
+- le **§10.3** : « il dépose son devis fournisseur **avant tout versement** ». Le décaissement, lui, suit le devis.
+
+Autrement dit : le groupeur sait **le jour de la clôture** combien il touche, et il le touche **dès qu'il a montré chez qui il achète**. Ce n'est pas une retenue de garantie, c'est le contrôle qui se joue avant que l'argent ne sorte — le seul moment où il protège encore de quelque chose, puisqu'il n'y a ni caution (§10.6) ni solde retenu après livraison.
+
+En pratique, un versement existe dès la clôture avec son montant, à l'état *en attente*, et passe à *effectué* quand un administrateur le libère depuis l'écran A3. Deux files en découlent sur l'écran A1, et elles n'appellent pas la même action :
+
+| File | Ce qui bloque | Ce qu'on peut faire |
+|---|---|---|
+| **Virements à faire** | Rien — le devis est là | Libérer |
+| **Devis attendus** | Le groupeur n'a rien déposé | Le relancer, c'est tout |
+
+⚠️ **L'ancienneté est le chiffre qui doit faire agir, pas le montant.** Un groupeur qui attend depuis cinq jours ne peut pas acheter la marchandise qu'il a vendue, et ce sont ses acheteurs qui attendront ensuite. Les deux files sont donc triées du plus ancien au plus récent.
 
 #### Annoncer la décision — par écrit ou de vive voix
 
@@ -765,9 +785,11 @@ Il recrute et vérifie les groupeurs, fixe leur plafond, contrôle les reçus, d
 **Livreur** — page web, sans compte ni installation
 22. Tournée du livreur
 
-**Administrateur** — deux écrans, le reste en admin Django (§13.6)
-- **A1. Tableau de bord** — *à maquetter* : alertes, les six files de travail, quatre indicateurs
+**Administrateur** — quatre écrans derrière une barre latérale, le reste en admin Django (§13.6)
+- **A1. Tableau de bord** : alertes, files de travail, courbe de collecte, répartition des groupages, quatre indicateurs
 - **A2. Recrutement — dossiers KYC** : la file d'attente, l'examen d'un dossier, la décision et son annonce
+- **A3. Virements aux groupeurs** : le devis fournisseur, et la libération des fonds
+- **A4. Groupages** : tous états — ouverts, clôturés, livrés, annulés
 - A3. Justificatifs d'achat et déblocage des fonds — admin Django
 - A4. Contestations et livraisons non confirmées — admin Django
 - A5. Modération et messages signalés — admin Django

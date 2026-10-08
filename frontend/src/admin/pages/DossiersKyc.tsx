@@ -216,7 +216,12 @@ export default function DossiersKyc({
             }}
           />
 
-          <main className="min-w-0 flex-1">
+          {/* ⚠️ Un `div`, pas un `main` : la coquille de l'administration
+              (`mise-en-page/Sidebar`) en fournit deja un, et **un document
+              n'a qu'un seul `main`**. Les imbriquer est du HTML invalide, et
+              un lecteur d'ecran annonce alors deux regions principales — on ne
+              sait plus laquelle porte le contenu. */}
+          <div className="min-w-0 flex-1">
             {file.chargement ? (
               <FicheEnChargement />
             ) : dossier ? (
@@ -236,7 +241,7 @@ export default function DossiersKyc({
                 dossiers le jour où ils arrivent et cette page reste vide.
               </p>
             )}
-          </main>
+          </div>
         </div>
       )}
     </div>

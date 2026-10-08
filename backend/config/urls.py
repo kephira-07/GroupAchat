@@ -16,6 +16,7 @@ from groupachat.api import (
     DemandeViewSet,
     QuestionViewSet,
 )
+from groupachat.api_admin import AdministrationViewSet
 from groupachat.api_comptes import CompteViewSet
 from groupachat.api_groupeur import GroupeurViewSet as EspaceGroupeurViewSet
 from groupachat.api_kyc import DossierViewSet, GroupeurViewSet
@@ -39,6 +40,12 @@ routeur.register("demandes", DemandeViewSet, basename="demande")
 #   `AllowAny` du §1.5.
 routeur.register("groupeurs", GroupeurViewSet, basename="groupeur")
 routeur.register("dossiers", DossierViewSet, basename="dossier")
+
+# L'administration : etat du service, groupages, virements. Derriere le
+# meme jeton que `dossiers/` — ces routes voient tout.
+routeur.register(
+    "administration", AdministrationViewSet, basename="administration"
+)
 
 # L'espace de travail du groupeur : ses campagnes, son portefeuille, ses
 # questions. Distinct de `groupeurs/`, qui est le **depot de dossier**

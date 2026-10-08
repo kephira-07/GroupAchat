@@ -188,15 +188,28 @@ class Campagne(models.Model):
                 "lancer de campagne."
             )
 
-        plafond = self.groupeur.plafond if self.groupeur_id else None
-        if plafond is not None and self.collecte_prevue() > plafond:
-            raise ValidationError(
-                f"Cette campagne dépasserait le plafond de collecte du groupeur "
-                f"({plafond} F)."
-            )
+    # ⚠️ **Le plafond de collecte n'est plus contrôlé ici**, et c'est une
+    # correction, pas un relâchement.
+    #
+    # Il l'était, et ça produisait deux défauts opposés :
+    #
+    # - **il ne bornait rien.** À la création, la collecte vaut zéro : le
+    #   contrôle passait toujours. Or le §10.4 lui donne un rôle précis —
+    #   « borner le montant maximal d'un sinistre » — qui ne vaut qu'au moment
+    #   où l'argent entre ;
+    # - **il rendait la campagne immodifiable** dès qu'elle dépassait le
+    #   plafond. `clean` s'exécute à chaque `save`, donc clôturer une campagne
+    #   qui avait bien marché échouait avec « dépasserait le plafond » — un
+    #   message qui n'a aucun sens au moment de clôturer. C'est le même piège
+    #   que le contrôle n° 2 sur le groupeur (voir `Groupeur.save`) : une règle
+    #   de saisie appliquée à toute écriture.
+    #
+    # Le contrôle vit désormais dans `enregistrer_paiement`, là où il borne
+    # réellement l'exposition : **un paiement qui ferait dépasser le plafond
+    # est refusé.**
 
     def collecte_prevue(self) -> Decimal:
-        """La collecte déjà réalisée. Sert au contrôle du plafond (§10.4)."""
+        """La collecte déjà réalisée. Lue par le contrôle de plafond (§10.4)."""
         return self.collecte_sur_les_parts if self.pk else Decimal("0")
 
     def save(self, *args, **kwargs):

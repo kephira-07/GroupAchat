@@ -39,7 +39,15 @@ from django.db import transaction
 from django.utils import timezone
 
 from groupachat.catalogue.models import Campagne
-from groupachat.commandes.models import enregistrer_paiement
+from groupachat.commandes.models import (
+    Commande,
+    Justificatif,
+    Versement,
+    annuler_campagne,
+    cloturer_campagne,
+    enregistrer_paiement,
+    liberer_le_versement,
+)
 from groupachat.comptes.models import Acheteur, Groupeur, PieceKyc
 from groupachat.echanges.models import Question
 
@@ -148,6 +156,17 @@ class Command(BaseCommand):
                     # Leur dossier est validé : sans ça ils ne pourraient rien
                     # lancer, ce qui est le comportement voulu.
                     "statut_kyc": Groupeur.StatutKyc.VALIDE,
+                    # ⚠️ **Niveau Établi**, et ce n'est pas une facilité : ces
+                    # trois-là mènent des groupages à 400 000 F dans le jeu de
+                    # démonstration. Les laisser au niveau Entrée — plafond
+                    # 150 000 F — ferait refuser la moitié des paiements, et le
+                    # jeu de données ne raconterait plus rien. Un groupeur qui
+                    # collecte ces montants est, par construction, passé par
+                    # les trois campagnes livrées du §10.4.
+                    #
+                    # Les nouveaux venus de la file KYC, eux, sont au niveau
+                    # Entrée : c'est là que le plafond se démontre.
+                    "niveau": Groupeur.Niveau.ETABLI,
                     "titulaire_mobile_money": nom,
                     "numero_mobile_money": telephone,
                 },
@@ -162,6 +181,7 @@ class Command(BaseCommand):
             par_identifiant[donnees["id"]] = campagne
 
         self._charger_les_questions(catalogue, par_identifiant)
+        self._creer_les_etats_de_fin(par_identifiant)
 
         self.stdout.write(
             self.style.SUCCESS(
@@ -230,11 +250,47 @@ class Command(BaseCommand):
                 cle_idempotence=f"demo-{donnees['id']}-{numero}",
             )
 
+        self._etaler_les_commandes(campagne, index)
+
         self.stdout.write(
             f"  {campagne.titre} — {donnees['acheteursConfirmes']} commandes, "
             f"{campagne.collecte_sur_les_parts} F collectés"
         )
         return campagne
+
+    def _etaler_les_commandes(self, campagne, index: int) -> None:
+        """Répartit les commandes sur les quatorze derniers jours.
+
+        ⚠️ **Sans ça, la courbe de collecte de l'écran A1 ne montre rien.**
+        ``passee_le`` est en ``auto_now_add`` : toutes les commandes du jeu de
+        démonstration portent l'instant du chargement, donc la courbe reste
+        plate pendant treize jours puis monte à la verticale. Ce n'est pas une
+        courbe, c'est un trait — et un administrateur à qui on la montre ne
+        peut rien en conclure.
+
+        La répartition n'est pas uniforme : elle **monte vers la fin**, parce
+        que c'est ce que fait un groupage réel — les commandes s'accélèrent à
+        l'approche de la clôture, c'est tout l'effet du compte à rebours du
+        §2.4. Une courbe plate donnerait une fausse idée du produit.
+        """
+        commandes = list(campagne.commandes.order_by("id"))
+        if not commandes:
+            return
+
+        maintenant = timezone.now()
+        total = len(commandes)
+
+        for rang, commande in enumerate(commandes):
+            # ⚠️ **Exposant inférieur à 1**, et le sens compte : `jours`
+            # décroît quand `avancement` croît, donc un exposant > 1 aurait
+            # entassé les commandes sur les jours *anciens* — exactement
+            # l'inverse de ce qu'on veut, et la courbe descendait.
+            avancement = (rang / max(1, total - 1)) ** 0.55
+            jours = 13 - avancement * 13
+            Commande.objects.filter(pk=commande.pk).update(
+                passee_le=maintenant
+                - timedelta(days=jours, hours=(index * 3 + rang) % 24)
+            )
 
     # ── Les questions publiques ─────────────────────────────────────────────
 
@@ -301,6 +357,72 @@ class Command(BaseCommand):
                         "reponse": _texte_de_la_reponse(echange.get("reponse")),
                     },
                 )
+
+    # ── Les fins de parcours, pour l'administration ────────────────────────
+
+    def _creer_les_etats_de_fin(self, par_identifiant: dict) -> None:
+        """Des groupages **arrivés au bout**, dans les quatre états possibles.
+
+        Sans eux, l'écran d'administration n'a rien à montrer : que des
+        groupages ouverts, aucune file, aucune courbe, aucun virement. Or c'est
+        précisément ce que l'administrateur regarde — ce qui s'est terminé, et
+        comment.
+
+        Les quatre cas ne sont pas interchangeables :
+
+        | Groupage | Ce qu'il met à l'épreuve |
+        |---|---|
+        | Huile de palme | **Virement à faire** : clôturé, devis déposé, argent prêt |
+        | Eau de javel | **Devis attendu** : clôturé, le groupeur n'a rien déposé |
+        | Ventilateur | **Annulé par le groupeur** : tout le monde remboursé |
+        | Serviettes | **Livré** : le cas qui fait monter le taux d'aboutissement |
+
+        Le deuxième est le plus utile à montrer : c'est celui où **le groupeur
+        attend**, et où l'administration est le goulot d'étranglement.
+        """
+        a_cloturer = {
+            "C3": ("Huilerie Adjalé, Adidogomé", 185000, True),
+            "C8": ("Grossiste Akodessewa", 72000, False),
+        }
+
+        for identifiant, (fournisseur, montant, avec_devis) in a_cloturer.items():
+            campagne = par_identifiant.get(identifiant)
+            if campagne is None or hasattr(campagne, "versement"):
+                continue
+
+            versement = cloturer_campagne(campagne)
+            if avec_devis:
+                Justificatif.objects.create(
+                    campagne=campagne,
+                    nature=Justificatif.Nature.DEVIS,
+                    fournisseur=fournisseur,
+                    montant=Decimal(str(montant)),
+                    reference=f"coffre/devis/{campagne.pk}",
+                )
+            # Reculé de quelques jours : sans ça, « attend depuis 0 jour » et
+            # la colonne d'ancienneté de l'écran ne démontre rien.
+            Versement.objects.filter(pk=versement.pk).update(
+                effectue_le=timezone.now() - timedelta(days=4 if avec_devis else 2)
+            )
+
+        annule = par_identifiant.get("C9")
+        if annule is not None and annule.statut == Campagne.Statut.OUVERTE:
+            annuler_campagne(annule)
+
+        livre = par_identifiant.get("C14")
+        if livre is not None and not hasattr(livre, "versement"):
+            versement = cloturer_campagne(livre)
+            Justificatif.objects.create(
+                campagne=livre,
+                nature=Justificatif.Nature.DEVIS,
+                fournisseur="Textile Lomé",
+                montant=Decimal("60000"),
+                reference=f"coffre/devis/{livre.pk}",
+            )
+            liberer_le_versement(versement, par="Administration")
+            livre.statut = Campagne.Statut.LIVREE
+            livre.save(update_fields=["statut"])
+            livre.commandes.update(statut="livree")
 
     # ── Les dossiers KYC en attente ─────────────────────────────────────────
 

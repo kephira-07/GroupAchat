@@ -231,8 +231,14 @@ function RouteurGroupeur({
                 }
               : undefined
           }
+          telephone={telephone}
           onRetour={retourTableau}
-          onPubliee={retourTableau}
+          onPubliee={() => {
+            /* Le groupage existe : le tableau de bord, la liste et les
+               chiffres ont tous change. */
+            recharger();
+            retourTableau();
+          }}
         />
       ) : null}
 

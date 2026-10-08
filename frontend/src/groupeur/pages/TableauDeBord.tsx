@@ -8,6 +8,7 @@ import { formaterFrancs } from "../../domaine/format";
 import { LIBELLE_CAMPAGNE, type Campagne } from "../../domaine/groupeur";
 import { decrireTempsRestant } from "../../domaine/format";
 import { useEspaceGroupeur } from "../../api/EspaceGroupeurContexte";
+import { Barre } from "../../ui/Graphique";
 import { ErreurReseau, ListeEnChargement } from "../../ui/EtatReseau";
 import { EnTeteGroupeur } from "../mise-en-page/ChromeGroupeur";
 import { IconeDemander } from "../../ui/Icones";
@@ -75,6 +76,17 @@ export default function TableauDeBord({
      et c'est exactement la que naissent les ecarts de tresorerie. */
   const ouvertes = bord?.campagnes_ouvertes ?? 0;
   const commandes = bord?.commandes ?? 0;
+
+  /** Les groupages encore ouverts : les seuls dont l'avancement veut dire
+      quelque chose. Un groupage clôturé n'avance plus. */
+  const enCours = espace.campagnes.filter(
+    (campagne) => campagne.statut === "ouverte",
+  );
+
+  /** Le dénominateur de la barre de collecte : son meilleur groupage en cours.
+      `|| 1` évite une division par zéro le premier jour. */
+  const collecteMaximale =
+    Math.max(...enCours.map((campagne) => campagne.collecte), 0) || 1;
 
   /**
    * ⚠️ **Un dossier non valide n'a pas de chiffres, et il ne faut surtout pas
@@ -241,6 +253,76 @@ export default function TableauDeBord({
         </button>
       </div>
 
+      {/* L'avancement des groupages en cours. */}
+      {enCours.length > 0 ? (
+        <section className="px-4 pt-6">
+          <h2 className="text-lg font-semibold text-texte">
+            Où en sont vos groupages
+          </h2>
+          {/*
+            ⚠️ **Deux barres par groupage, et pas une jauge de remplissage.**
+
+            Le §2.5 interdit la jauge de progression vers un objectif, et pour
+            une raison de fond : il n'y a **ni minimum ni plafond de
+            participants**, donc aucun dénominateur honnête. « 12 sur 20 »
+            serait inventé.
+
+            Ce qui est tracé ici a un dénominateur réel :
+
+            - **le temps**, dont la date de clôture est connue d'avance ;
+            - **la collecte**, rapportée au meilleur de ses groupages en cours
+              — c'est une comparaison entre ses propres chiffres, pas un
+              objectif qu'on lui aurait fixé.
+
+            Le chiffre est écrit à côté de chaque barre : l'information ne
+            repose jamais sur la seule couleur.
+          */}
+          <ul className="mt-3 space-y-4">
+            {enCours.map((campagne) => (
+              <li
+                key={campagne.id}
+                className="rounded-xl border border-bordure p-3"
+              >
+                <button
+                  type="button"
+                  onClick={() => onCampagne(campagne)}
+                  className="block w-full text-left"
+                >
+                  <p className="truncate font-medium text-texte">
+                    {campagne.produit}
+                  </p>
+                  <p className="mt-0.5 text-xs text-texte-secondaire">
+                    {campagne.commandes} commande
+                    {campagne.commandes > 1 ? "s" : ""}
+                  </p>
+
+                  <div className="mt-3 space-y-3">
+                    <Barre
+                      libelle="Temps écoulé"
+                      valeur={DUREE_TYPE_HEURES - campagne.heuresRestantes}
+                      maximum={DUREE_TYPE_HEURES}
+                      couleur={
+                        campagne.heuresRestantes <= 24
+                          ? "var(--color-primaire)"
+                          : "var(--color-confiance)"
+                      }
+                      chiffre={decrireTempsRestant(campagne.heuresRestantes).libelle}
+                    />
+                    <Barre
+                      libelle="Collecté"
+                      valeur={campagne.collecte}
+                      maximum={collecteMaximale}
+                      couleur="var(--color-confiance)"
+                      chiffre={formaterFrancs(campagne.collecte)}
+                    />
+                  </div>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       {/* « A faire aujourd'hui » — le seul bloc orange de l'ecran, et la
           raison d'ouvrir l'application le matin. */}
       <section className="mt-4 px-4">
@@ -290,7 +372,14 @@ export default function TableauDeBord({
                   <p className="text-sm text-texte-secondaire">
                     {campagne.commandes} commandes
                     <span aria-hidden="true"> · </span>
-                    {campagne.heuresRestantes > 0
+                    {/* ⚠️ **Le compte à rebours ne vaut que pour un groupage
+                        ouvert.** Il se calculait auparavant dès que
+                        `heuresRestantes > 0`, ce qui affichait « reste 3
+                        jours » sur un groupage déjà livré : la date de clôture
+                        peut être dans le futur alors que le groupeur a
+                        clôturé par anticipation. C'est l'**état** qui fait
+                        foi, pas l'horloge. */}
+                    {campagne.statut === "ouverte" && campagne.heuresRestantes > 0
                       ? decrireTempsRestant(campagne.heuresRestantes).libelleAccessible
                       : LIBELLE_CAMPAGNE[campagne.statut]}
                   </p>
@@ -351,3 +440,18 @@ function Tuile({
     </button>
   );
 }
+
+/**
+ * La duree de reference d'un groupage, pour la barre de temps.
+ *
+ * ⚠️ **Sept jours, parce que l'API ne renvoie pas la duree choisie** — elle
+ * donne les heures restantes, pas la duree initiale. Avec une duree typique de
+ * sept jours, la barre est juste pour la grande majorite des groupages et
+ * fausse pour les autres : un groupage de trente jours affichera « plein »
+ * pendant ses trois premieres semaines.
+ *
+ * C'est un pis-aller, et le vrai correctif est cote serveur : renvoyer
+ * `cree_le` avec la campagne suffirait a calculer la duree exacte. Le
+ * mentionner ici plutot que de laisser quelqu'un s'etonner du resultat.
+ */
+const DUREE_TYPE_HEURES = 7 * 24;

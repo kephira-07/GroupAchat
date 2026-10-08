@@ -18,6 +18,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
 
@@ -170,6 +171,28 @@ def enregistrer_paiement(
     si l'encaissement avait réussi ; l'appel à l'agrégateur viendra ici, entre
     la vérification de la clé et la création.
     """
+
+    # ⚠️ **Le plafond de collecte, contrôlé ici et nulle part ailleurs**
+    # (§10.4).
+    #
+    # Il ne protège pas de la fraude, il **borne le montant maximal d'un
+    # sinistre** — ce qui, pour une jeune structure, est la différence entre un
+    # incident et une fermeture. Ce rôle n'a de sens qu'au moment où l'argent
+    # entre : le contrôler à la création de la campagne, quand la collecte vaut
+    # zéro, revenait à ne rien contrôler.
+    #
+    # Le message s'adresse à l'acheteur, qui n'a rien fait de mal et n'a pas à
+    # comprendre nos règles internes : on lui dit que le groupage est complet,
+    # pas que le groupeur a atteint son plafond.
+    plafond = campagne.groupeur.plafond
+    if plafond is not None:
+        apres = campagne.collecte_sur_les_parts + (campagne.prix_part * quantite)
+        if apres > plafond:
+            raise PlafondAtteint(
+                "Ce groupage est complet. Il se clôture bientôt — revenez "
+                "voir le prochain."
+            )
+
     existante = Commande.objects.filter(cle_idempotence=cle_idempotence).first()
     if existante is not None:
         return existante, False
@@ -201,6 +224,16 @@ def enregistrer_paiement(
     return commande, True
 
 
+class PlafondAtteint(Exception):
+    """Un paiement qui ferait dépasser le plafond de collecte du groupeur.
+
+    Une exception à part, et non une ``ValidationError`` : ce n'est pas une
+    saisie fautive. L'acheteur n'a rien fait de mal, et l'interface doit le
+    traiter comme « ce groupage est complet », pas comme « votre formulaire est
+    invalide ».
+    """
+
+
 class Versement(models.Model):
     """Le versement d'une campagne à son groupeur, à la clôture.
 
@@ -208,7 +241,32 @@ class Versement(models.Model):
     n'y a donc pas de solde retenu après livraison, et aucun écran ne doit
     écrire « votre argent est bloqué jusqu'à la livraison » : la formulation
     exacte est « détenu jusqu'à la clôture ».
+
+    ## ⚠️ « Payé à la clôture » et « libéré après le devis » ne se contredisent pas
+
+    Les deux viennent du cahier des charges, et il faut les lire ensemble :
+
+    - le **montant** est arrêté à la clôture. Rien n'est retenu « en attendant
+      de voir », rien ne dépend de la livraison. C'est la règle du §7, et c'est
+      elle qui interdit la formulation « bloqué jusqu'à la livraison » ;
+    - le **décaissement** suit le devis fournisseur. Le §10.3 est explicite :
+      « il dépose son devis fournisseur **avant tout versement** ».
+
+    Autrement dit : le groupeur sait **le jour de la clôture** combien il
+    touche, et il le touche dès qu'il a montré chez qui il achète. Ce n'est pas
+    une retenue de garantie, c'est le contrôle qui se joue **avant** que
+    l'argent ne sorte — le seul moment où il protège encore de quelque chose.
+
+    D'où ``etat`` : un versement existe dès la clôture, avec son montant, et il
+    passe à ``effectue`` quand un administrateur le libère.
     """
+
+    class Etat(models.TextChoices):
+        #: Montant arrêté, en attente du devis fournisseur (§10.3).
+        EN_ATTENTE = "en-attente", "En attente du devis"
+        EFFECTUE = "effectue", "Effectué"
+        #: Le groupage a échoué après la clôture : rien ne part.
+        ANNULE = "annule", "Annulé"
 
     campagne = models.OneToOneField(
         "catalogue.Campagne",
@@ -224,7 +282,18 @@ class Versement(models.Model):
     frais_livraison_collectes = models.DecimalField(
         "frais de livraison collectés", max_digits=12, decimal_places=0
     )
-    effectue_le = models.DateTimeField("effectué le", auto_now_add=True)
+    etat = models.CharField(
+        "état", max_length=20, choices=Etat.choices, default=Etat.EN_ATTENTE
+    )
+
+    #: Quand l'argent est réellement parti. ``None`` tant qu'il n'est pas libéré.
+    libere_le = models.DateTimeField("libéré le", null=True, blank=True)
+    #: Qui l'a libéré. ⚠️ Un nom en clair faute d'authentification côté
+    #: administration — voir ``api_kyc.JetonAdmin``. Le jour où les comptes
+    #: existent, ce champ devient une clé étrangère.
+    libere_par = models.CharField("libéré par", max_length=120, blank=True)
+
+    effectue_le = models.DateTimeField("calculé le", auto_now_add=True)
 
     class Meta:
         verbose_name = "versement"
@@ -233,6 +302,27 @@ class Versement(models.Model):
 
     def __str__(self) -> str:
         return f"{self.campagne.titre} — {self.verse} F"
+
+    @property
+    def devis(self):
+        """Le devis fournisseur déposé pour cette campagne, s'il y en a un.
+
+        C'est lui que l'administrateur regarde avant de libérer : chez qui le
+        groupeur achète, et pour combien.
+        """
+        return self.campagne.justificatifs.filter(
+            nature=Justificatif.Nature.DEVIS
+        ).first()
+
+    @property
+    def liberable(self) -> bool:
+        """Peut-on faire partir l'argent ?
+
+        ⚠️ **Non sans devis.** C'est le seul contrôle qui s'exerce encore à ce
+        stade : une fois l'argent parti, il n'y a plus de levier sur le
+        groupeur. Le §10.3 construit tout le dispositif autour de ce moment.
+        """
+        return self.etat == self.Etat.EN_ATTENTE and self.devis is not None
 
 
 @transaction.atomic
@@ -264,6 +354,98 @@ def cloturer_campagne(campagne) -> Versement:
     )
 
 
+class Justificatif(models.Model):
+    """Le devis fournisseur, puis le reçu de paiement — §10.3.
+
+    Deux pièces, deux moments, et elles ne jouent pas le même rôle :
+
+    | | Quand | Ce qu'elle sert à faire |
+    |---|---|---|
+    | **Devis** | Après la clôture, avant le versement | Savoir **chez qui** il achète, et pour combien. C'est ce qui débloque l'argent |
+    | **Reçu** | Après l'achat | Vérifier qu'il a bien acheté. Son absence entraîne l'annulation de la campagne |
+
+    ⚠️ **Aucun fichier n'est stocké ici**, pour la même raison que les pièces
+    d'identité : ``reference`` est une clé dans un stockage à accès restreint,
+    qui reste à monter au déploiement. Ce qui est en base, c'est le
+    **fournisseur et le montant** — c'est-à-dire ce que l'administrateur lit
+    pour décider, et ce qu'on peut recouper plus tard avec le relevé bancaire.
+    """
+
+    class Nature(models.TextChoices):
+        DEVIS = "devis", "Devis fournisseur"
+        RECU = "recu", "Reçu de paiement"
+
+    class Etat(models.TextChoices):
+        EN_ATTENTE = "en-attente", "À contrôler"
+        VALIDE = "valide", "Validé"
+        REFUSE = "refuse", "Refusé"
+
+    campagne = models.ForeignKey(
+        "catalogue.Campagne",
+        on_delete=models.CASCADE,
+        related_name="justificatifs",
+        verbose_name="campagne",
+    )
+    nature = models.CharField("nature", max_length=10, choices=Nature.choices)
+
+    fournisseur = models.CharField("fournisseur", max_length=160)
+    montant = models.DecimalField("montant", max_digits=12, decimal_places=0)
+
+    #: La clé dans le stockage à accès restreint. Jamais une URL publique.
+    reference = models.CharField("référence de stockage", max_length=200, blank=True)
+
+    etat = models.CharField(
+        "état", max_length=20, choices=Etat.choices, default=Etat.EN_ATTENTE
+    )
+    motif_refus = models.CharField("motif du refus", max_length=240, blank=True)
+
+    depose_le = models.DateTimeField("déposé le", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "justificatif"
+        verbose_name_plural = "justificatifs"
+        ordering = ("-depose_le",)
+        constraints = [
+            # Un devis et un reçu par campagne. En redéposer un remplace le
+            # précédent : sinon l'administrateur examine une pile et ne sait
+            # plus lequel fait foi.
+            models.UniqueConstraint(
+                fields=["campagne", "nature"], name="un_justificatif_par_nature"
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.get_nature_display()} — {self.campagne.titre}"
+
+
+@transaction.atomic
+def liberer_le_versement(versement: Versement, par: str) -> Versement:
+    """Fait partir l'argent vers le groupeur.
+
+    ⚠️ **Refuse sans devis.** C'est le dernier moment où un contrôle sert
+    encore à quelque chose : après, il n'y a plus de levier. Le §10.3 construit
+    tout le dispositif autour de ce point.
+    """
+    if versement.etat != Versement.Etat.EN_ATTENTE:
+        raise ValidationError("Ce versement a déjà été traité.")
+    if versement.devis is None:
+        raise ValidationError(
+            "Aucun devis fournisseur n'a été déposé pour cette campagne : "
+            "l'argent ne peut pas être libéré."
+        )
+
+    versement.etat = Versement.Etat.EFFECTUE
+    versement.libere_le = timezone.now()
+    versement.libere_par = par
+    versement.save(update_fields=["etat", "libere_le", "libere_par"])
+
+    # ⚠️ **Aucun virement réel n'est émis.** Le paiement est simulé jusqu'à
+    # l'agrément d'un agrégateur (§18.2) : cette ligne note que l'argent *doit*
+    # partir, elle ne le fait pas partir. C'est ici que l'appel au prestataire
+    # viendra.
+    return versement
+
+
 @transaction.atomic
 def annuler_campagne(campagne) -> None:
     """Annule une campagne et rembourse les acheteurs.
@@ -277,3 +459,11 @@ def annuler_campagne(campagne) -> None:
     campagne.commandes.filter(statut__in=Commande.STATUTS_PAYANTS).update(
         statut=Commande.Statut.REMBOURSEE
     )
+
+    # Si la campagne avait déjà été clôturée, son versement est annulé avec
+    # elle — mais **seulement s'il n'est pas déjà parti**. De l'argent versé ne
+    # se reprend pas d'un `update` : ce serait un remboursement à réclamer, et
+    # il doit se voir dans le journal plutôt que de disparaître.
+    Versement.objects.filter(
+        campagne=campagne, etat=Versement.Etat.EN_ATTENTE
+    ).update(etat=Versement.Etat.ANNULE)

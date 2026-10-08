@@ -1,265 +1,354 @@
-import { useState } from "react";
-import { formaterDateCourte } from "../../domaine/format";
-import { ACTIVITE, ALERTES, FILES, INDICATEURS } from "../../donnees/admin";
+import {
+  type AlerteAdmin,
+  type FileAdmin,
+  type IndicateurAdmin,
+  lireLeTableauDeBordAdmin,
+  type TableauDeBordAdmin as DonneesTableauDeBord,
+} from "../../api/administration";
+import { useRequete } from "../../api/useRequete";
+import { formaterFrancs } from "../../domaine/format";
+import { COULEUR_STATUT, Courbe, Repartition } from "../../ui/Graphique";
+import { ErreurReseau, Squelette } from "../../ui/EtatReseau";
 import { IconeAlerte, IconeCoche } from "../../ui/Icones";
+import type { EcranAdmin } from "../mise-en-page/Sidebar";
 
 /**
- * Ecran A1 — Tableau de bord administrateur. SPEC_ECRANS_FIGMA.md, ecran A1.
+ * Écran A1 — Tableau de bord administrateur. SPEC_ECRANS_FIGMA.md, écran A1.
  *
- * **C'est la seule vue cote administrateur.** Tout le reste — fiches,
- * recherche, edition, actions — vit dans l'admin Django (§13.6 du cahier des
- * charges). Cette page existe parce que c'est precisement ce que l'admin
- * Django ne sait pas faire : donner une vue d'ensemble en un ecran.
+ * **Chrome neutre, ni orange ni bleu** (§1.2) : les deux chromes de marque
+ * appartiennent aux deux publics, l'outil interne n'en porte aucun. Cette
+ * neutralité évite de confondre une capture d'écran interne avec le produit.
  *
- * **Chrome neutre, ni orange ni bleu.** Les deux chromes de marque
- * appartiennent aux deux publics ; l'outil interne n'en porte aucun. Cette
- * neutralite est utile : elle evite de confondre une capture d'ecran interne
- * avec le produit.
- *
- * **1 280 x 800, pas 390.** C'est le seul ecran du produit destine a un
- * ordinateur — l'administrateur travaille assis, avec un clavier, pas dans un
- * taxi.
+ * ⚠️ **Mais la couleur n'a pas disparu pour autant — elle encode.** Une
+ * pastille rouge sur une file dit qu'il y a de l'argent engagé ; une courbe
+ * bleue dit la collecte. Ce que le chrome neutre interdit, c'est la couleur de
+ * *marque* employée comme décor, pas la couleur employée comme information.
+ * Chaque teinte de cet écran porte un chiffre écrit à côté d'elle : une
+ * capture en noir et blanc reste lisible, et un daltonien aussi.
  *
  * ## L'ordre vertical, qui est tout le propos
  *
- * Alertes, puis files de travail, puis indicateurs, puis activite recente.
- * **L'activite est en dernier parce que c'est le seul bloc qui regarde le
- * passe** ; tout ce qui precede demande une action.
+ * **Alertes → files de travail → chiffres → activité.** Un administrateur qui
+ * ouvre cette page le matin a une question : qu'est-ce qui attend une
+ * décision ? Pas « comment ça s'est passé ».
+ *
+ * L'activité est en dernier **parce que c'est le seul bloc qui regarde le
+ * passé** : tout ce qui précède demande une action.
  *
  * ⚠️ **Trois absences voulues** :
  *
- * - **aucun bouton qui deplace de l'argent.** Depuis une vue d'ensemble on *va
- *   vers* un dossier ; on ne rembourse pas en un clic sans l'avoir ouvert.
- *   Toute action sur l'argent est tracee et motivee (§18.3) ;
- * - **aucune donnee personnelle.** Des compteurs et des montants. Un nom
- *   n'apparait qu'une fois le dossier ouvert, et cet acces est journalise ;
- * - **le nombre d'inscrits en grand.** C'est la mesure qui flatte et n'engage
- *   a rien. Ce qui compte est le nombre de campagnes allees jusqu'a la
- *   livraison.
- *
- * Le basculeur « journee calme » n'est pas un gadget : la spec demande de
- * savoir dessiner cet etat, qui est **le plus frequent et celui qu'on
- * oublie**. Un administrateur qui ouvre son ecran tous les matins pour voir un
- * mur rouge finit par ne plus l'ouvrir.
+ * - **aucun bouton qui déplace de l'argent.** Depuis une vue d'ensemble on
+ *   *va vers* un dossier ; on ne libère pas un virement sans l'avoir ouvert.
+ *   Toute action sur l'argent est tracée et motivée (§18.3) ;
+ * - **aucune donnée personnelle.** Des compteurs et des montants. Un nom
+ *   n'apparaît qu'une fois le dossier ouvert ;
+ * - **le nombre d'inscrits.** C'est la mesure qui flatte et n'engage à rien.
+ *   Ce qui compte est le nombre de groupages allés jusqu'à la livraison, et
+ *   c'est lui qui est affiché.
  */
 export default function TableauDeBordAdmin({
-  onDossiersKyc,
+  jeton,
+  onNaviguer,
+  onJetonRefuse,
 }: {
-  /**
-   * Ouvre l'ecran A2 depuis la file « Dossiers KYC a valider ».
-   *
-   * **Une seule des six files mene quelque part aujourd'hui**, et c'est voulu
-   * plutot que subi : les cinq autres n'ont pas encore d'ecran. Leur tuile
-   * reste affichee — la faire disparaitre deplacerait les cartes d'un jour a
-   * l'autre et on ne retrouverait plus rien — mais elle n'est pas cliquable,
-   * et le curseur le dit. Un bouton qui ne fait rien est pire qu'un bouton
-   * absent : on appuie deux fois avant de comprendre.
-   */
-  onDossiersKyc: () => void;
+  jeton: string;
+  onNaviguer: (ecran: EcranAdmin) => void;
+  onJetonRefuse: () => void;
 }) {
-  const [journeeCalme, setJourneeCalme] = useState(false);
-  const [ecart, setEcart] = useState(0);
+  const requete = useRequete(
+    (signal) => lireLeTableauDeBordAdmin(jeton, signal),
+    [jeton],
+  );
 
-  const alertes = journeeCalme ? [] : ALERTES;
-  const files = journeeCalme
-    ? FILES.map((f) => ({
-        ...f,
-        nombre: f.id === "F1" ? 1 : 0,
-        plusAncienJours: f.id === "F1" ? 1 : undefined,
-      }))
-    : FILES;
+  if (requete.erreur?.statut === 403) {
+    onJetonRefuse();
+  }
 
   return (
-    /* Fond `surface-douce`, cartes blanches : le chrome neutre. */
-    <div className="min-h-dvh bg-surface-douce">
-      <header className="border-b border-bordure bg-white">
-        <div className="mx-auto flex max-w-[1280px] items-center justify-between gap-4 px-8 py-4">
-          <div>
-            <h1 className="text-xl font-semibold text-texte">
-              Group Achat — Administration
-            </h1>
-            <p className="text-sm text-texte-secondaire">
-              {new Date().toLocaleDateString("fr-FR", {
-                weekday: "long",
-                day: "numeric",
-                month: "long",
-              })}
-            </p>
-          </div>
-
-          {/* De quoi montrer les trois etats demandes par la spec. */}
-          <div className="flex items-center gap-4 text-sm">
-            <label className="flex items-center gap-2 text-texte-secondaire">
-              <input
-                type="checkbox"
-                checked={journeeCalme}
-                onChange={(e) => setJourneeCalme(e.target.checked)}
-                className="size-4"
-              />
-              Journée calme
-            </label>
-            <label className="flex items-center gap-2 text-texte-secondaire">
-              <input
-                type="checkbox"
-                checked={ecart !== 0}
-                onChange={(e) => setEcart(e.target.checked ? 12500 : 0)}
-                className="size-4"
-              />
-              Écart de rapprochement
-            </label>
-          </div>
-        </div>
+    <div className="mx-auto max-w-[1100px] px-8 py-6">
+      <header>
+        <h1 className="text-2xl font-semibold text-texte">Tableau de bord</h1>
+        <p className="mt-1 text-texte-secondaire">
+          Ce qui attend une décision, d&apos;abord. Ce qui s&apos;est passé,
+          ensuite.
+        </p>
       </header>
 
-      <div className="mx-auto max-w-[1280px] space-y-8 px-8 py-8">
-        {/* 1. Les alertes. Rien quand il n'y a rien : pas de bloc vide
-            « aucune alerte », qui prend de la place et apprend a ignorer la
-            zone. */}
-        {alertes.length > 0 ? (
-          <ul className="space-y-2">
-            {alertes.map((alerte) => (
-              <li
-                key={alerte.id}
-                className={`flex items-center gap-3 rounded-xl px-4 py-3 ${
-                  alerte.gravite === "danger"
-                    ? "bg-danger-fond text-danger"
-                    : "bg-primaire-fond text-primaire-texte-sur-fond"
-                }`}
-              >
-                <IconeAlerte taille={20} className="shrink-0" />
-                <p className="min-w-0 flex-1 text-sm font-medium">
-                  {alerte.texte}
-                </p>
-                <button
-                  type="button"
-                  className="shrink-0 text-sm font-semibold underline"
-                >
-                  {alerte.lien}
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : null}
+      {requete.chargement ? (
+        <EnChargement />
+      ) : requete.erreur ? (
+        <ErreurReseau erreur={requete.erreur} onReessayer={requete.recharger} />
+      ) : requete.donnees ? (
+        <Contenu donnees={requete.donnees} onNaviguer={onNaviguer} />
+      ) : null}
+    </div>
+  );
+}
 
-        {/* 2. Les six files de travail, en 3 x 2. */}
+function EnChargement() {
+  return (
+    <div className="mt-8 space-y-6" aria-busy="true">
+      <div className="grid grid-cols-4 gap-4">
+        {[0, 1, 2, 3].map((indice) => (
+          <div
+            key={indice}
+            className="space-y-2 rounded-xl border border-bordure bg-white p-5"
+          >
+            <Squelette largeur="60%" hauteur={13} />
+            <Squelette largeur="80%" hauteur={24} />
+          </div>
+        ))}
+      </div>
+      <div className="rounded-xl border border-bordure bg-white p-5">
+        <Squelette largeur="30%" hauteur={16} />
+        <div className="mt-4">
+          <Squelette largeur="100%" hauteur={120} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Contenu({
+  donnees,
+  onNaviguer,
+}: {
+  donnees: DonneesTableauDeBord;
+  onNaviguer: (ecran: EcranAdmin) => void;
+}) {
+  return (
+    <div className="mt-6 space-y-6">
+      {/* 1 — Les alertes. Elles remontent toutes seules (§10.5). */}
+      {donnees.alertes.length > 0 ? (
         <section>
-          <h2 className="text-lg font-semibold text-texte">Files de travail</h2>
-          <ul className="mt-3 grid grid-cols-3 gap-4">
-            {files.map((file) => {
-              /* F1 est la file des dossiers KYC : la seule a avoir son ecran
-                 (A2). Repere par son identifiant et non par son libelle, qui
-                 se reformule. */
-              const ouvrable = file.id === "F1";
-              return (
-              <li key={file.id}>
-                <button
-                  type="button"
-                  disabled={!ouvrable}
-                  onClick={ouvrable ? onDossiersKyc : undefined}
-                  className={`w-full rounded-xl border bg-white p-5 text-left transition-colors ${
-                    ouvrable
-                      ? "cursor-pointer hover:border-texte-secondaire"
-                      : "cursor-default"
-                  } ${
-                    /* La seule file ou notre propre argent est expose. Les
-                       autres coutent de la confiance ; celle-ci coute du cash,
-                       et un ecran qui les traite a egalite ment sur les
-                       priorites. */
-                    file.argentExpose ? "border-danger" : "border-bordure"
-                  }`}
-                >
-                  <span
-                    className={`block text-[22px] font-bold ${
-                      file.nombre === 0 ? "text-texte-secondaire" : "text-texte"
-                    }`}
-                  >
-                    {file.nombre}
-                  </span>
-                  <span
-                    className={`mt-0.5 block font-semibold ${
-                      file.nombre === 0 ? "text-texte-secondaire" : "text-texte"
-                    }`}
-                  >
-                    {file.libelle}
-                  </span>
-                  {/* C'est cette ligne qui fait agir, pas le compteur. */}
-                  {file.plusAncienJours !== undefined ? (
-                    <span className="mt-1 block text-xs text-texte-secondaire">
-                      le plus ancien : {file.plusAncienJours} jour
-                      {file.plusAncienJours > 1 ? "s" : ""}
-                    </span>
-                  ) : null}
-                </button>
-              </li>
-              );
-            })}
-          </ul>
-        </section>
-
-        {/* 3. Les quatre indicateurs. */}
-        <section>
-          <h2 className="text-lg font-semibold text-texte">Indicateurs</h2>
-          <ul className="mt-3 grid grid-cols-4 gap-4">
-            {INDICATEURS.map((indicateur) => (
-              <li
-                key={indicateur.id}
-                className="rounded-xl border border-bordure bg-white p-5"
-              >
-                <p className="text-sm font-medium text-texte-secondaire">
-                  {indicateur.libelle}
-                </p>
-                <p className="mt-1 text-[22px] font-bold text-texte">
-                  {indicateur.valeur}
-                </p>
-                {indicateur.detail ? (
-                  <p className="text-xs text-texte-secondaire">
-                    {indicateur.detail}
-                  </p>
-                ) : null}
-
-                {/* La ligne la plus serieuse de l'ecran : le jour ou l'argent
-                    detenu calcule et le solde reel divergent, il faut le voir
-                    tout de suite. */}
-                {indicateur.id === "I1" ? (
-                  <p
-                    className={`mt-2 flex items-center gap-1.5 text-xs font-semibold ${
-                      ecart === 0 ? "text-succes" : "text-danger"
-                    }`}
-                  >
-                    {ecart === 0 ? (
-                      <IconeCoche taille={14} />
-                    ) : (
-                      <IconeAlerte taille={14} />
-                    )}
-                    {ecart === 0
-                      ? "Rapprochement : écart de 0 F"
-                      : `Écart de ${ecart.toLocaleString("fr-FR")} F — à instruire`}
-                  </p>
-                ) : null}
+          <h2 className="text-sm font-semibold text-danger">
+            {donnees.alertes.length} alerte
+            {donnees.alertes.length > 1 ? "s" : ""}
+          </h2>
+          <ul className="mt-2 space-y-2">
+            {donnees.alertes.map((alerte) => (
+              <li key={alerte.id}>
+                <Alerte alerte={alerte} onNaviguer={onNaviguer} />
               </li>
             ))}
           </ul>
         </section>
+      ) : (
+        /* ⚠️ **La journée calme doit se dessiner aussi.** C'est l'état le plus
+           fréquent, et celui qu'on oublie : un administrateur qui ouvre son
+           écran tous les matins pour voir un mur rouge finit par ne plus
+           l'ouvrir. */
+        <p className="flex items-center gap-2 rounded-xl border border-bordure bg-white px-4 py-3 text-sm text-texte-secondaire">
+          <IconeCoche taille={18} className="text-succes" />
+          Aucune alerte. Rien d&apos;anormal sur le service.
+        </p>
+      )}
 
-        {/* 4. L'activite recente, en dernier : le seul bloc qui regarde le
-            passe. */}
-        <section>
-          <h2 className="text-lg font-semibold text-texte">Activité récente</h2>
+      {/* 2 — Les files de travail. */}
+      <section>
+        <h2 className="text-lg font-semibold text-texte">Files de travail</h2>
+        <ul className="mt-3 grid grid-cols-3 gap-4">
+          {donnees.files.map((file) => (
+            <li key={file.id}>
+              <TuileFile file={file} onNaviguer={onNaviguer} />
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {/* 3 — Les chiffres et les courbes. */}
+      <section className="grid grid-cols-2 gap-4">
+        <div className="rounded-xl border border-bordure bg-white p-5">
+          <h2 className="font-semibold text-texte">Collecte des 14 jours</h2>
+          <p className="mt-0.5 text-sm text-texte-secondaire">
+            {formaterFrancs(
+              donnees.serie_collecte.reduce(
+                (somme, point) => somme + point.montant,
+                0,
+              ),
+            )}{" "}
+            encaissés sur la période
+          </p>
+          <div className="mt-4">
+            <Courbe
+              points={donnees.serie_collecte}
+              libelle="Collecte des quatorze derniers jours"
+              couleur="#1E3A8A"
+            />
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-bordure bg-white p-5">
+          <h2 className="font-semibold text-texte">Où en sont les groupages</h2>
+          <p className="mt-0.5 text-sm text-texte-secondaire">
+            Tous états confondus, depuis le début
+          </p>
+          <div className="mt-4">
+            <Repartition
+              libelle="Répartition des groupages par état"
+              parts={donnees.repartition_statuts.map((part) => ({
+                libelle: part.libelle,
+                nombre: part.nombre,
+                couleur: COULEUR_STATUT[part.statut] ?? "#9AA3AF",
+              }))}
+            />
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 className="text-lg font-semibold text-texte">Indicateurs</h2>
+        <ul className="mt-3 grid grid-cols-4 gap-4">
+          {donnees.indicateurs.map((indicateur) => (
+            <li key={indicateur.id}>
+              <TuileIndicateur indicateur={indicateur} />
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {/* 4 — L'activité. En dernier : elle ne demande rien. */}
+      <section>
+        <h2 className="text-lg font-semibold text-texte">Activité récente</h2>
+        {donnees.activite.length === 0 ? (
+          <p className="mt-2 text-sm text-texte-secondaire">
+            Rien ne s&apos;est encore terminé.
+          </p>
+        ) : (
           <ul className="mt-3 overflow-hidden rounded-xl border border-bordure bg-white">
-            {ACTIVITE.map((ligne) => (
+            {donnees.activite.map((ligne, indice) => (
               <li
-                key={ligne.id}
+                key={`${ligne.date}-${indice}`}
                 className="flex items-center gap-4 border-b border-bordure px-5 py-3 text-sm last:border-b-0"
               >
-                <span className="w-20 shrink-0 text-texte-secondaire">
-                  {formaterDateCourte(ligne.date)}
+                <span className="w-24 shrink-0 text-texte-secondaire">
+                  {ligne.date}
                 </span>
-                <span className="text-texte">{ligne.texte}</span>
+                <span className="min-w-0 flex-1 text-texte">{ligne.texte}</span>
               </li>
             ))}
           </ul>
-        </section>
-      </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function Alerte({
+  alerte,
+  onNaviguer,
+}: {
+  alerte: AlerteAdmin;
+  onNaviguer: (ecran: EcranAdmin) => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onNaviguer(alerte.destination as EcranAdmin)}
+      className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left transition-colors hover:bg-white ${
+        alerte.gravite === "danger"
+          ? "border-danger bg-danger-fond"
+          : "border-bordure bg-white"
+      }`}
+    >
+      <IconeAlerte
+        taille={18}
+        className={
+          alerte.gravite === "danger" ? "text-danger" : "text-texte-secondaire"
+        }
+      />
+      <span
+        className={`min-w-0 flex-1 text-sm ${
+          alerte.gravite === "danger" ? "text-danger" : "text-texte"
+        }`}
+      >
+        {alerte.texte}
+      </span>
+      <span className="shrink-0 text-xs font-semibold text-texte-secondaire">
+        Ouvrir
+      </span>
+    </button>
+  );
+}
+
+function TuileFile({
+  file,
+  onNaviguer,
+}: {
+  file: FileAdmin;
+  onNaviguer: (ecran: EcranAdmin) => void;
+}) {
+  /* Les deux files d'argent mènent à l'écran des virements ; le reste suit
+     son identifiant quand un écran existe. */
+  const destination: EcranAdmin =
+    file.id === "versements" || file.id === "devis-attendus" || file.id === "recus"
+      ? "versements"
+      : file.id === "kyc"
+        ? "dossiers"
+        : "groupages";
+
+  return (
+    <button
+      type="button"
+      onClick={() => onNaviguer(destination)}
+      className={`w-full rounded-xl border bg-white p-5 text-left transition-colors hover:border-texte-secondaire ${
+        /* ⚠️ Le filet rouge ne marque pas « beaucoup », il marque **notre
+           propre trésorerie engagée**. Les autres files coûtent de la
+           confiance ; celles-ci coûtent du cash, et un écran qui les traite à
+           égalité ment sur les priorités. */
+        file.argent_expose && file.nombre > 0
+          ? "border-danger"
+          : "border-bordure"
+      }`}
+    >
+      <span
+        className={`block text-[22px] font-bold ${
+          file.nombre === 0 ? "text-texte-secondaire" : "text-texte"
+        }`}
+      >
+        {file.nombre}
+      </span>
+      <span
+        className={`mt-0.5 block font-semibold ${
+          file.nombre === 0 ? "text-texte-secondaire" : "text-texte"
+        }`}
+      >
+        {file.libelle}
+      </span>
+      <span className="mt-1 block text-xs text-texte-secondaire">
+        {file.detail}
+      </span>
+      {/* C'est cette ligne qui fait agir, pas le compteur. */}
+      {file.nombre > 0 && file.plus_ancien_jours > 0 ? (
+        <span
+          className={`mt-2 block text-xs font-semibold ${
+            file.plus_ancien_jours > 2 ? "text-danger" : "text-texte-secondaire"
+          }`}
+        >
+          le plus ancien : {file.plus_ancien_jours} jour
+          {file.plus_ancien_jours > 1 ? "s" : ""}
+        </span>
+      ) : null}
+    </button>
+  );
+}
+
+function TuileIndicateur({ indicateur }: { indicateur: IndicateurAdmin }) {
+  const couleur = {
+    neutre: "text-texte",
+    attention: "text-primaire-texte-sur-fond",
+    succes: "text-succes",
+  }[indicateur.ton];
+
+  return (
+    <div className="rounded-xl border border-bordure bg-white p-5">
+      <p className="text-sm text-texte-secondaire">{indicateur.libelle}</p>
+      <p className={`mt-1 text-[22px] font-bold ${couleur}`}>
+        {indicateur.unite === "F"
+          ? formaterFrancs(indicateur.valeur)
+          : `${indicateur.valeur} ${indicateur.unite}`}
+      </p>
+      <p className="mt-1 text-xs text-texte-secondaire">{indicateur.detail}</p>
     </div>
   );
 }
