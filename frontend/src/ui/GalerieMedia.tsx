@@ -111,16 +111,19 @@ export default function GalerieMedia({
             ) : null}
             {/* Le bouton est **pose sur** l'affiche, pas a cote : c'est la
                 qu'on appuie d'instinct. Fond blanc a 92 % comme les autres
-                commandes posees sur un media (§2.1). */}
-            <span className="absolute inset-0 flex items-center justify-center">
+                commandes posees sur un media (§2.1).
+                ⚠️ La mention est **sous le bouton, au centre**, et non en bas
+                du cadre : le bas-gauche porte deja la pastille de statut, et
+                les deux se chevauchaient. */}
+            <span className="absolute inset-0 flex flex-col items-center justify-center gap-3">
               <span className="flex size-16 items-center justify-center rounded-full bg-white/92 text-texte">
                 <IconeLecture taille={28} />
               </span>
-            </span>
-            {/* Dit franchement ce que couter l'appui. Sur un forfait limite,
-                c'est une information, pas un detail decoratif. */}
-            <span className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-white/92 px-3 py-1 text-xs font-medium text-texte-secondaire">
-              Vidéo — se lance quand vous appuyez
+              {/* Dit franchement ce que l'appui va couter. Sur un forfait
+                  limite, c'est une information, pas un ornement. */}
+              <span className="rounded-full bg-white/92 px-3 py-1 text-xs font-medium text-texte-secondaire">
+                Vidéo — se lance quand vous appuyez
+              </span>
             </span>
           </button>
         )}
