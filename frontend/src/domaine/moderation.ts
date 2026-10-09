@@ -4,7 +4,7 @@
  *
  * **Pourquoi ce filtre existe.** Un groupeur qui recupere les numeros de ses
  * acheteurs peut leur proposer la meme marchandise hors plateforme, au meme
- * prix, sans commission. L'anonymat des deux cotes (§1.7) est ce qui protege
+ * prix, et sans nous. L'anonymat des deux cotes (§1.7) est ce qui protege
  * le modele economique, et les questions publiques sont le dernier endroit par
  * ou un numero pouvait passer.
  *

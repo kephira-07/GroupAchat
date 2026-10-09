@@ -2,10 +2,10 @@
 """L'espace de travail du groupeur — et ce qu'il ne doit jamais voir.
 
 **La règle de ces routes tient en une phrase : un groupeur voit des codes et
-des quartiers, jamais une personne.** C'est ce qui protège la commission
+des quartiers, jamais une personne.** C'est ce qui protège le modèle
 contre la désintermédiation — un groupeur qui connaîtrait ses gros acheteurs
-pourrait leur proposer la même marchandise hors plateforme, au même prix, sans
-commission.
+pourrait leur proposer la même marchandise hors plateforme, au même prix, et
+sans nous.
 
 Ces tests sont donc volontairement **méfiants** : ils ne vérifient pas que
 l'API renvoie les bons champs, ils vérifient qu'elle n'en renvoie **aucun**
@@ -164,12 +164,13 @@ class TableauDeBord(SocleGroupeur):
     def test_en_collecte_et_disponible_ne_se_confondent_pas(self) -> None:
         """**La distinction la plus importante de cet écran.**
 
-        *En collecte* est l'argent des acheteurs sur des campagnes encore
-        ouvertes : il ne lui appartient pas, il est détenu par Group Achat
-        jusqu'à la clôture. *Disponible* est ce qui lui a été versé.
+        *En collecte* est l'argent de ses acheteurs sur des groupages encore
+        ouverts : il lui appartient déjà, mais il est **détenu jusqu'à la
+        clôture**, donc pas retirable. *Disponible* est ce qu'il peut prendre
+        tout de suite.
 
         Les confondre donnerait un chiffre flatteur et faux, et le premier
-        versement détruirait la crédibilité du tableau de bord.
+        retrait refusé détruirait la crédibilité du tableau de bord.
         """
         reponse = self.client.get(
             "/api/espace-groupeur/tableau-de-bord/", self.numero()
@@ -178,7 +179,12 @@ class TableauDeBord(SocleGroupeur):
         self.assertEqual(reponse.data["disponible"], 0)
 
     def test_apres_cloture_l_argent_passe_de_collecte_a_disponible(self) -> None:
-        """Et la commission de 5 % est retenue au passage, sur les parts seules."""
+        """Et les 1 500 F de frais sont arrêtés au passage, sur les parts seules.
+
+        ⚠️ Ce groupage n'a qu'**une part de 4 000 F**, donc les frais y pèsent
+        lourd : 4 000 − 1 500 = 2 500. C'est voulu et c'est le cas limite du
+        §9.2 — un groupage minuscule coûte en vérification ce qu'un gros coûte.
+        """
         self.client.post(
             f"/api/espace-groupeur/{self.campagne.pk}/cloturer/",
             self.numero(),
@@ -188,8 +194,8 @@ class TableauDeBord(SocleGroupeur):
             "/api/espace-groupeur/tableau-de-bord/", self.numero()
         )
         self.assertEqual(reponse.data["en_collecte"], 0)
-        # 4 000 − 5 % = 3 800.
-        self.assertEqual(reponse.data["disponible"], 3800)
+        # 4 000 − 1 500 = 2 500.
+        self.assertEqual(reponse.data["disponible"], 2500)
 
     def test_les_taches_disent_quoi_faire_pas_ce_qui_s_est_passe(self) -> None:
         """Un tableau de bord qui raconte le passé se lit une fois."""

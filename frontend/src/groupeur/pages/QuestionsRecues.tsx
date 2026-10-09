@@ -19,7 +19,7 @@ import { IconeBouclier } from "../../ui/Icones";
  *
  * ⚠️ **C'est le cote risque du fil** (§14.2 du cahier des charges). L'acheteur
  * n'a rien a gagner a sortir de la plateforme ; **le groupeur, si** — il y
- * gagnerait la commission. Le filtre de `domaine/moderation.ts` s'applique
+ * gagnerait nos frais. Le filtre de `domaine/moderation.ts` s'applique
  * donc a l'identique sur ses reponses, avec deux ajouts :
  *
  * **a) L'avertissement de premiere reponse**, affiche **une seule fois**. Son
@@ -132,9 +132,11 @@ export default function QuestionsRecues({ onRetour }: { onRetour: () => void }) 
         return (
           <section key={groupageId} className="mt-6 px-4">
             <div className="flex items-center gap-3">
-              <div className="size-12 shrink-0">
-                <Vignette photo={groupage?.photo} alt={groupage?.produit ?? ""} />
-              </div>
+              <Vignette
+                photo={groupage?.photo}
+                alt={groupage?.produit ?? ""}
+                taille={48}
+              />
               <h2 className="min-w-0 truncate font-semibold text-texte">
                 {/* Le titre vient de la question elle-meme : il est joint par
                     l'API, ce qui evite de dependre de la liste des campagnes

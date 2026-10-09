@@ -18,7 +18,7 @@ import Bouton from "../../ui/Bouton";
  * L'ecran 4 promet a l'acheteur que ses coordonnees ne sont pas communiquees
  * au groupeur, et c'est cet ecran-ci qui tient la promesse. C'est aussi ce qui
  * empeche un groupeur de se constituer un fichier de clients et de les servir
- * hors plateforme, au meme prix, sans commission — autrement dit c'est ce qui
+ * hors plateforme, au meme prix, et sans nous — autrement dit c'est ce qui
  * protege le modele economique. Les identites ne sortent qu'une fois, vers le
  * livreur, le jour de la livraison (ecran 22).
  *
@@ -36,27 +36,13 @@ export default function GererCampagne({
 }) {
   const temps = decrireTempsRestant(campagne.heuresRestantes);
 
-  /** La repartition par quartier : une information qu'il n'a nulle part ailleurs. */
-  const repartition = useMemo(() => {
-    const parQuartier = new Map<Quartier, number>();
-    for (const commande of commandes) {
-      parQuartier.set(
-        commande.quartier,
-        (parQuartier.get(commande.quartier) ?? 0) + commande.quantite,
-      );
-    }
-    return [...parQuartier.entries()].sort((a, b) => b[1] - a[1]);
-  }, []);
-
-  const totalParts = repartition.reduce((total, [, n]) => total + n, 0);
-
   /**
    * Les commandes de cette campagne, **telles que le groupeur a le droit de
    * les voir** : un code de livraison, une quantite, un montant, un quartier.
    *
    * ⚠️ Ni nom, ni numero, ni repere. C'est la route `commandes` de l'ecran 15
    * qui tient cette promesse, et un test verifie champ par champ qu'elle ne
-   * laisse rien passer d'autre — c'est ce qui protege la commission contre la
+   * laisse rien passer d'autre — c'est ce qui protege le modele contre la
    * desintermediation.
    */
   const requete = useRequete(
@@ -75,6 +61,33 @@ export default function GererCampagne({
        quartier inconnu afficherait simplement sa cle brute. */
     quartier: brute.quartier as Quartier,
   }));
+
+  /**
+   * La repartition par quartier : une information qu'il n'a nulle part
+   * ailleurs, et la seule carte de l'anonymat qu'il puisse lire (§1.7).
+   *
+   * ⚠️ **Ce bloc etait place avant `commandes`**, qu'il lit. Une `const` n'est
+   * pas remontee comme une fonction : le corps du `useMemo` s'executait au
+   * premier rendu et levait « Cannot access 'commandes' before
+   * initialization ». L'ecran 15 ne s'ouvrait donc **jamais** — page blanche,
+   * et rien dans le terminal.
+   *
+   * Les dependances etaient vides, en plus : meme sans l'erreur, la
+   * repartition serait restee celle du premier rendu, c'est-a-dire vide,
+   * puisque les commandes arrivent du reseau un instant plus tard.
+   */
+  const repartition = useMemo(() => {
+    const parQuartier = new Map<Quartier, number>();
+    for (const commande of commandes) {
+      parQuartier.set(
+        commande.quartier,
+        (parQuartier.get(commande.quartier) ?? 0) + commande.quantite,
+      );
+    }
+    return [...parQuartier.entries()].sort((a, b) => b[1] - a[1]);
+  }, [commandes]);
+
+  const totalParts = repartition.reduce((total, [, n]) => total + n, 0);
 
   if (requete.chargement) {
     return (

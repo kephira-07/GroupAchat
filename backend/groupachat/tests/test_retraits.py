@@ -1,22 +1,24 @@
 # -*- coding: utf-8 -*-
-"""Le devis, le virement, et ce qui les sépare — §10.3.
+"""Le solde, le retrait, et les 1 500 F — §9 et §10 du cahier des charges.
 
-**C'est le dernier moment où un contrôle sert encore à quelque chose.** Une
-fois l'argent parti chez le groupeur, il n'y a plus aucun levier sur lui : ni
-caution — le §10.6 l'a écartée — ni solde retenu, puisqu'il est payé
-intégralement à la clôture. Tout le dispositif de sécurité se joue donc *avant*
-le décaissement, et c'est ce que ces tests protègent.
+L'argent de l'acheteur est inscrit au **portefeuille du groupeur** dès son
+paiement. La plateforme ne verse plus rien : elle tient le compte, et elle
+exécute les retraits qu'il demande.
 
-⚠️ **Deux règles qui ont l'air de se contredire, et qui ne se contredisent
-pas :**
+**Trois moments, et ces tests protègent chacun d'eux :**
 
-- le §7 : « le groupeur est payé intégralement à la clôture » — le **montant**
-  est arrêté ce jour-là, rien ne dépend de la livraison ;
-- le §10.3 : « il dépose son devis fournisseur **avant tout versement** » — le
-  **décaissement** suit le devis.
+| Moment | Ce qui est vrai |
+|---|---|
+| Groupage ouvert | Le solde est à lui, mais **détenu jusqu'à la clôture** |
+| Clôture maintenue | Il devient **retirable**, 1 500 F de frais arrêtés |
+| Retrait | Il demande, **nous ne pouvons pas refuser**, nous exécutons |
 
-Il sait dès la clôture combien il touche, et il le touche dès qu'il a montré
-chez qui il achète.
+⚠️ **Le test le plus contre-intuitif de ce fichier est
+``test_sans_devis_le_retrait_part_quand_meme``**, et il est là exprès. Le devis
+fournisseur bloquait le versement dans le modèle précédent ; il ne bloque plus
+rien. Si quelqu'un rétablit ce verrou un jour sans toucher au cahier des
+charges, c'est ce test qui le dira — et le §9.1 dit franchement ce que cette
+perte de levier nous coûte.
 """
 
 from __future__ import annotations
@@ -32,7 +34,7 @@ from groupachat.catalogue.models import Campagne
 from groupachat.commandes.models import (
     Justificatif,
     PlafondAtteint,
-    Versement,
+    Retrait,
     cloturer_campagne,
     enregistrer_paiement,
 )
@@ -92,50 +94,177 @@ class SocleArgent(TestCase):
 
 class LeMontantEstArreteALaCloture(SocleArgent):
     def test_les_chiffres_du_fil_rouge_tombent_juste(self) -> None:
-        """128 000 collectés, 6 400 de commission, 121 600 à verser.
+        """128 000 collectés, 1 500 F de frais, 126 500 retirables.
 
         **Un jury vérifie ces chiffres d'un écran à l'autre.**
         """
-        versement = cloturer_campagne(self.campagne)
+        retrait = cloturer_campagne(self.campagne)
 
-        self.assertEqual(versement.collecte, Decimal("128000"))
-        self.assertEqual(versement.commission, Decimal("6400"))
-        self.assertEqual(versement.verse, Decimal("121600"))
-        # 32 × 1 000 F de livraison, **hors commission** : ils vont au
-        # transporteur, pas au groupeur.
-        self.assertEqual(versement.frais_livraison_collectes, Decimal("32000"))
+        self.assertEqual(retrait.collecte, Decimal("128000"))
+        self.assertEqual(retrait.frais_plateforme, Decimal("1500"))
+        self.assertEqual(retrait.net, Decimal("126500"))
+        # 32 × 1 000 F de livraison, **jamais touchés par les frais** : ils
+        # vont au transporteur, pas au groupeur.
+        self.assertEqual(retrait.frais_livraison_collectes, Decimal("32000"))
 
-    def test_le_versement_existe_des_la_cloture_mais_n_est_pas_parti(self) -> None:
-        """La nuance qui porte tout le §10.3.
+    def test_les_frais_ne_dependent_pas_du_montant_collecte(self) -> None:
+        """⚠️ **C'est tout l'intérêt d'un montant fixe**, et c'est fragile.
 
-        Le groupeur **sait** ce qu'il touche. L'argent, lui, attend le devis.
+        Quelqu'un qui remet un pourcentage « parce que c'était comme ça
+        avant » ne casserait aucun autre test de ce fichier : les deux
+        groupages ci-dessous n'ont pas la même collecte, et pourtant ils
+        doivent porter exactement les mêmes frais.
         """
-        versement = cloturer_campagne(self.campagne)
-        self.assertEqual(versement.etat, Versement.Etat.EN_ATTENTE)
-        self.assertIsNone(versement.libere_le)
-        self.assertFalse(versement.liberable)
+        petit = cloturer_campagne(self.campagne)
 
+        gros = Campagne.objects.create(
+            groupeur=self.groupeur,
+            titre="Sacs de riz parfumé",
+            description="Un lot.",
+            contenu_part="Un sac",
+            categorie=Campagne.Categorie.ALIMENTAIRE,
+            prix_part=Decimal("14500"),
+            date_fin=timezone.now() + timedelta(days=2),
+        )
+        # Huit parts : 116 000 F, sous le plafond de 150 000 F du niveau
+        # Entree (§10.4). Ce qui compte ici est que la collecte differe de
+        # celle des ecouteurs, pas qu'elle soit grosse.
+        for numero in range(8):
+            acheteur = Acheteur.objects.create(telephone=f"+2289030{numero:04d}")
+            enregistrer_paiement(
+                campagne=gros,
+                acheteur=acheteur,
+                quantite=1,
+                quartier="Tokoin",
+                repere="Carrefour",
+                telephone=acheteur.telephone,
+                cle_idempotence=f"riz-{numero}",
+            )
+        gros_retrait = cloturer_campagne(gros)
 
-class LeDevisDebloqueLArgent(SocleArgent):
-    def test_sans_devis_on_ne_libere_rien(self) -> None:
-        """⚠️ **Le test le plus important de ce fichier.**
+        self.assertEqual(gros_retrait.collecte, Decimal("116000"))
+        self.assertEqual(gros_retrait.frais_plateforme, Decimal("1500"))
+        self.assertEqual(
+            petit.frais_plateforme, gros_retrait.frais_plateforme
+        )
 
-        C'est le dernier contrôle avant que l'argent ne sorte. Après, il n'y a
-        plus de levier.
+    def test_le_retrait_est_retirable_des_la_cloture(self) -> None:
+        """La clôture ouvre le retrait, elle ne fait partir aucun argent.
+
+        Le groupeur **sait** ce qu'il touche, et il peut le prendre quand il
+        veut. Rien n'est encore sorti de la plateforme.
         """
-        versement = cloturer_campagne(self.campagne)
+        retrait = cloturer_campagne(self.campagne)
+        self.assertEqual(retrait.etat, Retrait.Etat.RETIRABLE)
+        self.assertTrue(retrait.retirable)
+        self.assertFalse(retrait.executable)
+        self.assertIsNone(retrait.demande_le)
+        self.assertIsNone(retrait.libere_le)
+
+
+class LeRetraitDuGroupeur(SocleArgent):
+    """Écran 18 — le bouton « Retirer mes fonds », et ce qu'il déclenche."""
+
+    def test_rien_a_retirer_tant_que_le_groupage_est_ouvert(self) -> None:
+        """⚠️ **La règle qui rend le remboursement possible.**
+
+        Le solde est à lui dès le paiement de ses acheteurs, mais il est
+        **détenu jusqu'à la clôture**. S'il pouvait retirer avant, un groupage
+        annulé n'aurait plus rien à rendre aux acheteurs.
+        """
         reponse = self.client.post(
-            f"/api/administration/{versement.pk}/liberer/",
+            "/api/espace-groupeur/retirer/", self.numero(), format="json"
+        )
+        self.assertEqual(reponse.status_code, 400)
+
+    def test_il_retire_et_les_1_500_F_sont_annonces(self) -> None:
+        """La confirmation de l'écran 18 a besoin des deux chiffres."""
+        cloturer_campagne(self.campagne)
+        reponse = self.client.post(
+            "/api/espace-groupeur/retirer/", self.numero(), format="json"
+        )
+        self.assertEqual(reponse.status_code, 200, reponse.data)
+        self.assertEqual(reponse.data["groupages"], 1)
+        self.assertEqual(reponse.data["frais_plateforme"], 1500)
+        self.assertEqual(reponse.data["montant"], 126500)
+
+        retrait = Retrait.objects.get(campagne=self.campagne)
+        self.assertEqual(retrait.etat, Retrait.Etat.DEMANDE)
+        self.assertIsNotNone(retrait.demande_le)
+        # ⚠️ L'argent n'est pas encore parti : c'est un ordre, pas un virement.
+        self.assertIsNone(retrait.libere_le)
+
+    def test_un_second_retrait_ne_trouve_plus_rien(self) -> None:
+        """Un double appui ne doit pas demander deux fois le même argent."""
+        cloturer_campagne(self.campagne)
+        premier = self.client.post(
+            "/api/espace-groupeur/retirer/", self.numero(), format="json"
+        )
+        second = self.client.post(
+            "/api/espace-groupeur/retirer/", self.numero(), format="json"
+        )
+        self.assertEqual(premier.status_code, 200)
+        self.assertEqual(second.status_code, 400)
+
+    def test_le_portefeuille_distingue_le_retirable_du_retire(self) -> None:
+        """Deux chiffres, et les confondre ferait croire à un double paiement."""
+        retrait = cloturer_campagne(self.campagne)
+
+        avant = self.client.get(
+            "/api/espace-groupeur/portefeuille/", self.numero()
+        )
+        self.assertEqual(avant.data["disponible"], 126500)
+        self.assertEqual(avant.data["retire"], 0)
+
+        self.client.post(
+            "/api/espace-groupeur/retirer/", self.numero(), format="json"
+        )
+        self.client.post(
+            f"/api/administration/{retrait.pk}/executer/",
             {"decide_par": "Kephira"},
             format="json",
             **self.entete(),
         )
-        self.assertEqual(reponse.status_code, 400)
 
-        versement.refresh_from_db()
-        self.assertEqual(versement.etat, Versement.Etat.EN_ATTENTE)
+        apres = self.client.get(
+            "/api/espace-groupeur/portefeuille/", self.numero()
+        )
+        self.assertEqual(apres.data["disponible"], 0)
+        self.assertEqual(apres.data["retire"], 126500)
 
-    def test_le_depot_du_devis_est_la_demande_de_virement(self) -> None:
+
+class LeDevisNeBloquePlusRien(SocleArgent):
+    def test_sans_devis_le_retrait_part_quand_meme(self) -> None:
+        """⚠️ **Le test le plus important de ce fichier**, et il dit une perte.
+
+        Dans le modèle précédent, l'absence de devis fournisseur interdisait de
+        libérer l'argent, et c'était le dernier contrôle du dispositif. Le
+        portefeuille du groupeur l'a supprimé : son solde est à lui, et le lui
+        refuser serait indéfendable.
+
+        **Ce test existe pour que ce choix reste visible.** S'il casse un jour,
+        c'est que quelqu'un a rétabli le verrou — ce qui demande de rouvrir le
+        §9.1 et le §10.2 du cahier des charges, pas seulement ce fichier.
+        """
+        retrait = cloturer_campagne(self.campagne)
+        self.assertIsNone(retrait.devis)
+
+        self.client.post(
+            "/api/espace-groupeur/retirer/", self.numero(), format="json"
+        )
+        reponse = self.client.post(
+            f"/api/administration/{retrait.pk}/executer/",
+            {"decide_par": "Kephira"},
+            format="json",
+            **self.entete(),
+        )
+        self.assertEqual(reponse.status_code, 200, reponse.data)
+
+        retrait.refresh_from_db()
+        self.assertEqual(retrait.etat, Retrait.Etat.EFFECTUE)
+
+    def test_le_devis_est_enregistre_et_consultable(self) -> None:
+        """Il constate : on sait chez qui il achète, et pour combien."""
         cloturer_campagne(self.campagne)
         reponse = self.client.post(
             f"/api/espace-groupeur/{self.campagne.pk}/justificatif/",
@@ -149,63 +278,66 @@ class LeDevisDebloqueLArgent(SocleArgent):
         )
         self.assertEqual(reponse.status_code, 201, reponse.data)
 
-        versement = Versement.objects.get(campagne=self.campagne)
-        self.assertTrue(versement.liberable)
+        retrait = Retrait.objects.get(campagne=self.campagne)
         self.assertEqual(
-            versement.devis.fournisseur, "Importateur Lomé Électronique"
+            retrait.devis.fournisseur, "Importateur Lomé Électronique"
         )
 
-    def test_avec_le_devis_l_argent_part_et_c_est_trace(self) -> None:
-        """⚠️ **Toute action sur l'argent est tracée et motivée** (§18.3).
+    def test_on_n_execute_pas_un_retrait_qu_il_n_a_pas_demande(self) -> None:
+        """⚠️ **Le seul contrôle qui reste de notre côté.**
 
-        Qui, quand, sur quelle campagne. C'est la contrepartie du fait qu'un
-        jeton partagé ne distingue pas deux administrateurs : si on ne sait pas
-        *qui* au sens fort, on sait au moins ce qui a été fait et sous quel nom.
+        Exécuter un retrait qu'il n'a pas déclenché reviendrait à sortir son
+        argent de la plateforme à sa place.
         """
-        cloturer_campagne(self.campagne)
-        self.client.post(
-            f"/api/espace-groupeur/{self.campagne.pk}/justificatif/",
-            {
-                **self.numero(),
-                "nature": "devis",
-                "fournisseur": "Importateur Lomé Électronique",
-                "montant": "95000",
-            },
-            format="json",
-        )
-
-        versement = Versement.objects.get(campagne=self.campagne)
+        retrait = cloturer_campagne(self.campagne)
         reponse = self.client.post(
-            f"/api/administration/{versement.pk}/liberer/",
+            f"/api/administration/{retrait.pk}/executer/",
             {"decide_par": "Kephira"},
             format="json",
             **self.entete(),
         )
-        self.assertEqual(reponse.status_code, 200, reponse.data)
+        self.assertEqual(reponse.status_code, 400)
 
-        versement.refresh_from_db()
-        self.assertEqual(versement.etat, Versement.Etat.EFFECTUE)
-        self.assertEqual(versement.libere_par, "Kephira")
-        self.assertIsNotNone(versement.libere_le)
+        retrait.refresh_from_db()
+        self.assertEqual(retrait.etat, Retrait.Etat.RETIRABLE)
 
-    def test_on_ne_libere_pas_deux_fois(self) -> None:
-        """Un double appui ne doit pas envoyer l'argent deux fois."""
-        cloturer_campagne(self.campagne)
+    def test_l_execution_est_tracee(self) -> None:
+        """⚠️ **Toute action sur l'argent est tracée et motivée** (§18.3).
+
+        Qui, quand, sur quel groupage. C'est la contrepartie du fait qu'un
+        jeton partagé ne distingue pas deux administrateurs : si on ne sait pas
+        *qui* au sens fort, on sait au moins ce qui a été fait et sous quel nom.
+        """
+        retrait = cloturer_campagne(self.campagne)
         self.client.post(
-            f"/api/espace-groupeur/{self.campagne.pk}/justificatif/",
-            {**self.numero(), "nature": "devis", "fournisseur": "X", "montant": "1"},
-            format="json",
+            "/api/espace-groupeur/retirer/", self.numero(), format="json"
         )
-        versement = Versement.objects.get(campagne=self.campagne)
+        self.client.post(
+            f"/api/administration/{retrait.pk}/executer/",
+            {"decide_par": "Kephira"},
+            format="json",
+            **self.entete(),
+        )
 
+        retrait.refresh_from_db()
+        self.assertEqual(retrait.etat, Retrait.Etat.EFFECTUE)
+        self.assertEqual(retrait.libere_par, "Kephira")
+        self.assertIsNotNone(retrait.libere_le)
+
+    def test_on_n_execute_pas_deux_fois(self) -> None:
+        """Un double appui ne doit pas envoyer l'argent deux fois."""
+        retrait = cloturer_campagne(self.campagne)
+        self.client.post(
+            "/api/espace-groupeur/retirer/", self.numero(), format="json"
+        )
         premiere = self.client.post(
-            f"/api/administration/{versement.pk}/liberer/",
+            f"/api/administration/{retrait.pk}/executer/",
             {"decide_par": "Kephira"},
             format="json",
             **self.entete(),
         )
         seconde = self.client.post(
-            f"/api/administration/{versement.pk}/liberer/",
+            f"/api/administration/{retrait.pk}/executer/",
             {"decide_par": "Kephira"},
             format="json",
             **self.entete(),
@@ -257,8 +389,8 @@ class LeDevisDebloqueLArgent(SocleArgent):
 
 
 class UnGroupageAnnule(SocleArgent):
-    def test_aucune_commission_sur_une_campagne_annulee(self) -> None:
-        """§7 — et le versement qui attendait est annulé avec elle.
+    def test_aucun_frais_sur_un_groupage_annule(self) -> None:
+        """§7 — et le retrait qui attendait est annulé avec lui.
 
         Un groupage qui n'aboutit pas ne rapporte rien à personne. C'est ce qui
         rend « vous êtes livré, ou remboursé » tenable.
@@ -271,9 +403,9 @@ class UnGroupageAnnule(SocleArgent):
         )
         self.assertEqual(reponse.status_code, 200, reponse.data)
 
-        versement = Versement.objects.get(campagne=self.campagne)
-        self.assertEqual(versement.etat, Versement.Etat.ANNULE)
-        self.assertIsNone(versement.libere_le)
+        retrait = Retrait.objects.get(campagne=self.campagne)
+        self.assertEqual(retrait.etat, Retrait.Etat.ANNULE)
+        self.assertIsNone(retrait.libere_le)
 
     def test_les_acheteurs_sont_rembourses(self) -> None:
         cloturer_campagne(self.campagne)
@@ -296,14 +428,14 @@ class LeTableauDeBordAdmin(SocleArgent):
     def test_les_files_mettent_l_argent_en_tete(self) -> None:
         """**Du plus coûteux au moins coûteux.**
 
-        Un dossier KYC qui traîne coûte un groupeur. Un virement qui traîne
+        Un dossier KYC qui traîne coûte un groupeur. Un retrait qui traîne
         coûte une livraison et la confiance de dizaines d'acheteurs.
         """
         reponse = self.client.get(
             "/api/administration/tableau-de-bord/", **self.entete()
         )
         self.assertEqual(reponse.status_code, 200)
-        self.assertEqual(reponse.data["files"][0]["id"], "versements")
+        self.assertEqual(reponse.data["files"][0]["id"], "retraits")
         self.assertTrue(reponse.data["files"][0]["argent_expose"])
 
     def test_l_argent_detenu_est_le_premier_indicateur(self) -> None:
@@ -345,13 +477,13 @@ class LeTableauDeBordAdmin(SocleArgent):
             **self.entete(),
         )
         self.assertEqual(len(reponse.data), 1)
-        self.assertEqual(reponse.data[0]["versement_etat"], "en-attente")
+        self.assertEqual(reponse.data[0]["retrait_etat"], "retirable")
 
-    def test_la_file_des_versements_part_du_plus_ancien(self) -> None:
+    def test_la_file_des_retraits_part_du_plus_ancien(self) -> None:
         """Un groupeur qui attend ne peut pas acheter ce qu'il a vendu."""
         cloturer_campagne(self.campagne)
         reponse = self.client.get(
-            "/api/administration/versements/", **self.entete()
+            "/api/administration/retraits/", **self.entete()
         )
         self.assertEqual(reponse.status_code, 200)
         self.assertEqual(len(reponse.data), 1)
@@ -440,8 +572,8 @@ class LePlafondDeCollecte(TestCase):
         """
         for numero in range(3):
             self.payer(numero)
-        versement = cloturer_campagne(self.campagne)
-        self.assertEqual(versement.collecte, Decimal("150000"))
+        retrait = cloturer_campagne(self.campagne)
+        self.assertEqual(retrait.collecte, Decimal("150000"))
 
     def test_au_niveau_etabli_il_n_y_a_pas_de_plafond(self) -> None:
         """« Au cas par cas » (§10.4) : `None`, et on n'invente pas un chiffre."""

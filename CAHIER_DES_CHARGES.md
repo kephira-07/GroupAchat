@@ -23,7 +23,7 @@ Au Togo, les achats groupés existent déjà, mais ils vivent dans des **groupes
 
 - L'acheteur **gagne en fiabilité** : il ne traite plus avec un inconnu, il commande sur une plateforme qui a choisi ses groupeurs et qui détient l'argent.
 - Le groupeur **gagne un marché** : il n'est plus limité à son groupe WhatsApp, il est exposé à toute la demande de Lomé.
-- La plateforme **prélève une commission** sur chaque campagne aboutie.
+- La plateforme **retient 1 500 F sur chaque groupage abouti**, au moment où le groupeur retire son argent.
 
 La plateforme n'achète pas, ne stocke pas et ne négocie pas. Elle **rassemble l'offre, encaisse, sécurise et organise la livraison**.
 
@@ -69,7 +69,7 @@ L'acheteur ne juge donc pas un groupeur : il fait confiance à Group Achat. C'es
 | **Groupeur** | Lance les campagnes, fixe le produit, le prix et le délai, décide si la commande passe, commande chez son fournisseur, répond aux questions | Un marché bien plus large que son carnet d'adresses |
 | **Service de livraison partenaire** | Livre les acheteurs pour les groupeurs qui n'ont pas de livreur | Son tarif de livraison |
 | **Annonceur** | Achète un emplacement dans le bandeau partenaires de l'accueil. **Pas un utilisateur de l'application** : son emplacement est saisi par l'administrateur | De la visibilité auprès des acheteurs |
-| **Administrateur (nous)** | Recrute et vérifie les groupeurs, contrôle les justificatifs d'achat, débloque les fonds, arbitre les litiges, modère, **gère les emplacements publicitaires**. Ce n'est pas un spectateur : c'est l'opérateur dont dépend tout le circuit de l'argent — **§13** | La commission et les emplacements |
+| **Administrateur (nous)** | Recrute et vérifie les groupeurs, contrôle les justificatifs d'achat, arbitre les litiges, modère, **gère les emplacements publicitaires**. Ce n'est pas un spectateur : c'est l'opérateur dont dépend tout le circuit de l'argent — **§13** | Les frais de retrait et les emplacements |
 
 **Sur le livreur.** Nous ne gérons pas de flotte et n'employons personne. Nous **passons un partenariat avec un service de livraison** et lui confions les livraisons des groupeurs qui n'ont pas leur propre livreur. Un groupeur qui a déjà son livreur peut l'utiliser. Le livreur n'est donc **pas un profil utilisateur de l'application** dans le MVP — c'est un prestataire, avec une conséquence importante traitée en section 11 : il faut quand même un moyen de prouver qu'il a livré.
 
@@ -92,7 +92,7 @@ L'acheteur ne juge donc pas un groupeur : il fait confiance à Group Achat. C'es
 
 4. **Les groupeurs sont anonymes.** L'acheteur ne voit qu'un **pseudonyme**. Ni nom, ni photo, ni quartier, ni coordonnées, et aucune page de profil. Le pseudonyme n'est cliquable nulle part.
 
-   La raison est économique : un acheteur qui peut identifier et joindre le groupeur traite directement avec lui la fois suivante, sans la plateforme, sans garantie et sans commission. L'anonymat protège le modèle autant que l'acheteur.
+   La raison est économique : un acheteur qui peut identifier et joindre le groupeur traite directement avec lui la fois suivante, sans la plateforme, sans garantie et sans un franc pour nous. L'anonymat protège le modèle autant que l'acheteur.
 
 5. **Les échanges passent par la plateforme.** L'acheteur pose ses questions **publiquement** sous une campagne, le groupeur répond, et la réponse est visible de tous. **Il n'existe aucun canal privé.** Tout message est filtré avant publication pour en retirer les coordonnées et les tentatives de prise de contact direct — voir §14.2.
 
@@ -100,9 +100,9 @@ L'acheteur ne juge donc pas un groupeur : il fait confiance à Group Achat. C'es
 
 7. **Un acheteur peut être servi seul**, si le groupeur l'autorise. Il n'y a pas de seuil imposé par la plateforme.
 
-8. **Tout l'argent passe par la plateforme.** L'acheteur paie Group Achat, jamais le groupeur en direct.
+8. **L'argent passe par la plateforme, mais il appartient au groupeur.** L'acheteur paie dans l'application, jamais le groupeur de la main à la main. La somme s'inscrit aussitôt au **portefeuille du groupeur**, où elle est **détenue jusqu'à la clôture** (§9).
 
-9. **Commission sur campagne aboutie.** Aucune commission sur une campagne annulée : les acheteurs sont remboursés intégralement.
+9. **1 500 F par groupage abouti**, retenus au moment du retrait. **Aucun frais sur un groupage annulé** : les acheteurs sont remboursés intégralement.
 
 10. **La plateforme n'est ni vendeuse ni productrice.** Elle encaisse, sécurise, fait livrer et arbitre.
 
@@ -116,7 +116,7 @@ Le mot **campagne** désigne une opération de groupage sur un produit, ouverte 
 
 À la clôture, le groupeur tranche :
 - **il maintient** : la campagne passe à *commande passée* et suit son cours ;
-- **il annule** : tous les acheteurs sont **remboursés intégralement**, sans commission, et reçoivent une notification expliquant que la campagne n'a pas abouti.
+- **il annule** : tous les acheteurs sont **remboursés intégralement**, sans aucun frais, et reçoivent une notification expliquant que la campagne n'a pas abouti.
 
 **État alternatif :** *annulée*.
 
@@ -127,7 +127,7 @@ Le mot **campagne** désigne une opération de groupage sur un produit, ouverte 
 | Clôture | La date fixée par le groupeur est atteinte, ou il clôture à la main |
 | Décision | Le groupeur, dans un délai de **48 h** *(proposition)* après la clôture |
 | Annulation automatique | Aucune décision du groupeur passé ce délai — sinon l'argent des acheteurs resterait bloqué indéfiniment |
-| Commande passée | Le groupeur a reçu les fonds et déposé son justificatif d'achat (section 10) |
+| Commande passée | Le groupeur a retiré son solde et déposé son justificatif d'achat (section 10) |
 | Livraison | Le groupeur déclare la marchandise reçue et prête |
 | Terminée | Toutes les livraisons sont confirmées |
 
@@ -140,62 +140,72 @@ Le mot **campagne** désigne une opération de groupage sur un produit, ouverte 
 ## 9. Circuit de l'argent
 
 ```
-   Acheteur                 Group Achat              Groupeur            Fournisseur
-      │                          │                      │                    │
-      │  paie sa part            │                      │                    │
-      ├─────────────────────────▶│                      │                    │
-      │                     fonds détenus               │                    │
-      │                          │                      │                    │
-      │                     ── clôture de la campagne ──                     │
-      │                          │                      │                    │
-      │                          │  commission retenue  │                    │
-      │                          │  + fonds versés      │                    │
-      │                          ├─────────────────────▶│  achat             │
-      │                          │                      ├───────────────────▶│
-      │                          │   justificatif        │                    │
-      │                          │◀─────────────────────┤                    │
-      │                          │                      │                    │
-      │        livraison par le partenaire              │                    │
-      │◀─────────────────────────┴──────────────────────┘                    │
+   Acheteur            Group Achat            Portefeuille         Fournisseur
+      │              (tient le compte)       du groupeur               │
+      │                      │                     │                   │
+      │  paie sa part        │                     │                   │
+      ├─────────────────────▶│  inscrit au crédit  │                   │
+      │                      ├────────────────────▶│                   │
+      │                      │              détenu jusqu'à la clôture  │
+      │                      │                     │                   │
+      │              ── clôture du groupage ──     │                   │
+      │                      │                     │                   │
+      │                      │   le solde devient  │                   │
+      │                      │     retirable       │                   │
+      │                      │                     │                   │
+      │                      │  retrait : 1 500 F  │   achat           │
+      │                      │  retenus par part   ├──────────────────▶│
+      │                      │◀── de groupage ─────┤                   │
+      │                      │                     │                   │
+      │     livraison par le partenaire            │                   │
+      │◀─────────────────────┴─────────────────────┘                   │
 ```
 
 1. L'acheteur paie sa part **à la commande**, par Mobile Money. Il ne paie rien d'autre : pas de frais de service, pas d'abonnement.
-2. **Les fonds sont détenus par Group Achat**, pas par le groupeur.
-3. À la clôture, si le groupeur maintient la campagne, la plateforme **retient sa commission** et **lui verse les fonds** pour qu'il puisse acheter la marchandise.
-4. Le groupeur achète chez son fournisseur et **dépose le justificatif de ce paiement** sur la plateforme.
-5. La marchandise arrive, le partenaire de livraison livre les acheteurs.
-6. Si la campagne est annulée, **remboursement intégral** et aucune commission.
+2. **La somme s'inscrit immédiatement au portefeuille du groupeur**, tenu par la plateforme. Ce n'est plus l'argent de Group Achat : c'est le sien, et son portefeuille le lui montre dès la première commande.
+3. **Mais elle n'est pas retirable tant que le groupage est ouvert** : elle est **détenue jusqu'à la clôture**. C'est ce qui rend le remboursement possible si le groupage n'aboutit pas.
+4. À la clôture, si le groupeur maintient le groupage, **son solde devient retirable**.
+5. **Au retrait, la plateforme retient 1 500 F par groupage abouti** (§9.2). Le groupeur reçoit le reste et achète sa marchandise.
+6. Il dépose le **justificatif de son achat**, la marchandise arrive, le partenaire de livraison livre les acheteurs.
+7. Si le groupage est annulé, **remboursement intégral** et **aucun frais** — ni pour l'acheteur, ni pour le groupeur.
+
+**Ce que ce circuit change par rapport au précédent.** La version antérieure de ce document faisait de Group Achat le détenteur des fonds : l'acheteur payait la plateforme, qui versait au groupeur à la clôture. L'argent appartient désormais au groupeur dès le premier paiement, et la plateforme n'est plus qu'un teneur de compte. La conséquence pratique est qu'il n'y a plus de « versement » à décider ni à libérer : il y a un **solde** et un **retrait**.
 
 ### 9.1 Le point faible de ce circuit, énoncé clairement
 
-Dans ce schéma, **l'argent des acheteurs quitte la plateforme avant que quoi que ce soit ne soit livré**. Entre l'étape 3 et l'étape 5, les acheteurs ont payé, la plateforme s'est dessaisie, et rien n'a encore été reçu.
+**L'argent part avant que quoi que ce soit ne soit livré.** Entre le retrait et la livraison, les acheteurs ont payé, la plateforme s'est dessaisie, et rien n'a encore été reçu. Un groupeur qui retire et ne livre pas laisse la plateforme face à des acheteurs qu'elle doit rembourser sur sa propre trésorerie — ou décevoir, ce qui est pire, puisque notre promesse unique est la fiabilité.
 
-Le justificatif d'achat arrive **après** le versement : il constate, il ne conditionne rien. Un groupeur qui reçoit les fonds et ne livre pas laisse la plateforme face à des acheteurs qui ont payé et qu'elle doit rembourser sur sa propre trésorerie — ou décevoir, ce qui est pire, puisque notre promesse unique est la fiabilité.
+Ce n'est pas une critique du modèle : le groupeur a réellement besoin de cet argent pour acheter, et lui demander d'avancer sa trésorerie reviendrait à écarter la majorité des groupeurs. **C'est l'exécution qu'il faut armer**, et c'est l'objet du §10.
 
-Ce n'est pas une critique du modèle : le groupeur a réellement besoin de l'argent pour acheter, et lui demander d'avancer sa trésorerie reviendrait à écarter la majorité des groupeurs. Le modèle est juste. **C'est son exécution qu'il faut armer**, et c'est l'objet de la section suivante.
+Deux choses se sont aggravées en passant au portefeuille, et il faut les dire :
 
-### 9.2 La commission — tranchée
+- **Le retrait n'est plus conditionné au devis fournisseur.** Dans le circuit précédent, un administrateur libérait l'argent et pouvait refuser tant que le devis manquait. Un portefeuille dont le titulaire ne peut pas retirer son propre argent sans l'accord d'un tiers n'est pas un portefeuille, et prétendre le contraire serait malhonnête. Le devis reste demandé, mais il **constate** au lieu de **conditionner**.
+- **Le paiement direct au fournisseur devient impossible** dans le cas général : l'argent est déjà sur le compte du groupeur quand l'achat se décide. C'était la mesure la plus protectrice du dispositif précédent (§10.3).
+
+Ce qui reste pour tenir le risque : la **vérification des groupeurs à l'entrée** (§10.5), le **plafond de collecte par groupage** (§10.4), et le **délai de dépôt du reçu** sous peine d'annulation (§10.2). Ces trois mesures jouent toutes **en amont**, et aucune n'est optionnelle.
+
+### 9.2 Le frais de plateforme — tranché
 
 | Décision | Valeur |
 |---|---|
-| **Taux** | **5 % du montant collecté sur les parts** par campagne aboutie |
-| **Base de calcul** | Le prix des parts seulement. **Les frais de livraison ne sont pas commissionnés** : ils sont encaissés pour le compte du transporteur et lui sont reversés |
-| **Qui la supporte** | **Le groupeur**, par retenue sur son versement |
-| **Quand elle est acquise** | **À la clôture**, retenue sur le versement au groupeur (§10.1) |
-| **Campagne annulée** | Aucune commission |
-| **Minimum par campagne** *(proposition)* | 1 500 F — en dessous, la vérification manuelle coûte plus que ce qu'elle rapporte |
+| **Montant** | **1 500 F par groupage abouti**. Un montant fixe, pas un pourcentage |
+| **Assiette** | Aucune : le montant ne dépend ni de la collecte, ni du nombre de parts, ni du prix du produit |
+| **Qui le supporte** | **Le groupeur** |
+| **Quand il est retenu** | **Au retrait**, déduit de la somme qu'il reçoit. Un retrait qui solde trois groupages aboutis porte 4 500 F de frais |
+| **Groupage annulé** | **Aucun frais** |
+| **Frais de livraison** | Jamais touchés. Ils sont encaissés pour le compte du transporteur et lui sont reversés |
 
-**Pourquoi 5 % et pas plus.** Le groupeur a une alternative immédiate et gratuite : retourner sur WhatsApp. Son coût de départ est proche de zéro, ce qui plafonne de fait ce que nous pouvons prélever. Ce qu'il gagne chez nous — une audience, des commandes déjà payées, plus de clients à relancer — vaut largement 5 %, mais pas n'importe quel taux.
+**Pourquoi un montant fixe plutôt qu'un pourcentage.** Un pourcentage se discute à chaque groupage ; un chiffre fixe s'annonce une fois et ne se renégocie pas. Surtout, un pourcentage pèse très différemment selon la marge du produit : 5 % sur un sac de riz acheté 12 000 F et revendu 14 500 F absorbaient 29 % de la marge du groupeur, contre trois fois moins sur une robe. Les produits alimentaires de base — ceux qui servent le mieux notre public — étaient les plus pénalisés. 1 500 F fixes effacent cette distorsion.
 
-**Pourquoi la retenue sur le versement du groupeur, et pas des frais ajoutés à l'acheteur.** L'acheteur voit un prix net, sans frais de service. C'est notre argument de confiance, et il serait absurde de l'abîmer pour une ligne comptable. Dans les faits, le groupeur intègrera la commission dans son prix, donc l'acheteur la paiera indirectement — c'est normal, et cela ne change rien à ce qu'il voit.
+**Ce que ce choix nous coûte, dit franchement.** Sur le groupage témoin — 32 écouteurs à 4 000 F, 128 000 F collectés — l'ancienne commission de 5 % rapportait 6 400 F. Le frais fixe rapporte 1 500 F, soit **un quart**. Le modèle ne tient donc plus par le montant d'un groupage mais par **leur nombre** : il faut un peu plus de quatre groupages aboutis pour faire ce qu'un seul faisait avant. C'est un pari assumé sur le volume, et sur le fait qu'un frais faible et lisible attire plus de groupeurs qu'un pourcentage n'en rapporte.
 
-**Ce que 5 % laisse réellement.** L'agrégateur de paiement prélèvera sa propre commission sur chaque encaissement, et des frais sur chaque versement. **Notre marge nette sera donc sensiblement inférieure à 5 %**, et le chiffre exact ne sera connu qu'après le choix de l'agrégateur. À modéliser dès que ses tarifs seront connus : c'est le calcul qui dira si 5 % tient.
+**Le plancher de rentabilité.** 1 500 F doivent couvrir la vérification du groupeur, le contrôle des justificatifs et les frais de l'agrégateur de paiement sur l'encaissement **et** sur le reversement. Ces tarifs ne sont pas connus : **ils seront déterminants**, et le jour où ils le seront, c'est ce calcul qui dira si 1 500 F tiennent. Le levier, le cas échéant, est le montant — pas le retour à un pourcentage.
 
-**Le point faible d'un taux unique**, à garder en tête pour plus tard : 5 % pèsent très différemment selon la marge du produit. Sur un sac de riz acheté 12 000 F et proposé à 14 500 F, la marge du groupeur est de 2 500 F et notre commission en absorbe 29 %. Sur une robe à plus forte marge, elle en absorbe trois fois moins. Les produits alimentaires de base sont donc les plus pénalisés — alors que ce sont ceux qui servent le mieux notre public. Le levier, le jour où ce sera un problème : **un taux différencié par catégorie**. Pas maintenant : au lancement, la simplicité d'un chiffre unique vaut plus que l'optimisation, parce qu'elle s'explique en une phrase à un groupeur.
+**Le petit groupage est le cas limite.** Sur un groupage à 10 000 F de collecte, 1 500 F représentent 15 %. C'est beaucoup, et c'est voulu : un groupage minuscule coûte en vérification exactement ce qu'un gros coûte. Si la collecte est inférieure au frais, le frais est ramené à la collecte — **on ne laisse jamais un retrait négatif**.
 
 ### 9.3 Deuxième source de revenus : les emplacements publicitaires
 
-Un **bandeau partenaires** en haut de l'écran d'accueil est vendu à des entreprises. C'est une recette indépendante de la commission, et qui a l'avantage d'arriver **avant** le volume : un annonceur paie son emplacement même les semaines où peu de campagnes aboutissent.
+Un **bandeau partenaires** en haut de l'écran d'accueil est vendu à des entreprises. C'est une recette indépendante des frais de retrait, et qui a l'avantage d'arriver **avant** le volume : un annonceur paie son emplacement même les semaines où peu de campagnes aboutissent.
 
 **Modèle de vente proposé : un emplacement au forfait, à la semaine ou au mois.** Pas d'enchère, pas de coût pour mille impressions, pas de régie. À l'échelle de Lomé et au démarrage, un forfait se vend en une conversation, se facture sans outil, et s'administre depuis l'admin Django. Construire une machinerie publicitaire pour quatre annonceurs serait du travail perdu. Tarifs : **À définir**
 
@@ -214,42 +224,41 @@ Le bandeau ajoute des images à charger **sur l'écran le plus coûteux en donn�
 
 ## 10. Sécurisation du circuit — comment tenir la promesse de fiabilité
 
-Cinq mesures, de la plus efficace à la plus accessoire. Les trois premières me paraissent nécessaires avant d'encaisser le premier franc réel.
+Le portefeuille du groupeur (§9) déplace tout le dispositif **en amont du retrait** : une fois l'argent parti, il n'existe plus aucun levier. Les mesures ci-dessous sont classées de la plus efficace à la plus accessoire, et les trois premières me paraissent nécessaires avant d'encaisser le premier franc réel.
 
-### 10.1 Le versement : intégral, à la clôture
+### 10.1 Le solde : détenu jusqu'à la clôture, retirable ensuite
 
-**Décision retenue :** à la clôture d'une campagne maintenue, la plateforme retient sa commission et **verse au groupeur l'intégralité du reste**. Il achète la marchandise avec cet argent. **Le versement n'est pas lié à la livraison.**
+**Décision retenue :** l'argent de l'acheteur est inscrit au portefeuille du groupeur dès le paiement, mais **il n'est retirable qu'à la clôture d'un groupage maintenu**. Le retrait n'est pas lié à la livraison.
 
-| Moment | Flux |
+| Moment | Le solde du groupeur |
 |---|---|
-| Pendant la campagne | La plateforme détient les paiements |
-| Clôture, campagne maintenue | Commission retenue, **solde intégral versé au groupeur** |
+| Pendant le groupage | Inscrit à son crédit, **détenu jusqu'à la clôture** — visible, pas retirable |
+| Clôture, groupage maintenu | **Retirable intégralement**, moins 1 500 F au retrait |
+| Clôture, groupage annulé | Retiré de son solde et **remboursé aux acheteurs**, sans frais |
 | Ensuite | Il achète, dépose son reçu, et la marchandise est livrée |
 
-**Ce que ce choix implique, dit une fois et sans y revenir.** Entre le versement et la livraison, les acheteurs ont payé, la plateforme s'est dessaisie, et rien n'a été reçu. Si un groupeur ne livre pas, c'est Group Achat qui rembourse sur sa propre trésorerie — la promesse « livré ou remboursé » est un engagement financier de la plateforme, pas du groupeur.
+⚠️ **« Détenu jusqu'à la clôture », jamais « bloqué jusqu'à la livraison ».** La seconde formulation est fausse — rien ne dépend de la livraison — et elle ferait croire à une retenue de garantie qui n'existe pas. Le tableau des formulations interdites est au §1.7 de la spec des écrans.
 
-Il n'y a donc **rien en aval** pour tenir le groupeur : tout le dispositif de sécurité se joue **en amont** du versement, et il repose entièrement sur les quatre mesures qui suivent. C'est pourquoi aucune d'elles n'est optionnelle, et pourquoi le §10.3 — payer le fournisseur directement — devient la mesure la plus importante du dispositif plutôt qu'un raffinement pour gros montants.
+**Pourquoi ne pas ouvrir le retrait dès le paiement.** Parce que c'est la détention jusqu'à la clôture qui rend le remboursement possible. Un groupage annulé rend son argent aux acheteurs depuis le solde du groupeur ; si celui-ci avait déjà pu retirer, il n'y aurait rien à leur rendre et la promesse « livré ou remboursé » deviendrait un engagement de notre trésorerie sur chaque groupage ouvert, et non seulement sur ceux qui ont abouti.
 
 ### 10.2 Déposer le devis avant, le reçu après
 
-Aujourd'hui le justificatif arrive après le versement. Inverser la séquence change tout :
+La séquence reste la bonne, même si le devis ne commande plus le retrait :
 
 1. Le groupeur dépose le **devis ou la facture du fournisseur** → la plateforme sait ce qui va être acheté, à quel prix, chez qui.
-2. La plateforme **verse le montant collecté, moins la commission** (§10.1) — en une fois, à la clôture.
-3. Le groupeur dépose le **reçu de paiement** → la plateforme constate l'achat effectif.
-4. Sans reçu dans un délai donné *(proposition : 72 h)*, la campagne est annulée et les acheteurs remboursés — pendant que l'argent est encore récupérable.
+2. Il **retire son solde**, 1 500 F retenus par groupage abouti (§9.2).
+3. Il dépose le **reçu de paiement** → la plateforme constate l'achat effectif.
+4. Sans reçu dans un délai donné *(proposition : 72 h)*, le groupage est annulé et les acheteurs remboursés — pendant que l'argent est encore récupérable.
 
-Le devis n'empêche pas une fraude déterminée, mais il rend le mensonge documenté, donc attaquable, et il écarte l'erreur de bonne foi.
+⚠️ **Le devis constate, il ne conditionne plus.** C'est la contrepartie du portefeuille, et elle a un prix : le seul contrôle qui s'exerçait encore au moment où l'argent sortait a disparu. Le devis n'empêchait pas une fraude déterminée, mais il rendait le mensonge documenté, donc attaquable, et il écartait l'erreur de bonne foi. Il garde ce rôle — il ne garde plus le levier.
 
-### 10.3 Payer le fournisseur directement — la mesure centrale
+**Ce qui le remplace partiellement :** le délai du point 4. Un groupeur qui a retiré et ne produit pas de reçu voit son groupage annulé, et c'est cette annulation, inscrite à son historique, qui plafonne son groupage suivant (§10.4). La sanction est différée au lieu d'être préventive.
 
-Le versement étant intégral et antérieur à la livraison (§10.1), **c'est ici que se trouve désormais la seule protection structurelle** : la plateforme règle le fournisseur elle-même, par Mobile Money ou virement, sur la base du devis. L'argent **ne transite jamais par le groupeur**.
+### 10.3 Payer le fournisseur directement — mesure mise de côté
 
-Le groupeur garde son rôle entier — il trouve le produit, négocie, fait livrer — mais il ne détient plus les fonds des acheteurs. Le risque principal disparaît au lieu d'être atténué.
+**Cette mesure était la plus protectrice du dispositif précédent, et le portefeuille la rend inapplicable.** Elle consistait à ce que la plateforme règle elle-même le fournisseur sur la base du devis, de sorte que l'argent des acheteurs ne transite jamais par le groupeur. Elle supposait que la plateforme détienne les fonds au moment de l'achat : ce n'est plus le cas, ils sont sur le compte du groupeur depuis la première commande.
 
-Le groupeur garde son rôle entier — il trouve le produit, négocie, fait livrer — mais il ne détient plus l'argent des acheteurs. **Le risque principal disparaît au lieu d'être atténué.**
-
-Ce n'est pas applicable partout : certains fournisseurs ne sont pas joignables par Mobile Money, certains achats se font en espèces sur un marché. D'où la règle proposée : **paiement direct au fournisseur dès que le montant dépasse un seuil, versement au groupeur en dessous**. Seuil : **À définir** — et je recommande de le fixer bas, puisque c'est la seule mesure qui supprime le risque au lieu de le borner.
+Elle est conservée ici, et non supprimée, pour deux raisons. D'abord parce qu'elle reste **le seul dispositif connu qui supprime le risque au lieu de le borner** : si l'exécution montre un taux de non-livraison que les mesures en amont ne tiennent pas, c'est vers elle qu'il faudra revenir, et il faudra alors rouvrir le choix du portefeuille. Ensuite parce qu'elle redevient envisageable **au-dessus d'un seuil de montant** : un gros groupage pourrait n'être retirable qu'après règlement direct du fournisseur, le portefeuille restant la règle en dessous. Seuil : **À définir**, et la question ne se tranche pas avant d'avoir observé de vrais groupages.
 
 ### 10.4 Plafonner l'exposition d'un groupeur
 
@@ -325,7 +334,7 @@ Le second n'est pas une formalité administrative : c'est la matérialisation de
 | # | Contrôle | Comment | Ce qu'il empêche |
 |---|---|---|---|
 | 1 | **Pièce d'identité** | CNI, passeport ou carte consulaire, recto et verso, plus un **selfie tenant la pièce près du visage** | Qu'on se présente avec la pièce d'un tiers. Sans le selfie, une pièce volée suffit |
-| 2 | **Concordance du compte Mobile Money** | Le **nom du titulaire** du compte qui recevra le versement doit correspondre à la pièce d'identité | Le prête-nom. C'est le contrôle le plus rentable du lot : gratuit, immédiat, et c'est sur ce compte que partira l'argent |
+| 2 | **Concordance du compte Mobile Money** | Le **nom du titulaire** du compte qui recevra les retraits doit correspondre à la pièce d'identité | Le prête-nom. C'est le contrôle le plus rentable du lot : gratuit, immédiat, et c'est sur ce compte que partira l'argent |
 | 3 | **Téléphone vérifié** | Code SMS, numéro conservé au dossier | Un numéro jetable |
 | 4 | **Lieu d'activité** | Photo de l'étal ou de la boutique, localisation, et **visite physique pour les premiers groupeurs** | Le groupeur sans existence réelle. Rien ne remplace d'avoir vu la personne à son poste |
 | 5 | **Justificatif d'activité** | Registre de commerce, NIF, ou tout document d'activité | L'improvisation. **Non bloquant** : la plupart des bons groupeurs sont dans l'informel, l'exiger écarterait notre cœur de cible |
@@ -348,7 +357,7 @@ Appliquer les sept contrôles à tout le monde coûterait trop cher en temps et 
 
 Un dossier validé une fois ne protège de rien si rien n'est surveillé ensuite. À suivre en continu, dans l'admin :
 
-- **changement du compte Mobile Money de versement** — le signal d'alerte le plus important : il suspend les versements et déclenche une re-vérification, parce que c'est exactement le geste d'un compte repris par un tiers ;
+- **changement du compte Mobile Money de retrait** — le signal d'alerte le plus important : il suspend les retraits et déclenche une re-vérification, parce que c'est exactement le geste d'un compte repris par un tiers ;
 - retards répétés de dépôt du reçu d'achat ;
 - taux de livraison, délais, litiges ;
 - montants inhabituels au regard de l'historique du groupeur.
@@ -363,19 +372,22 @@ Deux outils le permettent, et ils font le même travail. L'**admin Django** rest
 
 #### Quand l'argent part réellement
 
-Deux règles coexistent, et il faut les lire ensemble plutôt que de les opposer :
+**C'est le groupeur qui le décide, et c'est nous qui l'exécutons.** Trois états, et un seul appelle une action de notre part :
 
-- le **§7** : « le groupeur est payé intégralement à la clôture ». Le montant est arrêté ce jour-là. Rien n'est retenu « en attendant de voir », rien ne dépend de la livraison — et c'est cette règle qui interdit la formulation « bloqué jusqu'à la livraison » ;
-- le **§10.3** : « il dépose son devis fournisseur **avant tout versement** ». Le décaissement, lui, suit le devis.
-
-Autrement dit : le groupeur sait **le jour de la clôture** combien il touche, et il le touche **dès qu'il a montré chez qui il achète**. Ce n'est pas une retenue de garantie, c'est le contrôle qui se joue avant que l'argent ne sorte — le seul moment où il protège encore de quelque chose, puisqu'il n'y a ni caution (§10.6) ni solde retenu après livraison.
-
-En pratique, un versement existe dès la clôture avec son montant, à l'état *en attente*, et passe à *effectué* quand un administrateur le libère depuis l'écran A3. Deux files en découlent sur l'écran A1, et elles n'appellent pas la même action :
-
-| File | Ce qui bloque | Ce qu'on peut faire |
+| État | Ce que ça veut dire | Qui agit |
 |---|---|---|
-| **Virements à faire** | Rien — le devis est là | Libérer |
-| **Devis attendus** | Le groupeur n'a rien déposé | Le relancer, c'est tout |
+| **Retirable** | Le groupage est clôturé et maintenu, le solde est à lui | Lui, quand il veut |
+| **Retrait demandé** | Il a appuyé sur « Retirer mes fonds » | **Nous** : exécuter le transfert Mobile Money |
+| **Effectué** | L'argent est parti, 1 500 F retenus | Personne |
+
+Tant que le paiement est simulé (§18.2), « exécuter » veut dire faire le transfert à la main depuis l'écran A3 et marquer la ligne. Le jour de l'agrégateur, cette même ligne déclenchera l'appel au prestataire, et rien d'autre ne changera.
+
+⚠️ **Nous ne pouvons pas refuser un retrait.** C'est la conséquence directe du portefeuille (§9.1) : le solde appartient au groupeur depuis le premier paiement de ses acheteurs. Le devis fournisseur est demandé avant, il est lu, il est archivé — mais son absence ne bloque plus rien. L'écran A1 garde donc deux files, et seule la première est un ordre à exécuter :
+
+| File | Ce que c'est | Ce qu'on peut faire |
+|---|---|---|
+| **Retraits à exécuter** | Un groupeur attend son argent | Faire le transfert |
+| **Devis manquants** | Un groupeur a retiré sans rien déposer | Le relancer, et compter les récidives |
 
 ⚠️ **L'ancienneté est le chiffre qui doit faire agir, pas le montant.** Un groupeur qui attend depuis cinq jours ne peut pas acheter la marchandise qu'il a vendue, et ce sont ses acheteurs qui attendront ensuite. Les deux files sont donc triées du plus ancien au plus récent.
 
@@ -421,13 +433,13 @@ Le raisonnement. Pour couvrir réellement une campagne de 464 000 F, il faudrait
 3. **Le garant.** Une personne identifiée qui co-signe le contrat. Coût nul pour le groupeur, pression sociale réelle, et c'est un mécanisme que notre marché comprend bien mieux qu'un dépôt bancaire.
 4. **L'historique du groupeur**, qui conditionne son plafond : ce qu'il a à perdre, ce n'est pas un dépôt, c'est son accès aux campagnes importantes.
 
-Le versement au groupeur étant intégral et antérieur à la livraison (§10.1), **il n'y a aucune retenue en aval** : ces quatre leviers sont tout ce dont nous disposons.
+Le retrait du groupeur étant intégral et antérieur à la livraison (§10.1), **il n'y a aucune retenue en aval** : ces quatre leviers sont tout ce dont nous disposons.
 
 **Où une caution garde du sens :** en **option, à l'initiative du groupeur, pour débloquer un plafond supérieur.** Un groupeur établi qui veut mener des campagnes à 1 500 000 F peut déposer une garantie pour y accéder. C'est volontaire, cela ne freine personne à l'entrée, et le montant suit le risque. Barème : **À définir**
 
 ### 10.6 Ce que cela donne, assemblé
 
-> L'acheteur paie Group Achat, part et frais de livraison. À la clôture, si le groupeur maintient la campagne, **il dépose son devis fournisseur avant tout versement**. Au-delà d'un seuil, la plateforme **règle le fournisseur directement** ; en dessous, elle verse au groupeur l'intégralité du montant, commission retenue. Il dépose ensuite son reçu de paiement, sous peine d'annulation de la campagne. La marchandise arrive, les livraisons sont confirmées par code, et son taux de livraison détermine le plafond de sa prochaine campagne.
+> L'acheteur paie sa part et ses frais de livraison dans l'application. La part s'inscrit au **portefeuille du groupeur**, détenue jusqu'à la clôture. À la clôture, s'il maintient le groupage, **son solde devient retirable** : il dépose son devis fournisseur, retire son argent — **1 500 F retenus par groupage abouti** —, achète. Il dépose ensuite son reçu de paiement, sous peine d'annulation du groupage. La marchandise arrive, les livraisons sont confirmées par code, et son taux de livraison détermine le plafond de sa prochaine campagne.
 
 Le groupeur n'avance jamais sa trésorerie. Tout le contrôle se joue **avant** que l'argent ne sorte : qui il est (§10.5), combien il peut collecter (§10.4), ce qu'il va acheter et à qui (§10.2), et si possible sans jamais toucher les fonds (§10.3).
 
@@ -496,7 +508,7 @@ Dans les deux cas, **la preuve de livraison est la même** : le code saisi par c
 | **Le code** | 6 caractères, alphabet sans ambiguïté (ni 0/O, ni 1/I/L), affichés par groupes de trois : `K7M-4PQ`. Plus un QR code pour aller vite |
 | **Où il apparaît** | Dans la commande de l'acheteur, **dès que la livraison est lancée** — pas avant |
 | **Qui le saisit** | Le livreur, sur une **page web ouverte depuis un lien de tournée**. Aucune installation, aucun compte |
-| **Ce que ça déclenche** | La commande passe à *livrée*, et la campagne se termine quand toutes le sont. Le versement au groupeur, lui, a déjà eu lieu à la clôture (§10.1) : la preuve sert ici à **clore le dossier, instruire une contestation et alimenter l'historique de fiabilité du groupeur** (§10.4) |
+| **Ce que ça déclenche** | La commande passe à *livrée*, et la campagne se termine quand toutes le sont. Le retrait du groupeur, lui, a déjà pu avoir lieu dès la clôture (§10.1) : la preuve sert ici à **clore le dossier, instruire une contestation et alimenter l'historique de fiabilité du groupeur** (§10.4) |
 
 **Pourquoi cette voie plutôt que la confirmation par l'acheteur.** Le code conserve une preuve **unique, horodatée et détenue par la plateforme**, indépendante de la bonne volonté des deux parties. Un acheteur qui oublie de confirmer laisserait un dossier ouvert sans fin ; un groupeur qui déclare avoir livré ne prouve rien.
 
@@ -523,8 +535,8 @@ C'est aussi là qu'il déclare un **colis refusé** (§12), avec un motif. Sans 
 
 - L'acheteur peut contester **au moment de la livraison**, pas après. Le motif est le non-respect flagrant de la commande : il a commandé une robe, on lui présente une chaussure.
 - Une fois la livraison acceptée, la contestation n'est plus possible.
-- En cas de contestation, le colis n'est pas accepté, le dossier remonte à l'administrateur, et les fonds de cette commande ne sont pas libérés.
-- L'administrateur examine et tranche : remboursement de l'acheteur, ou libération au groupeur.
+- En cas de contestation, le colis n'est pas accepté et le dossier remonte à l'administrateur.
+- L'administrateur examine et tranche : remboursement de l'acheteur, ou commande tenue pour livrée. ⚠️ **Le groupeur a pu retirer entre-temps** (§9.1) : un remboursement décidé ici se prend sur notre trésorerie, pas sur son solde.
 
 **Ce que cette règle implique, et qu'il faut regarder en face.** Une fenêtre fermée à la livraison protège le groupeur contre les réclamations tardives de mauvaise foi, ce qui est légitime. Mais elle ne couvre pas ce qu'on ne voit pas sur le pas de la porte : un carton scellé, une quantité manquante au fond du sac, un produit défectueux à l'usage.
 
@@ -556,9 +568,9 @@ Six files, et chacune porte un compteur et un délai. Ce sont elles qui occupent
 |---|---|---|
 | **Dossiers KYC à valider** | Un groupeur peut-il lancer des campagnes, et jusqu'à quel plafond (§10.5) | Du recrutement — notre vrai goulot d'étranglement |
 | **Justificatifs d'achat à contrôler** | La marchandise a-t-elle été commandée (§10.3) | Le seul point où l'on vérifie que l'argent versé est allé au produit |
-| **Contestations à arbitrer** | Rembourser l'acheteur ou libérer au groupeur (§12) | La confiance de l'acheteur, et vite |
+| **Contestations à arbitrer** | Rembourser l'acheteur ou tenir la commande pour livrée (§12) | La confiance de l'acheteur, et vite |
 | **Livraisons non confirmées à 7 jours** | Instruction d'un dossier où le groupeur est déjà payé (§12) | **De la trésorerie** — c'est la file la plus coûteuse |
-| **Messages signalés** | Modération, et comptage des tentatives (§14.2) | L'anonymat, donc la commission |
+| **Messages signalés** | Modération, et comptage des tentatives (§14.2) | L'anonymat, donc le modèle |
 | **Retours de colis** | Qui reprend, qui stocke, qui paie ([LIVRAISON.md](LIVRAISON.md) §4) | De l'argent, et la patience d'un acheteur |
 
 **La quatrième file mérite d'être mise en avant visuellement**, et pas par goût de la couleur : c'est la seule où **notre propre argent** est exposé, puisque le groupeur a déjà été payé. Les autres coûtent de la confiance ; celle-ci coûte du cash.
@@ -592,9 +604,9 @@ Toute l'architecture du §14 repose sur le fait que personne ne voit les deux c�
 
 **Quatre mesures, et elles ne coûtent presque rien si elles sont prises au début :**
 
-- **Deux profils, pas un.** Un profil *support* qui voit les commandes, les campagnes et les messages, sans accéder aux pièces d'identité ni déclencher un versement ; un profil *direction* qui a tout. Au démarrage une seule personne porte les deux — mais la séparation doit exister avant la première embauche, pas après.
+- **Deux profils, pas un.** Un profil *support* qui voit les commandes, les campagnes et les messages, sans accéder aux pièces d'identité ni exécuter un retrait ; un profil *direction* qui a tout. Au démarrage une seule personne porte les deux — mais la séparation doit exister avant la première embauche, pas après.
 - **Un journal d'accès aux données sensibles.** Qui a ouvert quelle pièce d'identité, et quand. C'est ce qui transforme une promesse de confidentialité en engagement vérifiable.
-- **Toute action sur l'argent est tracée et motivée.** Un remboursement, une libération de fonds, un déblocage de plafond : qui, quand, pourquoi. Jamais de bouton qui déplace de l'argent sans laisser de trace (§18.3).
+- **Toute action sur l'argent est tracée et motivée.** Un remboursement, l'exécution d'un retrait, un déblocage de plafond : qui, quand, pourquoi. Jamais de bouton qui déplace de l'argent sans laisser de trace (§18.3).
 - **Aucune suppression, jamais.** On annule, on rembourse, on suspend — on n'efface pas. Un enregistrement effacé est une preuve perdue le jour du litige.
 
 ### 13.6 Django admin ou écran sur mesure — tranché
@@ -672,7 +684,7 @@ Et mieux encore : **l'avertissement arrive avant l'envoi.** Dès que la saisie d
 
 #### L'asymétrie à assumer
 
-**C'est le groupeur qu'il faut surveiller, pas l'acheteur.** L'acheteur n'a rien à gagner à contourner : sans la plateforme il perd la garantie et le prix de groupe. Le groupeur, lui, a un intérêt direct — 5 % de commission et un client gardé pour la suite.
+**C'est le groupeur qu'il faut surveiller, pas l'acheteur.** L'acheteur n'a rien à gagner à contourner : sans la plateforme il perd la garantie et le prix de groupe. Le groupeur, lui, a un intérêt direct : **un client gardé pour la suite**. Le frais de 1 500 F pèse peu dans ce calcul — ce qu'il vise, c'est le répertoire.
 
 Donc : **les réponses du groupeur passent le filtre au même titre que les questions**, et un avertissement écrit lui est présenté une fois, à sa première réponse.
 
@@ -743,9 +755,9 @@ Il crée la campagne : produit détaillé — caractéristiques, état, garantie
 
 **Et il dispose d'un outil de gestion, pas seulement d'un formulaire.** Un écran de statistiques lui montre ses revenus versés, son taux de réussite, son panier moyen, ses revenus par campagne et la répartition de ses commandes par quartier. C'est ce qui le retient : il ne trouve ces chiffres nulle part ailleurs, et la répartition par quartier lui dit concrètement où concentrer ses tournées. Trois interdits y sont stricts : **aucune identité d'acheteur, aucun classement entre groupeurs, aucune projection de revenus** — détail à l'écran 21 du document des écrans.
 
-À la clôture, **il décide** : la commande passe, ou pas. S'il maintient, il dépose son devis fournisseur, **reçoit l'intégralité du montant collecté moins les 5 % de commission** (§10.1), achète, dépose son reçu. La marchandise arrive, le partenaire livre.
+À la clôture, **il décide** : la commande passe, ou pas. S'il maintient, son solde devient retirable : il dépose son devis fournisseur, **retire l'intégralité du montant collecté moins 1 500 F** (§10.1), achète, dépose son reçu. La marchandise arrive, le partenaire livre.
 
-**Il n'y a pas de solde retenu après la livraison** : tout est versé à la clôture. C'est ce qui rend le contrôle *avant* versement — KYC, plafond, devis, paiement direct du fournisseur — indispensable plutôt que confortable.
+**Il n'y a pas de solde retenu après la livraison** : tout devient retirable à la clôture. C'est ce qui rend le contrôle *avant* le retrait — KYC et plafond de collecte — indispensable plutôt que confortable, d'autant que le devis ne commande plus rien (§10.2).
 
 ### 16.3 Administrateur
 
@@ -753,7 +765,7 @@ Il crée la campagne : produit détaillé — caractéristiques, état, garantie
 
 Au-dessus des files, les alertes remontées toutes seules — changement de compte Mobile Money, plafond approché, écart de rapprochement. En dessous, quatre indicateurs, dont **l'argent détenu en ce moment**, qu'il rapproche du solde bancaire réel.
 
-Il recrute et vérifie les groupeurs, fixe leur plafond, contrôle les reçus, débloque les fonds, arbitre les contestations, modère, et gère les emplacements publicitaires. Détail complet au §13.
+Il recrute et vérifie les groupeurs, fixe leur plafond, contrôle les reçus, exécute les retraits, arbitre les contestations, modère, et gère les emplacements publicitaires. Détail complet au §13.
 
 ## 17. Écrans
 
@@ -788,7 +800,7 @@ Il recrute et vérifie les groupeurs, fixe leur plafond, contrôle les reçus, d
 **Administrateur** — quatre écrans derrière une barre latérale, le reste en admin Django (§13.6)
 - **A1. Tableau de bord** : alertes, files de travail, courbe de collecte, répartition des groupages, quatre indicateurs
 - **A2. Recrutement — dossiers KYC** : la file d'attente, l'examen d'un dossier, la décision et son annonce
-- **A3. Virements aux groupeurs** : le devis fournisseur, et la libération des fonds
+- **A3. Retraits des groupeurs** : le devis fournisseur, et l'exécution des transferts
 - **A4. Groupages** : tous états — ouverts, clôturés, livrés, annulés
 - A3. Justificatifs d'achat et déblocage des fonds — admin Django
 - A4. Contestations et livraisons non confirmées — admin Django
@@ -813,17 +825,17 @@ Il recrute et vérifie les groupeurs, fixe leur plafond, contrôle les reçus, d
 - **Détenir l'argent de tiers est une activité réglementée.** L'encaissement doit passer par un **agrégateur de paiement agréé** connecté à T-Money et Flooz. Group Achat ne détient jamais l'argent sur un compte personnel.
 - Cela suppose un **compte marchand**, donc une **structure juridique constituée** et un dossier KYC sur la société et ses dirigeants (§10.5). **C'est le délai le plus long du projet.**
 - Un **avis juridique** est nécessaire sur la détention de fonds et sur l'engagement « livré ou remboursé », qui nous engage financièrement.
-- Choix de l'agrégateur, **ses tarifs d'encaissement et de reversement** — qui déterminent si la commission de 5 % tient (§9.2) —, délais de reversement : **À définir**
+- Choix de l'agrégateur, **ses tarifs d'encaissement et de reversement** — qui déterminent si le frais de 1 500 F tient (§9.2) —, délais de reversement : **À définir**
 
-Architecturalement, le passage de la phase 1 à la phase 2 ne touche qu'une seule couche : le connecteur de paiement. Statuts, écrans, calculs de versement et de commission, journal des opérations sont identiques dans les deux cas. C'est à cette condition que le travail de la phase 1 n'est pas perdu.
+Architecturalement, le passage de la phase 1 à la phase 2 ne touche qu'une seule couche : le connecteur de paiement. Statuts, écrans, calculs de solde et de frais, journal des opérations sont identiques dans les deux cas. C'est à cette condition que le travail de la phase 1 n'est pas perdu.
 
 ### 18.3 Traçabilité
 
-Journal horodaté de **tous** les mouvements d'argent et de **tous** les changements de statut : paiements, versements aux groupeurs, dépôts de justificatifs, livraisons confirmées, remboursements, décisions d'arbitrage. C'est à la fois l'exigence comptable, la preuve en cas de litige, et la matière des plafonds de 10.4.
+Journal horodaté de **tous** les mouvements d'argent et de **tous** les changements de statut : paiements, retraits des groupeurs, dépôts de justificatifs, livraisons confirmées, remboursements, décisions d'arbitrage. C'est à la fois l'exigence comptable, la preuve en cas de litige, et la matière des plafonds de 10.4.
 
 ## 19. Stack technique
 
-**Architecture.** API séparée de l'interface. Le back-end expose une API indépendante que le prototype web consomme aujourd'hui et que l'application mobile consommera. **Toute la logique métier — détention des fonds, calcul de la commission, versements, statuts — vit côté serveur, jamais dans l'application.** Une application installée ne se corrige pas par un déploiement : ce qui est côté serveur se corrige le jour même.
+**Architecture.** API séparée de l'interface. Le back-end expose une API indépendante que le prototype web consomme aujourd'hui et que l'application mobile consommera. **Toute la logique métier — détention des fonds, calcul des frais, retraits, statuts — vit côté serveur, jamais dans l'application.** Une application installée ne se corrige pas par un déploiement : ce qui est côté serveur se corrige le jour même.
 
 **Back-end :** Django + Django REST Framework, PostgreSQL. L'admin Django sert de back-office pour le recrutement, le contrôle des justificatifs, le déblocage des fonds et les litiges — **plus une seule page sur mesure**, le tableau de bord de synthèse (§13.6).
 
@@ -833,7 +845,7 @@ Journal horodaté de **tous** les mouvements d'argent et de **tous** les changem
 
 > **La décision à ne pas prendre trop vite :** React Native permettrait de partager du code entre le web et le mobile, Flutter donnerait une meilleure application mais aucun partage avec React. Ce choix ne se tranche pas maintenant — il se tranche quand le web aura des utilisateurs et qu'on saura ce qu'ils font. Choisir aujourd'hui, c'est choisir sans information.
 
-**Intégrité.** Toute opération touchant à l'argent passe par une transaction avec verrouillage de ligne (`SELECT FOR UPDATE`) : pas de double versement au groupeur, pas de double validation de livraison, pas de double paiement.
+**Intégrité.** Toute opération touchant à l'argent passe par une transaction avec verrouillage de ligne (`SELECT FOR UPDATE`) : pas de double retrait au groupeur, pas de double validation de livraison, pas de double paiement.
 
 **Tâches planifiées.** Trois règles ne se déclenchent sur aucune action utilisateur, et chacune est une **porte de sortie de l'argent détenu** :
 1. clôture d'une campagne à sa date d'échéance ;
@@ -865,9 +877,9 @@ MVP : commande de gestion Django appelée par un cron horaire. Plus tard : Celer
 
 | Sujet | Décision | Où |
 |---|---|---|
-| Commission | **5 % du prix des parts**, à la charge du groupeur, retenue à la clôture | §9.2 |
-| Frais de livraison | **1 000 F dans tout Lomé, payés par l'acheteur**, ligne distincte, non commissionnés | §11.1 |
-| Versement au groupeur | **Intégral, à la clôture**, avant la livraison | §10.1 |
+| Frais de plateforme | **1 500 F par groupage abouti**, à la charge du groupeur, retenus au retrait | §9.2 |
+| Frais de livraison | **1 000 F dans tout Lomé, payés par l'acheteur**, ligne distincte, jamais touchés par le frais de plateforme | §11.1 |
+| Retrait du groupeur | **Intégral, ouvert dès la clôture**, avant la livraison | §10.1 |
 | Organisation de la livraison | **Group Achat et son partenaire** par défaut ; le groupeur s'il a son livreur | §11.2 |
 | Preuve de livraison | **Le livreur saisit le code de l'acheteur**, via un lien de tournée | §11.3 |
 | Paiement | **Simulé** en phase 1, réel dès l'agrégateur agréé | §18.2 |
@@ -883,7 +895,7 @@ Les écrans peuvent être dessinés en entier. Les deux points ouverts qui reste
 
 - Agrégateur de paiement, compte marchand, structure juridique constituée.
 - Avis juridique sur la détention de fonds et sur la promesse « livré ou remboursé ».
-- **Tarifs de l'agrégateur** — ils déterminent si 5 % de commission laissent une marge nette viable.
+- **Tarifs de l'agrégateur** — ils déterminent si 1 500 F par groupage laissent une marge nette viable.
 - **Seuil de paiement direct au fournisseur** (§10.3). C'est désormais la seule mesure qui supprime le risque plutôt que de le borner : je recommande de le fixer bas.
 
 ### 21.4 À traiter pendant la construction

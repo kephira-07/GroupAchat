@@ -28,10 +28,48 @@
   --color-danger: #c0392b;
   --color-danger-fond: #fbeae8;
 
-  --color-texte: #14181f;
-  --color-texte-secondaire: #5a6472;
-  --color-bordure: #e4e7ec;
-  --color-surface-douce: #f7f8fa;
+  /* ── Les neutres, rechauffes ───────────────────────────────────────────
+     ⚠️ **Ils etaient bleus, et c'etait le defaut d'harmonie du site.**
+
+     Mesure des anciennes valeurs, en teinte HSL :
+
+     | Jeton | Avant | Teinte |
+     |---|---|---|
+     | `texte` | `#14181F` | **218°** |
+     | `texte-secondaire` | `#5A6472` | **215°** |
+     | `bordure` | `#E4E7EC` | **218°** |
+     | `surface-douce` | `#F7F8FA` | **220°** |
+
+     Tous entre 215 et 220° — du bleu. Or la marque acheteur est a **22-26°**,
+     de l'orange. Et ces quatre jetons portent **85 % des pixels de la page**
+     (318 usages sur 374) : l'ensemble lisait donc froid, et l'orange y etait
+     un corps etranger pose dessus. C'est ca, « les couleurs ne s'harmonisent
+     pas » — ce n'etait pas une impression, c'est mesurable.
+
+     La correction tourne la teinte a **28°** en gardant la clarte, avec une
+     saturation tres basse : ce sont des gris chauds, pas des beiges. Un gris
+     chaud lit comme du papier, et le bleu du chrome groupeur s'y pose aussi
+     bien que l'orange — verifie : `confiance` tient 9,78:1 sur la surface
+     douce chaude.
+
+     ⚠️ **Aucun contraste ne se degrade**, parce que la clarte ne bouge pas :
+     `texte` passe de 17,79:1 a 17,46:1 sur blanc, `texte-secondaire` **gagne**
+     en lisibilite (6,00 → 7,46:1). */
+  --color-texte: #1d1916; /* 17,46:1 sur blanc — etait #14181F */
+  --color-texte-secondaire: #5c544d; /* 7,46:1 — etait #5A6472 a 6,00:1 */
+
+  /* **Le troisieme niveau manquait.** Deux gris seulement pour 239 usages de
+     texte obligeaient a faire toute la hierarchie a la graisse et a la taille.
+     Celui-ci porte les mentions et les horodatages.
+
+     ⚠️ 4,86:1 sur blanc et **4,57:1 sur `surface-douce`** : conforme, mais
+     c'est le jeton le plus juste de la palette. Il est fait pour des mentions
+     courtes, jamais pour un paragraphe, et jamais sur un fond plus sombre que
+     `surface-douce`. */
+  --color-texte-mention: #7a7066;
+
+  --color-bordure: #ebe8e5; /* etait #E4E7EC */
+  --color-surface-douce: #faf8f7; /* etait #F7F8FA */
 
   /* §1.3 : la spec proposait Inter ou Roboto ; la charte retenue est
      Jost + Poppins. Roboto reste en secours — il est deja sur tout Android,
@@ -53,7 +91,12 @@
     font-family: var(--font-sans);
     /* §1.3 — Corps 16 px, plancher absolu. */
     font-size: 16px;
-    line-height: 1.5;
+    /* 1,6 et non 1,5. Poppins est une geometrique : ses lettres sont larges et
+       ses jambages courts, ce qui rend les lignes serrees fatigantes en
+       francais, ou les mots sont longs et les accents nombreux. Le dixieme
+       supplementaire se voit surtout sur les paragraphes de trois lignes et
+       plus — la description d'un groupage, les regles de l'ecran 3. */
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
   }
 

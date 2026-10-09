@@ -439,8 +439,8 @@ function FicheEnChargement() {
 /**
  * La fiche, a droite.
  *
- * L'ordre suit celui de l'examen reel : **l'identite, le compte de versement,
- * les pieces, puis la decision**. Le compte de versement est en deuxieme
+ * L'ordre suit celui de l'examen reel : **l'identite, le compte de retrait,
+ * les pieces, puis la decision**. Le compte de retrait est en deuxieme
  * position et non en dernier parce que c'est lui qui arrete tout : s'il ne
  * concorde pas, l'administrateur n'a pas besoin de lire la suite.
  */
@@ -506,7 +506,7 @@ function Fiche({
           ) : (
             <IconeAlerte taille={18} />
           )}
-          Contrôle n° 2 — compte de versement
+          Contrôle n° 2 — compte de retrait
         </h3>
 
         <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-2 text-sm">

@@ -22,7 +22,7 @@
 **Groupeur**
 - Créer une campagne
 - Décider à la clôture si la commande passe
-- Recevoir l'argent collecté, moins 5 % de commission
+- Retirer l'argent collecté dès la clôture, moins **1 500 F par groupage abouti**
 
 **Récit de la fonctionnalité n°1** — *en tant qu'acheteur à Lomé avec un smartphone, je veux rejoindre une campagne et payer ma part en Mobile Money, afin d'obtenir le prix de gros sans avancer l'argent à un inconnu.*
 

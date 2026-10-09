@@ -3,7 +3,7 @@
 
 **Pourquoi ce filtre existe.** Un groupeur qui récupère les numéros de ses
 acheteurs peut leur proposer la même marchandise hors plateforme, au même prix,
-sans commission. L'anonymat des deux côtés est ce qui protège le modèle
+sans nous. L'anonymat des deux côtés est ce qui protège le modèle
 économique, et les questions publiques sont le dernier endroit par où un numéro
 pouvait passer.
 
@@ -90,7 +90,7 @@ def expliquer(motif: str, *, role: str = "acheteur") -> dict[str, str]:
 
     **La copie est plus ferme côté groupeur**, parce que la bonne foi y est
     moins probable : l'acheteur n'a rien à gagner à sortir de la plateforme, le
-    groupeur y gagnerait la commission. On lui dit que la tentative est
+    groupeur y gagnerait nos frais. On lui dit que la tentative est
     enregistrée, ce qu'on ne dit jamais à un acheteur.
     """
     if role == "groupeur":

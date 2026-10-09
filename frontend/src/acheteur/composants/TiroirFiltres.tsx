@@ -111,7 +111,7 @@ export default function TiroirFiltres({
         aria-modal="true"
         aria-label="Filtrer les groupages"
         tabIndex={-1}
-        className="relative flex h-full w-full max-w-sm flex-col bg-white shadow-[-8px_0_32px_rgba(20,24,31,0.18)] outline-none"
+        className="relative flex h-full w-full max-w-sm flex-col bg-white shadow-[-8px_0_32px_rgba(29,25,22,0.18)] outline-none"
       >
         <div className="flex items-center justify-between border-b border-bordure px-5 py-4">
           <h2 className="text-lg font-semibold text-texte">Filtrer</h2>

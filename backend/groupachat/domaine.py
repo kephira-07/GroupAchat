@@ -20,8 +20,15 @@ from decimal import ROUND_HALF_UP, Decimal
 
 # ── L'argent ────────────────────────────────────────────────────────────────
 
-#: Commission de la plateforme, à la charge du groupeur, retenue à la clôture.
-TAUX_COMMISSION = Decimal("0.05")
+#: Frais de la plateforme, à la charge du groupeur, **retenus au retrait**.
+#:
+#: ⚠️ **Un montant fixe, pas un taux.** Le modèle a changé : l'argent de
+#: l'acheteur est inscrit au portefeuille du groupeur dès son paiement, et
+#: la plateforme ne retient plus un pourcentage sur un versement qu'elle
+#: ferait — elle prélève 1 500 F sur chaque groupage abouti, au moment où le
+#: groupeur retire son solde. Voir §9.2 du cahier des charges, qui dit aussi
+#: franchement ce que ce choix nous coûte.
+FRAIS_PLATEFORME = Decimal("1500")
 
 #: Frais de livraison, en francs CFA.
 #:
@@ -48,32 +55,38 @@ def arrondir(montant: Decimal) -> Decimal:
 
 
 @dataclass(frozen=True)
-class Versement:
-    """Ce qui revient au groupeur à la clôture d'une campagne."""
+class Retrait:
+    """Ce que le groupeur peut retirer à la clôture d'un groupage."""
 
     collecte: Decimal
-    commission: Decimal
-    verse: Decimal
+    frais: Decimal
+    net: Decimal
 
 
-def calculer_versement(collecte_sur_les_parts: Decimal) -> Versement:
-    """Applique la commission de 5 %.
+def calculer_retrait(collecte_sur_les_parts: Decimal) -> Retrait:
+    """Retient les 1 500 F de frais de plateforme.
 
-    ⚠️ **La commission ne porte jamais sur les frais de livraison.** Ceux-ci
-    sont payés par l'acheteur et vont au transporteur ; les inclure ferait
-    payer au groupeur une commission sur de l'argent qui ne passe pas par lui.
-    L'argument de cette fonction est donc la collecte **sur les parts**, et son
-    nom le dit pour qu'on ne s'y trompe pas à l'appel.
+    ⚠️ **Les frais ne portent jamais sur les frais de livraison.** Ceux-ci sont
+    payés par l'acheteur et vont au transporteur ; les compter dans l'assiette
+    ferait payer au groupeur des frais sur de l'argent qui ne passe pas par
+    lui. L'argument de cette fonction est donc la collecte **sur les parts**,
+    et son nom le dit pour qu'on ne s'y trompe pas à l'appel.
 
-    Aucune commission n'est prélevée sur une campagne annulée : dans ce cas, la
-    fonction n'est simplement pas appelée.
+    Aucun frais n'est prélevé sur un groupage annulé : dans ce cas, la fonction
+    n'est simplement pas appelée.
+
+    ⚠️ **Jamais de net négatif.** Si la collecte est inférieure aux frais — un
+    groupage à une seule part de 1 000 F —, les frais sont ramenés à la
+    collecte et le net vaut zéro. On ne présente pas à quelqu'un un retrait qui
+    lui réclame de l'argent : ce serait absurde à l'écran, et ce serait un
+    découvert en base. Le §9.2 du cahier des charges tranche ce cas limite.
     """
     collecte = arrondir(Decimal(collecte_sur_les_parts))
-    commission = arrondir(collecte * TAUX_COMMISSION)
-    return Versement(
+    frais = min(FRAIS_PLATEFORME, collecte)
+    return Retrait(
         collecte=collecte,
-        commission=commission,
-        verse=collecte - commission,
+        frais=frais,
+        net=collecte - frais,
     )
 
 

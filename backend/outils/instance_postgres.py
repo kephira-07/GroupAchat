@@ -18,7 +18,13 @@ pas droit, on en lance un second :
   se retrouver ailleurs.
 
 Pour travailler sur votre serveur a vous, il suffira de changer `DATABASE_URL`
-dans `backend/.env` — rien d'autre dans le code ne depend du port.
+dans le `.env` **de la racine** — rien d'autre dans le code ne depend du port.
+
+⚠️ **Un seul fichier de variables, a la racine**, et c'est `config/settings.py`
+qui le decide : il n'en lit pas d'autre. Cet outil ecrivait `backend/.env`,
+que plus personne ne lit depuis — la base repondait alors
+« password authentication failed » avec un fichier qui portait pourtant le bon
+mot de passe, au mauvais endroit.
 """
 
 from __future__ import annotations
@@ -34,6 +40,8 @@ from pathlib import Path
 
 PG = Path(r"C:\Program Files\PostgreSQL\17\bin")
 RACINE = Path(r"C:\ALLPROJECT\Professionnel\GroupAchat\backend")
+#: Le `.env` lu par Django, Compose et Vite. **Le seul.**
+FICHIER_ENV = RACINE.parent / ".env"
 DONNEES = RACINE / ".pgdata"
 JOURNAL = RACINE / ".pgdata.log"
 PORT = "5433"
@@ -63,6 +71,46 @@ def serveur_repond(mot_de_passe: str) -> bool:
         env=environnement,
     )
     return resultat.returncode == 0
+
+
+ENTETE = (
+    "# Variables de developpement. Ne pas commiter.\n"
+    "# Un seul fichier pour Django, Compose et Vite — voir config/settings.py.\n"
+)
+
+GABARIT = (
+    "DJANGO_SECRET_KEY=dev-seulement-a-remplacer-en-production\n"
+    "DJANGO_DEBUG=1\n"
+)
+
+
+def poser_database_url(url: str) -> None:
+    """Remplace la ligne `DATABASE_URL`, **et ne touche a rien d'autre**.
+
+    ⚠️ Cet outil reecrivait le fichier en entier. Tant qu'il visait
+    `backend/.env`, qui ne portait que trois variables, c'etait sans
+    consequence. Pointe sur le `.env` de la racine, la meme ligne effacerait
+    `JETON_ADMIN`, `SMS_FOURNISSEUR`, `CORS_ORIGINES` et les identifiants du
+    compte administrateur — c'est-a-dire tout ce qui ne se regenere pas.
+
+    Le mot de passe de l'instance change a chaque remise a neuf : c'est bien
+    cette ligne-la, et elle seule, qui doit suivre.
+    """
+    lignes = (
+        FICHIER_ENV.read_text(encoding="utf-8").splitlines(keepends=True)
+        if FICHIER_ENV.exists()
+        else [ENTETE, GABARIT]
+    )
+
+    nouvelle = f"DATABASE_URL={url}\n"
+    for rang, ligne in enumerate(lignes):
+        if ligne.startswith("DATABASE_URL="):
+            lignes[rang] = nouvelle
+            break
+    else:
+        lignes.append(nouvelle)
+
+    FICHIER_ENV.write_text("".join(lignes), encoding="utf-8")
 
 
 def main() -> int:
@@ -140,22 +188,11 @@ def main() -> int:
         return 1
 
     url = f"postgres://{ROLE}:{mot_de_passe}@127.0.0.1:{PORT}/{BASE}"
-    (RACINE / ".env").write_text(
-        "# Genere par l'outillage de developpement. Ne pas commiter.\n"
-        "# Instance PostgreSQL 17 dediee, port 5433, lancee par\n"
-        "#   python manage.py demarrer_postgres\n"
-        "# Pour utiliser le serveur installe sur la machine (port 5432), il\n"
-        "# suffit de remplacer cette ligne par ses identifiants.\n"
-        f"DATABASE_URL={url}\n"
-        "\n"
-        "DJANGO_SECRET_KEY=dev-seulement-a-remplacer-en-production\n"
-        "DJANGO_DEBUG=1\n",
-        encoding="utf-8",
-    )
+    poser_database_url(url)
 
     print(f"\nInstance prete : 127.0.0.1:{PORT}, base « {BASE} »")
     print(f"Journal        : {JOURNAL}")
-    print("backend/.env    : ecrit (ignore par git)")
+    print(f"{FICHIER_ENV.name:<15}: DATABASE_URL mis a jour (ignore par git)")
     return 0
 
 

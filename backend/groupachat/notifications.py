@@ -121,7 +121,8 @@ MOTIFS: dict[str, dict[str, str]] = {
         # une suite qui existe, sans rouvrir le dossier automatiquement.
         "suite": (
             "Ouvrez un compte Mobile Money à votre nom, puis reprenez une "
-            "inscription. Nous ne pouvons pas verser sur le compte d'un tiers."
+            "inscription. Nous ne pouvons pas payer un retrait sur le compte "
+            "d'un tiers."
         ),
     },
     "telephone-injoignable": {
@@ -246,10 +247,11 @@ Trois choses à savoir avant de commencer :
 
 - les acheteurs ne voient que votre pseudonyme, {pseudonyme}. Votre nom, votre
   numéro et votre adresse ne leur sont jamais montrés ;
-- vous êtes payé intégralement à la clôture du groupage, commission de 5 %
-  retenue. La commission ne porte jamais sur les frais de livraison ;
-- avant tout versement, vous déposez votre devis fournisseur, puis votre reçu
-  de paiement.
+- l'argent de vos acheteurs est à vous dès leur paiement. Il est détenu
+  jusqu'à la clôture du groupage, puis vous le retirez en entier ;
+- Group Achat retient 1 500 F par groupage abouti, au moment du retrait. Jamais
+  sur les frais de livraison, et jamais sur un groupage annulé ;
+- vous déposez votre devis fournisseur, puis votre reçu de paiement.
 
 Ouvrez votre tableau de bord pour créer votre premier groupage.
 
@@ -328,9 +330,9 @@ Bonjour, votre dossier est validé. Vous pouvez lancer votre premier groupage
 dès aujourd'hui, et {plaf}.
 
 Trois choses : les acheteurs ne voient que votre pseudonyme, {pseudonyme} —
-jamais votre nom ni votre numéro. Vous êtes payé en entier à la clôture, moins
-5 % de commission. Et avant qu'on vous verse l'argent, vous nous envoyez le
-devis de votre fournisseur.
+jamais votre nom ni votre numéro. L'argent de vos acheteurs est à vous dès
+leur paiement : vous le retirez en entier à la clôture, moins 1 500 F par
+groupage. Et vous nous envoyez le devis de votre fournisseur.
 
 [Demander s'il a des questions. Ne pas raccrocher avant qu'il ait dit qu'il
 sait où créer son groupage.]"""

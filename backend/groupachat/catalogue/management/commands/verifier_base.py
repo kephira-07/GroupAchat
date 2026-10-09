@@ -49,7 +49,8 @@ class Command(BaseCommand):
                 self.style.WARNING(
                     "\nSQLite est le secours, pas la configuration de référence. "
                     "Le cahier des charges impose PostgreSQL : renseignez "
-                    "DATABASE_URL dans backend/.env avant de conclure quoi que "
+                    "DATABASE_URL dans le .env de la racine avant de conclure quoi "
+                    "que "
                     "ce soit d'une suite verte."
                 )
             )

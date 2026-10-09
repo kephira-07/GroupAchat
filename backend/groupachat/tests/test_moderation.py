@@ -141,7 +141,7 @@ class RedactionTest(TestCase):
         self.assertIn("livreur", explication["rassurance"])
 
     def test_la_copie_groupeur_est_plus_ferme(self):
-        """La bonne foi y est moins probable : il y gagnerait la commission."""
+        """La bonne foi y est moins probable : il y gagnerait nos frais."""
         texte = moderation.expliquer(
             moderation.MOTIF_NUMERO, role="groupeur"
         )["corps"]

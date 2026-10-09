@@ -18,7 +18,7 @@ import { appeler } from "./client";
  * ⚠️ **Rien de ce qui passe par ici ne porte l'identite d'un acheteur.** Le
  * groupeur voit des codes de livraison et des quartiers, jamais un nom, un
  * numero ou une adresse (§1.7). Ce n'est pas une precaution de confort : c'est
- * ce qui protege la commission contre la desintermediation. Le serveur tient
+ * ce qui protege le modele contre la desintermediation. Le serveur tient
  * cette regle — `api_groupeur.py` — et `test_espace_groupeur.py` verifie
  * qu'aucune reponse ne laisse fuir un acheteur.
  *
@@ -45,6 +45,13 @@ export interface TableauDeBordApi {
    */
   en_collecte: number;
   disponible: number;
+  /**
+   * D'ou viennent ses commandes. **Agrege par le serveur**, en une requete.
+   *
+   * ⚠️ Des quartiers et des nombres, jamais un nom ni un repere : un quartier
+   * n'identifie personne (§1.7), et c'est ce qui autorise a le lui montrer.
+   */
+  par_quartier: { quartier: string; commandes: number; part: number }[];
   taches: Tache[];
 }
 
@@ -137,17 +144,18 @@ export function creerUneCampagne(
 
 export interface ResultatCloture {
   collecte: number;
-  commission: number;
-  montant_verse: number;
+  frais_plateforme: number;
+  montant_retirable: number;
   frais_livraison_collectes: number;
 }
 
 /**
- * Cloture un groupage : le groupeur est paye, commission retenue.
+ * Cloture un groupage : **le solde du groupeur devient retirable**.
  *
- * ⚠️ **Integralement a la cloture, pas a la livraison** (§7). Aucun ecran ne
- * doit ecrire « votre argent est bloque jusqu'a la livraison » — la
- * formulation autorisee est « detenu jusqu'a la cloture ».
+ * ⚠️ **Rien ne part ici.** L'argent etait deja le sien depuis le paiement de
+ * ses acheteurs ; il cesse simplement d'etre detenu. Aucun ecran ne doit
+ * ecrire « votre argent est bloque jusqu'a la livraison » — la formulation
+ * autorisee est « detenu jusqu'a la cloture ».
  */
 export function cloturerUneCampagne(
   telephone: string,
@@ -177,7 +185,7 @@ export interface CommandeGroupeurApi {
  * ⚠️ **Cinq champs, et pas un de plus.** Le code identifie la commande, le
  * quartier sert a organiser les tournees. Ajouter l'acheteur, le repere ou le
  * telephone lui permettrait de se constituer un fichier de clients et de les
- * servir hors plateforme — autrement dit de supprimer la commission.
+ * servir hors plateforme — autrement dit de nous supprimer du circuit.
  */
 export function listerLesCommandes(
   campagne: string,
@@ -188,22 +196,45 @@ export function listerLesCommandes(
 
 // ── Portefeuille — ecran 18 ────────────────────────────────────────────────
 
+export type EtatRetrait = "retirable" | "demande" | "effectue" | "annule";
+
 export interface PortefeuilleApi {
   disponible: number;
+  retire: number;
   mouvements: {
     id: string;
     date: string;
     campagne: string;
+    etat: EtatRetrait;
     collecte: number;
-    commission: number;
+    frais_plateforme: number;
     montant: number;
   }[];
 }
 
+/**
+ * ⚠️ **Le libelle depend de l'etat, et la difference compte.**
+ *
+ * Un solde devenu retirable n'est pas de l'argent parti. Les ecrire pareil
+ * ferait croire au groupeur qu'il a ete paye deux fois pour le meme groupage —
+ * c'est le genre de confusion qui se termine par un appel au support, et par
+ * un doute qui ne se repare pas.
+ */
+const LIBELLE_RETRAIT: Record<EtatRetrait, string> = {
+  retirable: "Groupage clôturé",
+  demande: "Retrait demandé",
+  effectue: "Retrait",
+  annule: "Groupage annulé",
+};
+
 export async function lireLePortefeuille(
   telephone: string,
   signal?: AbortSignal,
-): Promise<{ disponible: number; mouvements: MouvementPortefeuille[] }> {
+): Promise<{
+  disponible: number;
+  retire: number;
+  mouvements: MouvementPortefeuille[];
+}> {
   const brut = await appeler<PortefeuilleApi>("/espace-groupeur/portefeuille/", {
     parametres: { telephone },
     signal,
@@ -211,29 +242,68 @@ export async function lireLePortefeuille(
 
   return {
     disponible: brut.disponible,
+    retire: brut.retire,
     /**
-     * ⚠️ **Deux lignes par versement, et c'est volontaire.**
+     * ⚠️ **Deux lignes par groupage, et c'est volontaire.**
      *
-     * La commission a sa propre ligne, negative, plutot que d'etre deduite en
-     * silence du montant. Fondue dans le versement, elle priverait le groupeur
-     * du moyen de verifier les 5 % — et c'est exactement le genre d'opacite
+     * Les frais ont leur propre ligne, negative, plutot que d'etre deduits en
+     * silence du montant. Fondus dans le total, ils priveraient le groupeur du
+     * moyen de verifier les 1 500 F — et c'est exactement le genre d'opacite
      * qui fait douter d'une plateforme qui tient l'argent des autres.
+     *
+     * Un groupage annule ne porte **aucune ligne de frais** : il n'y en a pas,
+     * et une ligne a zero serait a expliquer.
      */
-    mouvements: brut.mouvements.flatMap((versement) => [
-      {
-        id: `${versement.id}-verse`,
-        date: versement.date,
-        libelle: `Versement — ${versement.campagne}`,
-        montant: versement.montant,
-      },
-      {
-        id: `${versement.id}-commission`,
-        date: versement.date,
-        libelle: "Commission Group Achat (5 %)",
-        montant: -versement.commission,
-      },
-    ]),
+    mouvements: brut.mouvements.flatMap((retrait) => {
+      const entree = {
+        id: `${retrait.id}-net`,
+        date: retrait.date,
+        libelle: `${LIBELLE_RETRAIT[retrait.etat]} — ${retrait.campagne}`,
+        montant: retrait.etat === "annule" ? undefined : retrait.montant,
+        mention: retrait.etat === "annule" ? "Aucun frais" : undefined,
+      };
+
+      if (retrait.etat === "annule") return [entree];
+
+      return [
+        entree,
+        {
+          id: `${retrait.id}-frais`,
+          date: retrait.date,
+          libelle:
+            retrait.etat === "effectue"
+              ? "Frais Group Achat — retenus"
+              : "Frais Group Achat — à retenir au retrait",
+          montant: -retrait.frais_plateforme,
+        },
+      ];
+    }),
   };
+}
+
+/**
+ * Le bouton « Retirer mes fonds » de l'ecran 18.
+ *
+ * ⚠️ **Il retire tout ce qui est retirable, d'un geste**, et la reponse dit
+ * combien de groupages ont ete soldes pour que la confirmation puisse annoncer
+ * les frais : 1 500 F par groupage abouti.
+ */
+export interface ResultatRetrait {
+  groupages: number;
+  frais_plateforme: number;
+  montant: number;
+  disponible: number;
+}
+
+export function retirerMesFonds(
+  telephone: string,
+  signal?: AbortSignal,
+): Promise<ResultatRetrait> {
+  return appeler("/espace-groupeur/retirer/", {
+    methode: "POST",
+    corps: { telephone },
+    signal,
+  });
 }
 
 // ── Demandes agregees — ecran 19 ───────────────────────────────────────────
@@ -245,6 +315,8 @@ export interface DemandeAgregeeApi {
   personnes: number;
   jours_ecoules: number;
   budget_moyen: number;
+  /** La quantite que les demandeurs ont ecrite le plus souvent. */
+  quantite_courante: string;
 }
 
 export async function listerLesDemandes(
@@ -264,17 +336,17 @@ export async function listerLesDemandes(
     joursEcoules: brute.jours_ecoules,
     budgetMoyen: brute.budget_moyen,
     /**
-     * ⚠️ **Le volume estime n'est pas servi par l'API, et on ne l'invente
-     * pas.**
+     * **La quantite la plus souvent demandee**, et non un volume estime.
      *
-     * Il supposerait de connaitre le conditionnement du produit — « 14
-     * personnes × 1 sac de 25 kg » — ce que la demande ne porte pas : elle
-     * n'a qu'une quantite en texte libre. Afficher une estimation fabriquee
-     * sur un ecran qui sert a decider d'un achat en gros serait pire que de ne
-     * rien afficher. Le cahier des charges est explicite : quand un chiffre
-     * n'est pas connu, on ecrit qu'on ne le connait pas.
+     * ⚠️ Le volume, lui, n'est pas connu : il supposerait de connaitre le
+     * conditionnement du produit — « 14 personnes × 1 sac de 25 kg » — ce que
+     * la demande ne porte pas. L'inventer sur un ecran qui sert a decider
+     * d'un achat en gros serait pire que de ne rien afficher.
+     *
+     * Ce que les gens ont ecrit, en revanche, se compte : c'est ce que le
+     * serveur renvoie ici. La ligne disparait quand il n'y a rien a dire.
      */
-    volumeEstime: "",
+    volumeEstime: brute.quantite_courante ?? "",
   }));
 }
 

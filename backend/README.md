@@ -53,7 +53,8 @@ python outils/instance_postgres.py
 - rôle avec **mot de passe généré**, pas `trust` — une instance de
   développement sans authentification est une mauvaise habitude qui finit par
   se retrouver ailleurs ;
-- écrit `backend/.env`, ignoré par git.
+- met à jour la ligne `DATABASE_URL` du `.env` **de la racine**, ignoré par
+  git, et ne touche à rien d'autre dedans.
 
 Pour travailler sur le serveur installé (port 5432), il suffit de remplacer
 `DATABASE_URL` dans `.env` : rien d'autre dans le code ne dépend du port.
@@ -109,16 +110,28 @@ casse, on doit savoir ce qui ne tient plus.
 
 ### L'argent
 
-- 128 000 − 6 400 = **121 600** et 401 800 − 20 090 = **381 710** — un jury
+- 128 000 − 1 500 = **126 500** et 401 800 − 1 500 = **400 300** — un jury
   refait ces calculs ;
-- **la commission ne porte jamais sur les frais de livraison.** Un test
-  compare les deux assiettes et chiffre l'écart (1 600 F sur le fil rouge) :
-  c'est la règle la plus facile à casser par distraction ;
+- **les frais sont un montant fixe**, 1 500 F par groupage abouti, et jamais un
+  pourcentage. Un test les compare sur trois collectes très différentes : c'est
+  la règle qui se perd le plus vite, parce qu'un pourcentage remis « comme
+  avant » passerait inaperçu sur un seul groupage ;
+- **les frais ne portent jamais sur les frais de livraison.** Avec un montant
+  fixe, l'assiette ne change plus le prélèvement : le test vérifie donc ce qui
+  reste faux dans ce cas, le **net**, qui porterait 32 000 F qui ne sont pas au
+  groupeur ;
+- **jamais de net négatif** : sur un groupage plus petit que les frais, les
+  frais sont ramenés à la collecte ;
 - 4 000 + 1 000 = **5 000 F payés** — l'erreur la plus facile de ce produit
   est d'afficher 4 000 là où l'acheteur paie 5 000 ;
-- les frais **ne se multiplient pas** par la quantité : un colis, des frais ;
-- **aucune commission sur une campagne annulée** : la fonction ne crée aucun
-  `Versement`, pas même une ligne à zéro.
+- les frais de livraison **ne se multiplient pas** par la quantité : un colis,
+  des frais ;
+- **aucun frais sur un groupage annulé** : la fonction ne crée aucun `Retrait`,
+  pas même une ligne à zéro ;
+- **le devis fournisseur ne bloque plus le retrait**, et un test le dit
+  explicitement. C'est une perte de levier assumée (§9.1) : s'il casse un jour,
+  c'est que le verrou a été rétabli, ce qui demande de rouvrir le cahier des
+  charges et pas seulement le test.
 
 ### L'anonymat (§1.7)
 

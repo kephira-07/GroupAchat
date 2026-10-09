@@ -13,49 +13,79 @@ from django.test import TestCase
 from groupachat import domaine
 
 
-class CommissionTest(TestCase):
-    """La commission de 5 %, à la charge du groupeur, retenue à la clôture."""
+class FraisDePlateformeTest(TestCase):
+    """1 500 F par groupage abouti, à la charge du groupeur, retenus au retrait."""
 
     def test_le_jeu_de_demonstration_tombe_juste(self):
-        """128 000 − 6 400 = 121 600. Un jury refait ce calcul."""
-        resultat = domaine.calculer_versement(Decimal("128000"))
+        """128 000 − 1 500 = 126 500. Un jury refait ce calcul."""
+        resultat = domaine.calculer_retrait(Decimal("128000"))
         self.assertEqual(resultat.collecte, Decimal("128000"))
-        self.assertEqual(resultat.commission, Decimal("6400"))
-        self.assertEqual(resultat.verse, Decimal("121600"))
+        self.assertEqual(resultat.frais, Decimal("1500"))
+        self.assertEqual(resultat.net, Decimal("126500"))
 
     def test_les_baskets_tombent_juste_aussi(self):
-        """41 × 9 800 = 401 800, moins 5 % = 381 710 (écran 18)."""
-        resultat = domaine.calculer_versement(Decimal("41") * Decimal("9800"))
+        """41 × 9 800 = 401 800, moins 1 500 = 400 300 (écran 18)."""
+        resultat = domaine.calculer_retrait(Decimal("41") * Decimal("9800"))
         self.assertEqual(resultat.collecte, Decimal("401800"))
-        self.assertEqual(resultat.commission, Decimal("20090"))
-        self.assertEqual(resultat.verse, Decimal("381710"))
+        self.assertEqual(resultat.frais, Decimal("1500"))
+        self.assertEqual(resultat.net, Decimal("400300"))
 
-    def test_la_commission_ne_porte_pas_sur_les_frais_de_livraison(self):
+    def test_le_montant_est_fixe_quelle_que_soit_la_collecte(self):
+        """⚠️ **C'est toute la règle**, et c'est elle qui se perd le plus vite.
+
+        Un pourcentage remis « comme avant » passerait inaperçu sur un seul
+        groupage. Trois collectes très différentes doivent porter exactement
+        les mêmes frais.
+        """
+        for collecte in ("10000", "128000", "2500000"):
+            with self.subTest(collecte=collecte):
+                resultat = domaine.calculer_retrait(Decimal(collecte))
+                self.assertEqual(resultat.frais, Decimal("1500"))
+
+    def test_les_frais_ne_portent_pas_sur_les_frais_de_livraison(self):
         """La règle la plus facile à casser par distraction.
 
-        Les frais sont payés par l'acheteur et vont au transporteur. Les
-        inclure ferait payer au groupeur une commission sur de l'argent qui ne
-        passe pas par lui.
+        Les frais de livraison sont payés par l'acheteur et vont au
+        transporteur. Les compter dans l'assiette ferait payer au groupeur des
+        frais sur de l'argent qui ne passe pas par lui.
+
+        ⚠️ **Avec un montant fixe, l'assiette ne change plus le prélèvement**,
+        et ce test ne peut plus attraper l'erreur par le montant des frais. Ce
+        qu'il vérifie désormais est ce qui reste faux dans ce cas : le **net**,
+        qui porterait 32 000 F qui ne sont pas au groupeur.
         """
         parts = Decimal("128000")
-        frais = Decimal("32000")  # 32 commandes × 1 000 F
+        livraison = Decimal("32000")  # 32 commandes × 1 000 F
 
-        sur_les_parts = domaine.calculer_versement(parts)
-        avec_les_frais = domaine.calculer_versement(parts + frais)
+        sur_les_parts = domaine.calculer_retrait(parts)
+        avec_la_livraison = domaine.calculer_retrait(parts + livraison)
 
-        self.assertEqual(sur_les_parts.commission, Decimal("6400"))
-        self.assertNotEqual(avec_les_frais.commission, sur_les_parts.commission)
-        # Si quelqu'un passe un jour le total au lieu des parts, le groupeur
-        # perd 1 600 F sans que rien ne le signale. D'où ce test.
-        self.assertEqual(avec_les_frais.commission - sur_les_parts.commission,
-                         Decimal("1600"))
+        self.assertEqual(sur_les_parts.frais, avec_la_livraison.frais)
+        self.assertEqual(
+            avec_la_livraison.net - sur_les_parts.net, livraison
+        )
+
+    def test_jamais_de_net_negatif(self):
+        """Un groupage plus petit que les frais ne réclame pas d'argent.
+
+        Le §9.2 tranche ce cas limite : les frais sont ramenés à la collecte,
+        et le net vaut zéro. Un retrait négatif serait absurde à l'écran et un
+        découvert en base.
+        """
+        resultat = domaine.calculer_retrait(Decimal("1000"))
+        self.assertEqual(resultat.frais, Decimal("1000"))
+        self.assertEqual(resultat.net, Decimal("0"))
 
     def test_aucun_centime_de_franc(self):
-        """Le franc CFA n'a pas de subdivision : tout est arrondi au franc."""
-        resultat = domaine.calculer_versement(Decimal("1333"))
-        self.assertEqual(resultat.commission, Decimal("67"))
-        self.assertEqual(resultat.verse, Decimal("1266"))
-        self.assertEqual(resultat.commission + resultat.verse, resultat.collecte)
+        """Le franc CFA n'a pas de subdivision : tout est arrondi au franc.
+
+        Une collecte avec des decimales ne peut venir que d'un calcul en
+        amont, mais elle ne doit jamais ressortir en centimes d'ici.
+        """
+        resultat = domaine.calculer_retrait(Decimal("128000.60"))
+        self.assertEqual(resultat.collecte, Decimal("128001"))
+        self.assertEqual(resultat.net, Decimal("126501"))
+        self.assertEqual(resultat.frais + resultat.net, resultat.collecte)
 
 
 class FraisDeLivraisonTest(TestCase):

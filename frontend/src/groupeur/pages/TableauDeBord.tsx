@@ -12,6 +12,8 @@ import { Barre } from "../../ui/Graphique";
 import { ErreurReseau, ListeEnChargement } from "../../ui/EtatReseau";
 import { EnTeteGroupeur } from "../mise-en-page/ChromeGroupeur";
 import { IconeDemander } from "../../ui/Icones";
+import Bouton from "../../ui/Bouton";
+import Encart from "../../ui/Encart";
 
 /**
  * Ecran 13 — Tableau de bord groupeur. SPEC_ECRANS_FIGMA.md, ecran 13.
@@ -120,7 +122,7 @@ export default function TableauDeBord({
           onReprendre={onReprendreLeDossier}
         />
 
-        <section className="px-4 pt-6">
+        <section className="px-4 pt-6 md:px-8">
           <h2 className="text-lg font-semibold text-texte">
             Ce que vous pourrez faire
           </h2>
@@ -137,9 +139,9 @@ export default function TableauDeBord({
                   "Vous voyez les codes de livraison et les quartiers — jamais les noms ni les numéros de vos acheteurs.",
               },
               {
-                titre: "Être payé à la clôture",
+                titre: "Retirer dès la clôture",
                 detail:
-                  "L'intégralité du montant collecté, commission de 5 % retenue. Jamais sur les frais de livraison.",
+                  "L'intégralité du montant collecté, moins 1 500 F de frais Group Achat. Jamais sur les frais de livraison.",
               },
             ].map((etape, indice) => (
               <li key={etape.titre} className="flex gap-3">
@@ -194,7 +196,35 @@ export default function TableauDeBord({
             ))}
           </div>
         </div>
-        <ListeEnChargement nombre={3} className="px-4 pt-6" />
+        <ListeEnChargement nombre={3} className="px-4 pt-6 md:px-8" />
+      </div>
+    );
+  }
+
+  /* ⚠️ **404 n'est pas une panne de reseau, et « Reessayer » n'y peut rien.**
+     Le serveur dit qu'aucun groupeur ne porte ce numero : le compte a ete
+     efface, ou la base a ete remise a neuf depuis la derniere visite.
+     Reappuyer sur « Reessayer » redonnera 404 indefiniment — l'ecran doit
+     dire ce qui s'est passe et proposer la seule issue : redeposer un
+     dossier. */
+  if (espace.erreur?.statut === 404) {
+    return (
+      <div className="relative pb-18">
+        <EnTeteGroupeur titre="Mon tableau de bord" />
+        <div className="px-4 pt-8 md:px-8">
+          <Encart variante="attention" role="groupeur" titre="Compte introuvable">
+            Aucun groupeur ne correspond à ce numéro. Le compte a été effacé,
+            ou la base a été remise à neuf depuis votre dernière visite. Vos
+            groupages, eux, ne sont pas récupérables.
+          </Encart>
+          {onReprendreLeDossier ? (
+            <div className="mt-4">
+              <Bouton role="groupeur" onClick={onReprendreLeDossier}>
+                Déposer un nouveau dossier
+              </Bouton>
+            </div>
+          ) : null}
+        </div>
       </div>
     );
   }
@@ -227,9 +257,13 @@ export default function TableauDeBord({
         />
       ) : null}
 
-      {/* Les quatre tuiles, en bleu, chevauchant l'en-tete. */}
-      <div className="-mt-3 px-4">
-        <div className="grid grid-cols-2 gap-3">
+      {/* Les quatre tuiles, en bleu.
+          ⚠️ Elles **chevauchent l'en-tete sur telephone** (`-mt-3`), ou la
+          place manque. Sur grand ecran elles descendent : le chevauchement y
+          mordrait sur le lisere orange de l'en-tete, et quatre tuiles tiennent
+          sur une ligne au lieu de deux. */}
+      <div className="-mt-3 px-4 md:mt-6 md:px-8">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <Tuile valeur={String(ouvertes)} libelle="campagnes ouvertes" onClick={onStatistiques} />
           <Tuile valeur={String(commandes)} libelle="commandes" onClick={onStatistiques} />
           <Tuile
@@ -253,9 +287,18 @@ export default function TableauDeBord({
         </button>
       </div>
 
+      {/* ⚠️ **Deux colonnes au-dela de 1024 px, une seule en dessous.**
+          Empilees, ces trois sections font un ruban de deux ecrans de haut sur
+          une machine de bureau : on descend longtemps pour lire des blocs qui
+          tiendraient cote a cote.
+          « A faire aujourd'hui » part a droite et **reste colle en haut**
+          (`sticky`) : c'est la liste des choses qui attendent une decision, et
+          elle doit rester sous les yeux pendant qu'on parcourt le reste. */}
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-6 lg:px-8">
+        <div className="min-w-0">
       {/* L'avancement des groupages en cours. */}
       {enCours.length > 0 ? (
-        <section className="px-4 pt-6">
+        <section className="px-4 pt-6 md:px-8 lg:px-0">
           <h2 className="text-lg font-semibold text-texte">
             Où en sont vos groupages
           </h2>
@@ -323,9 +366,11 @@ export default function TableauDeBord({
         </section>
       ) : null}
 
-      {/* « A faire aujourd'hui » — le seul bloc orange de l'ecran, et la
-          raison d'ouvrir l'application le matin. */}
-      <section className="mt-4 px-4">
+        </div>
+
+      {/* « A faire aujourd'hui » — le bloc orange de l'ecran, et la raison
+          d'ouvrir l'application le matin. */}
+      <section className="mt-4 px-4 md:px-8 lg:sticky lg:top-6 lg:mt-6 lg:px-0">
         <h2 className="text-lg font-semibold text-texte">
           À faire aujourd&apos;hui
         </h2>
@@ -352,19 +397,27 @@ export default function TableauDeBord({
         </ul>
       </section>
 
-      <section className="mt-6 px-4">
+      </div>
+
+      <section className="mt-6 px-4 md:px-8">
         <h2 className="text-lg font-semibold text-texte">Mes campagnes</h2>
-        <ul className="mt-2">
+        {/* ⚠️ **Deux colonnes au large, et des cadres plutot qu'un filet.**
+            Une liste de six lignes etalees sur 1 100 px laisse un vide de
+            800 px entre le titre et le montant : l'oeil perd la ligne en
+            route, et c'est le defaut classique d'un tableau mobile agrandi
+            tel quel. */}
+        <ul className="mt-2 lg:grid lg:grid-cols-2 lg:gap-3">
           {espace.campagnes.map((campagne) => (
-            <li key={campagne.id} className="border-b border-bordure last:border-b-0">
+            <li
+              key={campagne.id}
+              className="border-b border-bordure last:border-b-0 lg:rounded-xl lg:border lg:border-bordure"
+            >
               <button
                 type="button"
                 onClick={() => onCampagne(campagne)}
-                className="flex w-full items-center gap-3 py-3 text-left active:bg-surface-douce"
+                className="flex w-full items-center gap-3 py-3 text-left active:bg-surface-douce lg:px-3"
               >
-                <div className="size-12 shrink-0">
-                  <Vignette photo={campagne.photo} />
-                </div>
+                <Vignette photo={campagne.photo} taille={48} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium text-texte">
                     {campagne.produit}
@@ -410,7 +463,7 @@ export default function TableauDeBord({
           type="button"
           onClick={onCreer}
           aria-label="Créer une campagne"
-          className="fixed right-4 bottom-24 z-10 flex size-14 items-center justify-center rounded-full bg-marque text-texte shadow-[0_2px_10px_rgba(20,24,31,0.25)]"
+          className="fixed right-4 bottom-24 z-10 flex size-14 items-center justify-center rounded-full bg-marque text-texte shadow-[0_2px_10px_rgba(29,25,22,0.25)]"
         >
           <IconeDemander taille={26} />
         </button>

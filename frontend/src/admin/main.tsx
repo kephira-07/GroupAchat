@@ -9,7 +9,7 @@ import DemandeJeton from "./pages/DemandeJeton";
 import DossiersKyc from "./pages/DossiersKyc";
 import Groupages from "./pages/Groupages";
 import TableauDeBordAdmin from "./pages/TableauDeBordAdmin";
-import Versements from "./pages/Versements";
+import Retraits from "./pages/Retraits";
 
 /**
  * Le point d'entree de l'administration — **une application a part.**
@@ -41,7 +41,7 @@ import Versements from "./pages/Versements";
  * |---|---|---|
  * | A1 | Tableau de bord | `pages/TableauDeBordAdmin` |
  * | A2 | Dossiers KYC | `pages/DossiersKyc` |
- * | A3 | Virements aux groupeurs | `pages/Versements` |
+ * | A3 | Retraits des groupeurs | `pages/Retraits` |
  * | A4 | Groupages, tous etats | `pages/Groupages` |
  *
  * ⚠️ **Le port different n'est pas une mesure de securite.** Il n'authentifie
@@ -118,12 +118,11 @@ function Administration() {
       donnees.files.find((entree) => entree.id === id)?.nombre ?? 0;
 
     setCompteurs({
-      /* `urgent` sur les virements seulement : c'est la seule file ou **notre
-         propre tresorerie** est engagee, et ou quelqu'un attend pour
-         travailler. */
-      versements: {
-        nombre: file("versements"),
-        urgent: file("versements") > 0,
+      /* `urgent` sur les retraits seulement : c'est la seule file ou
+         quelqu'un attend son argent pour pouvoir travailler. */
+      retraits: {
+        nombre: file("retraits"),
+        urgent: file("retraits") > 0,
       },
       dossiers: { nombre: file("kyc") },
     });
@@ -151,8 +150,8 @@ function Administration() {
           onJetonRefuse={refuserLeJeton}
         />
       ) : null}
-      {ecran === "versements" ? (
-        <Versements jeton={jeton} onJetonRefuse={refuserLeJeton} />
+      {ecran === "retraits" ? (
+        <Retraits jeton={jeton} onJetonRefuse={refuserLeJeton} />
       ) : null}
       {ecran === "groupages" ? (
         <Groupages jeton={jeton} onJetonRefuse={refuserLeJeton} />

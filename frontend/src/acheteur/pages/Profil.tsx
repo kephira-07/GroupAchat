@@ -55,7 +55,7 @@ import {
  *
  * **Aucun profil de groupeur, aucun moyen d'en joindre un** : §1.7 et §7
  * regle 4 du cahier des charges l'interdisent, et c'est ce qui protege la
- * commission. Le pseudonyme n'est cliquable nulle part, ici pas davantage.
+ * nous. Le pseudonyme n'est cliquable nulle part, ici pas davantage.
  *
  * **Pas de canal d'assistance.** Le bloc d'aide redit les regles du produit,
  * il ne promet ni numero, ni adresse, ni formulaire : le cahier des charges ne

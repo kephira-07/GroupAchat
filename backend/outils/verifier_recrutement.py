@@ -108,11 +108,16 @@ def main() -> int:
     jeton = os.environ.get("JETON_ADMIN")
     if not jeton:
         # On lit `.env` nous-mêmes : ce script n'est pas lancé par Django.
-        for ligne in (RACINE / ".env").read_text(encoding="utf-8").splitlines():
+        #
+        # ⚠️ **Celui de la racine**, pas `backend/.env` : `config/settings.py`
+        # n'en lit qu'un, et c'est celui-là. Lire l'autre donnait un jeton
+        # vide, donc « rien à vérifier » sur une machine pourtant configurée.
+        fichier = RACINE.parent / ".env"
+        for ligne in fichier.read_text(encoding="utf-8").splitlines():
             if ligne.startswith("JETON_ADMIN="):
                 jeton = ligne.split("=", 1)[1].strip()
     if not jeton:
-        print("JETON_ADMIN absent de backend/.env — rien à vérifier.")
+        print("JETON_ADMIN absent du .env de la racine — rien à vérifier.")
         return 1
 
     print("Remise à zéro du jeu de démonstration…")

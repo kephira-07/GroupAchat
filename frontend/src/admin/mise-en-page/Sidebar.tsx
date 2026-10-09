@@ -4,7 +4,7 @@ import {
   IconeBouclier,
   IconeCarton,
   IconeGroupage,
-  IconePourcent,
+  IconeStatistiques,
 } from "../../ui/Icones";
 
 /**
@@ -40,7 +40,7 @@ import {
 
 export type EcranAdmin =
   | "tableau-de-bord"
-  | "versements"
+  | "retraits"
   | "groupages"
   | "dossiers";
 
@@ -51,8 +51,8 @@ interface Entree {
 }
 
 const ENTREES: readonly Entree[] = [
-  { cle: "tableau-de-bord", libelle: "Tableau de bord", Icone: IconePourcent },
-  { cle: "versements", libelle: "Virements à faire", Icone: IconeAlerte },
+  { cle: "tableau-de-bord", libelle: "Tableau de bord", Icone: IconeStatistiques },
+  { cle: "retraits", libelle: "Retraits à exécuter", Icone: IconeAlerte },
   { cle: "groupages", libelle: "Groupages", Icone: IconeCarton },
   { cle: "dossiers", libelle: "Dossiers KYC", Icone: IconeBouclier },
 ];

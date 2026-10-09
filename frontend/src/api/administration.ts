@@ -71,7 +71,7 @@ export interface GroupageAdmin {
   date_fin: string;
   cree_le: string;
   /** `null` quand la campagne n'a pas encore ete cloturee. */
-  versement_etat: string | null;
+  retrait_etat: string | null;
   /**
    * Les degats d'un groupage **annule** : combien de gens rembourses, pour
    * combien. `null` pour tous les autres etats.
@@ -95,9 +95,9 @@ export function listerLesGroupages(
   });
 }
 
-// ── Les virements ──────────────────────────────────────────────────────────
+// ── Les retraits ───────────────────────────────────────────────────────────
 
-export interface VersementAdmin {
+export interface RetraitAdmin {
   id: number;
   campagne: number;
   campagne_titre: string;
@@ -107,14 +107,22 @@ export interface VersementAdmin {
   groupeur_nom: string;
   groupeur_mobile_money: string;
   collecte: string;
-  commission: string;
-  verse: string;
+  /** 1 500 F par groupage abouti. **Un montant fixe, pas un taux** (§9.2). */
+  frais_plateforme: string;
+  net: string;
   frais_livraison_collectes: string;
-  etat: "en-attente" | "effectue" | "annule";
+  etat: "retirable" | "demande" | "effectue" | "annule";
+  /** Quand le groupeur a appuye sur « Retirer mes fonds ». */
+  demande_le: string | null;
   libere_le: string | null;
   libere_par: string;
   effectue_le: string;
-  /** Le devis fournisseur. `null` tant que le groupeur ne l'a pas depose. */
+  /**
+   * Le devis fournisseur. `null` tant que le groupeur ne l'a pas depose.
+   *
+   * ⚠️ **Il n'autorise rien.** Il est la pour etre lu : chez qui il achete, et
+   * pour combien. Le retrait part meme sans lui (§10.2).
+   */
   devis: {
     id: number;
     nature: string;
@@ -123,17 +131,18 @@ export interface VersementAdmin {
     etat: string;
     depose_le: string;
   } | null;
-  /** ⚠️ Faux sans devis : le §10.3 l'interdit. */
-  liberable: boolean;
+  /** Vrai seulement si le groupeur a demande son retrait. */
+  executable: boolean;
+  /** Depuis combien de jours il attend **sa demande**, pas la cloture. */
   jours_d_attente: number;
 }
 
-export function listerLesVersements(
+export function listerLesRetraits(
   jetonAdmin: string,
   etat: string | undefined,
   signal?: AbortSignal,
-): Promise<VersementAdmin[]> {
-  return appeler("/administration/versements/", {
+): Promise<RetraitAdmin[]> {
+  return appeler("/administration/retraits/", {
     parametres: { etat },
     jetonAdmin,
     signal,
@@ -141,23 +150,24 @@ export function listerLesVersements(
 }
 
 /**
- * Fait partir l'argent vers le groupeur.
+ * Fait partir l'argent que le groupeur a demande.
  *
- * ⚠️ **Le serveur refuse sans devis** (§10.3) : c'est le dernier moment ou un
- * controle sert encore a quelque chose. Apres, il n'y a plus de levier sur le
- * groupeur — ni caution, ni solde retenu.
+ * ⚠️ **Le serveur refuse ce qu'il n'a pas demande**, et rien d'autre. Le devis
+ * fournisseur n'entre plus dans ce controle : son solde est a lui depuis le
+ * paiement de ses acheteurs, et le §9.1 du cahier des charges assume cette
+ * perte de levier au lieu de la masquer derriere un refus indefendable.
  *
  * ⚠️ **Aucun virement reel n'est emis** : le paiement est simule jusqu'a
  * l'agrement d'un agregateur (§18.2). L'appel note que l'argent doit partir,
- * et qui l'a decide.
+ * et qui l'a execute.
  */
-export function libererLeVersement(
+export function executerLeRetrait(
   jetonAdmin: string,
   id: number,
   decidePar: string,
   signal?: AbortSignal,
-): Promise<VersementAdmin> {
-  return appeler(`/administration/${id}/liberer/`, {
+): Promise<RetraitAdmin> {
+  return appeler(`/administration/${id}/executer/`, {
     methode: "POST",
     corps: { decide_par: decidePar },
     jetonAdmin,

@@ -46,6 +46,7 @@ from rest_framework.permissions import BasePermission
 from rest_framework.response import Response
 
 from . import domaine, notifications
+from .demonstration import peupler
 from .api import ChampTelephone
 from .comptes.annonces import annoncer
 from .comptes.models import DecisionKyc, Groupeur, PieceKyc
@@ -403,6 +404,41 @@ class GroupeurViewSet(viewsets.GenericViewSet):
             PieceKyc(groupeur=groupeur, **piece) for piece in pieces
         )
         groupeur.soumettre_le_dossier()
+
+        # ⚠️ **Mode démonstration : le dossier est validé sur-le-champ.**
+        #
+        # L'examen par un humain est le cœur du §10.5, et c'est lui qui donne
+        # son sens à « groupeurs sélectionnés par Group Achat ». On ne le
+        # saute que pour montrer le produit, jamais en ligne : le réglage suit
+        # ``DEBUG`` et s'éteint seul en production (voir ``settings.py``).
+        #
+        # La décision est **tracée comme les autres**, avec son auteur écrit en
+        # clair. Une validation anonyme dans la base serait indiscernable d'un
+        # vrai examen, et c'est précisément ce qu'il ne faut pas laisser.
+        if getattr(settings, "DEMONSTRATION", False):
+            groupeur.trancher(
+                issue="valide",
+                decide_par="Mode démonstration",
+                canal=DecisionKyc.Canal.COURRIEL,
+            )
+            groupeur.refresh_from_db()
+
+            # ⚠️ **On n'efface plus les démonstrations précédentes ici.**
+            #
+            # Ce nettoyage existait pour garder le catalogue propre : six
+            # groupages publics par inscription, cinq passages, trente
+            # doublons. Mais il détruisait aussi **la session que quelqu'un
+            # était en train d'utiliser** : son espace se vidait d'un coup,
+            # sans rien dire, parce qu'un autre s'était inscrit entre-temps.
+            #
+            # Un catalogue encombré se range en une commande
+            # (`manage.py nettoyer_demonstration`). Un espace vidé sous les
+            # yeux de celui qui s'en sert ne se rattrape pas.
+
+            # On lui donne un passé : sans campagnes ni commandes, chacun
+            # de ses écrans afficherait « 0 », ce qui est exact et ne montre
+            # rien du produit. Voir `demonstration.peupler`.
+            peupler(groupeur)
 
         return Response(
             MonDossierSerializer(groupeur).data, status=status.HTTP_201_CREATED

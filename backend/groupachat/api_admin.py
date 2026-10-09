@@ -10,15 +10,15 @@ Un administrateur qui ouvre cette page le matin a **une** question : qu'est-ce
 qui attend une décision ? Pas « comment ça s'est passé ». Les routes suivent
 cet ordre :
 
-1. **ce qui bloque de l'argent** — les versements en attente d'un devis, parce
-   que le groupeur, lui, attend d'être payé pour pouvoir acheter ;
+1. **ce qui bloque de l'argent** — les **retraits demandés**, parce que le
+   groupeur, lui, attend son argent pour pouvoir acheter ;
 2. **ce qui bloque un recrutement** — les dossiers KYC (``api_kyc.py``) ;
 3. **ce qui a échoué** — groupages annulés, non aboutis : à comprendre, pas à
    décider ;
 4. **les chiffres** — en dernier, parce qu'ils ne demandent rien.
 
-⚠️ **Aucune route ne déplace d'argent sans trace.** Libérer un versement écrit
-qui, quand et sur quelle campagne (§18.3). C'est la contrepartie du fait qu'un
+⚠️ **Aucune route ne déplace d'argent sans trace.** Exécuter un retrait écrit
+qui, quand et sur quel groupage (§18.3). C'est la contrepartie du fait qu'un
 jeton partagé ne distingue pas deux administrateurs : si on ne sait pas *qui*
 au sens fort, on sait au moins *ce qui a été fait et sous quel nom*.
 """
@@ -42,8 +42,8 @@ from .catalogue.models import Campagne
 from .commandes.models import (
     Commande,
     Justificatif,
-    Versement,
-    liberer_le_versement,
+    Retrait,
+    executer_le_retrait,
 )
 from .comptes.models import Groupeur
 from .echanges.models import Question
@@ -64,12 +64,16 @@ class JustificatifSerializer(serializers.ModelSerializer):
         )
 
 
-class VersementSerializer(serializers.ModelSerializer):
-    """Un versement, avec de quoi décider s'il peut partir.
+class RetraitSerializer(serializers.ModelSerializer):
+    """Un retrait, avec de quoi exécuter le transfert.
 
     Il porte **le pseudonyme du groupeur et son vrai nom** : l'administration
     est le seul endroit où les deux se voient ensemble, et c'est nécessaire —
     on ne vire pas de l'argent à un pseudonyme.
+
+    ⚠️ ``devis`` est là pour être **lu**, pas pour autoriser. Le retrait part
+    même sans lui (§10.2), et l'administration le constate plutôt qu'elle ne le
+    contrôle.
     """
 
     campagne_titre = serializers.CharField(source="campagne.titre", read_only=True)
@@ -83,11 +87,11 @@ class VersementSerializer(serializers.ModelSerializer):
         source="campagne.groupeur.numero_mobile_money", read_only=True
     )
     devis = JustificatifSerializer(read_only=True)
-    liberable = serializers.BooleanField(read_only=True)
+    executable = serializers.BooleanField(read_only=True)
     jours_d_attente = serializers.SerializerMethodField()
 
     class Meta:
-        model = Versement
+        model = Retrait
         fields = (
             "id",
             "campagne",
@@ -96,27 +100,31 @@ class VersementSerializer(serializers.ModelSerializer):
             "groupeur_nom",
             "groupeur_mobile_money",
             "collecte",
-            "commission",
-            "verse",
+            "frais_plateforme",
+            "net",
             "frais_livraison_collectes",
             "etat",
+            "demande_le",
             "libere_le",
             "libere_par",
             "effectue_le",
             "devis",
-            "liberable",
+            "executable",
             "jours_d_attente",
         )
 
-    def get_jours_d_attente(self, versement: Versement) -> int:
+    def get_jours_d_attente(self, retrait: Retrait) -> int:
         """Depuis combien de jours le groupeur attend son argent.
 
-        ⚠️ **C'est le chiffre qui doit faire agir**, pas le montant. Un
-        groupeur qui attend depuis cinq jours ne peut pas acheter la
-        marchandise qu'il a vendue — et ce sont ses acheteurs qui attendront
-        ensuite.
+        ⚠️ **On compte depuis sa demande, pas depuis la clôture.** Un solde
+        retirable qu'il n'a pas réclamé ne fait attendre personne ; c'est le
+        jour où il appuie sur « Retirer mes fonds » que le compteur démarre.
+        Tant qu'il n'a rien demandé, la réponse est 0.
         """
-        return max(0, (timezone.now() - versement.effectue_le).days)
+        depart = retrait.demande_le
+        if depart is None:
+            return 0
+        return max(0, (timezone.now() - depart).days)
 
 
 class CampagneAdminSerializer(serializers.ModelSerializer):
@@ -133,7 +141,7 @@ class CampagneAdminSerializer(serializers.ModelSerializer):
         read_only=True,
     )
     heures_restantes = serializers.IntegerField(read_only=True)
-    versement_etat = serializers.SerializerMethodField()
+    retrait_etat = serializers.SerializerMethodField()
     rembourses = serializers.SerializerMethodField()
 
     class Meta:
@@ -150,13 +158,13 @@ class CampagneAdminSerializer(serializers.ModelSerializer):
             "heures_restantes",
             "date_fin",
             "cree_le",
-            "versement_etat",
+            "retrait_etat",
             "rembourses",
         )
 
-    def get_versement_etat(self, campagne: Campagne) -> str | None:
-        versement = getattr(campagne, "versement", None)
-        return versement.etat if versement else None
+    def get_retrait_etat(self, campagne: Campagne) -> str | None:
+        retrait = getattr(campagne, "retrait", None)
+        return retrait.etat if retrait else None
 
     def get_rembourses(self, campagne: Campagne) -> dict | None:
         """Les dégâts d'un groupage annulé : combien de gens, pour combien.
@@ -209,32 +217,39 @@ class AdministrationViewSet(viewsets.GenericViewSet):
             (c.collecte_sur_les_parts for c in ouvertes), Decimal("0")
         )
 
-        versements = Versement.objects.select_related(
-            "campagne", "campagne__groupeur"
-        )
-        en_attente = [v for v in versements if v.etat == Versement.Etat.EN_ATTENTE]
+        retraits = Retrait.objects.select_related("campagne", "campagne__groupeur")
+        demandes = [r for r in retraits if r.etat == Retrait.Etat.DEMANDE]
+        # Retirables sans que le groupeur ait rien demandé : personne n'attend,
+        # mais le devis manquant s'y lit quand même.
+        dormants = [r for r in retraits if r.etat == Retrait.Etat.RETIRABLE]
 
         return Response(
             {
-                "files": self._files(en_attente),
-                "indicateurs": self._indicateurs(campagnes, detenu, versements),
-                "alertes": self._alertes(en_attente),
+                "files": self._files(demandes, dormants),
+                "indicateurs": self._indicateurs(campagnes, detenu, retraits),
+                "alertes": self._alertes(demandes),
                 "serie_collecte": self._serie_collecte(),
                 "repartition_statuts": self._repartition(campagnes),
                 "activite": self._activite(maintenant),
             }
         )
 
-    def _files(self, en_attente: list[Versement]) -> list[dict]:
+    def _files(
+        self, demandes: list[Retrait], dormants: list[Retrait]
+    ) -> list[dict]:
         """Ce qui attend une décision, **du plus coûteux au moins coûteux**.
 
-        Les versements d'abord : c'est la seule file où quelqu'un attend son
+        Les retraits d'abord : c'est la seule file où quelqu'un attend son
         argent pour pouvoir travailler. Un dossier KYC qui traîne coûte un
-        groupeur ; un versement qui traîne coûte une livraison et la confiance
-        de dizaines d'acheteurs.
+        groupeur ; un retrait qui traîne coûte une livraison et la confiance de
+        dizaines d'acheteurs.
+
+        ⚠️ **La seconde file n'est plus un blocage, c'est une relance.** Avant,
+        « devis attendus » listait des versements qu'on refusait de libérer ;
+        désormais le groupeur retire sans nous demander, et cette file ne sert
+        qu'à constater qui n'a rien déposé — et à compter les récidives (§10.2).
         """
-        sans_devis = [v for v in en_attente if v.devis is None]
-        a_liberer = [v for v in en_attente if v.devis is not None]
+        sans_devis = [r for r in demandes + dormants if r.devis is None]
 
         kyc = Groupeur.objects.filter(
             statut_kyc=Groupeur.StatutKyc.EN_VERIFICATION
@@ -248,29 +263,30 @@ class AdministrationViewSet(viewsets.GenericViewSet):
 
         return [
             {
-                "id": "versements",
-                "libelle": "Virements à faire",
-                "nombre": len(a_liberer),
-                "detail": "Devis déposé, argent prêt à partir",
+                "id": "retraits",
+                "libelle": "Retraits à exécuter",
+                "nombre": len(demandes),
+                "detail": "Un groupeur attend son argent",
                 "argent_expose": True,
                 "plus_ancien_jours": max(
                     (
-                        (timezone.now() - v.effectue_le).days
-                        for v in a_liberer
+                        (timezone.now() - r.demande_le).days
+                        for r in demandes
+                        if r.demande_le is not None
                     ),
                     default=0,
                 ),
             },
             {
-                "id": "devis-attendus",
-                "libelle": "Devis attendus",
+                "id": "devis-manquants",
+                "libelle": "Devis manquants",
                 "nombre": len(sans_devis),
-                "detail": "Clôturés, le groupeur n'a pas encore déposé son devis",
+                "detail": "Clôturés, aucun devis déposé — à relancer",
                 "argent_expose": False,
                 "plus_ancien_jours": max(
                     (
-                        (timezone.now() - v.effectue_le).days
-                        for v in sans_devis
+                        (timezone.now() - r.effectue_le).days
+                        for r in sans_devis
                     ),
                     default=0,
                 ),
@@ -307,10 +323,10 @@ class AdministrationViewSet(viewsets.GenericViewSet):
             return 0
         return max(0, (timezone.now() - getattr(plus_ancien, champ)).days)
 
-    def _indicateurs(self, campagnes, detenu: Decimal, versements) -> list[dict]:
+    def _indicateurs(self, campagnes, detenu: Decimal, retraits) -> list[dict]:
         """Quatre chiffres, et pas un de plus.
 
-        ⚠️ **« Argent détenu en ce moment » est le premier**, et c'est lui qu'on
+        ⚠️ **« Argent détenu pour les groupeurs » est le premier**, et c'est lui qu'on
         rapproche du solde bancaire réel. C'est le seul chiffre de cet écran qui
         engage la responsabilité de la structure.
 
@@ -322,26 +338,27 @@ class AdministrationViewSet(viewsets.GenericViewSet):
         annulees = campagnes.filter(statut=Campagne.Statut.ANNULEE).count()
         terminees = livrees + annulees
 
-        commission = versements.filter(
-            etat=Versement.Etat.EFFECTUE
-        ).aggregate(total=Sum("commission"))["total"] or Decimal("0")
+        frais = retraits.filter(etat=Retrait.Etat.EFFECTUE).aggregate(
+            total=Sum("frais_plateforme")
+        )["total"] or Decimal("0")
+        aboutis = retraits.filter(etat=Retrait.Etat.EFFECTUE).count()
 
         return [
             {
                 "id": "detenu",
-                "libelle": "Argent détenu en ce moment",
+                "libelle": "Argent détenu pour les groupeurs",
                 "valeur": int(detenu),
                 "unite": "F",
                 "detail": "À rapprocher du solde bancaire",
                 "ton": "neutre",
             },
             {
-                "id": "a-verser",
-                "libelle": "En attente de virement",
+                "id": "a-executer",
+                "libelle": "Retraits demandés",
                 "valeur": int(
-                    versements.filter(
-                        etat=Versement.Etat.EN_ATTENTE
-                    ).aggregate(total=Sum("verse"))["total"]
+                    retraits.filter(etat=Retrait.Etat.DEMANDE).aggregate(
+                        total=Sum("net")
+                    )["total"]
                     or 0
                 ),
                 "unite": "F",
@@ -359,36 +376,39 @@ class AdministrationViewSet(viewsets.GenericViewSet):
                 "ton": "succes" if terminees and livrees >= annulees else "neutre",
             },
             {
-                "id": "commission",
-                "libelle": "Commission encaissée",
-                "valeur": int(commission),
+                "id": "frais",
+                "libelle": "Frais encaissés",
+                "valeur": int(frais),
                 "unite": "F",
-                "detail": "5 % sur les groupages aboutis",
+                "detail": f"1 500 F par groupage abouti · {aboutis} groupage"
+                + ("s" if aboutis > 1 else ""),
                 "ton": "neutre",
             },
         ]
 
-    def _alertes(self, en_attente: list[Versement]) -> list[dict]:
+    def _alertes(self, demandes: list[Retrait]) -> list[dict]:
         """Ce qui remonte tout seul. **Par gravité, pas par date.**"""
         alertes = []
 
-        for versement in en_attente:
-            jours = (timezone.now() - versement.effectue_le).days
-            if jours >= 3 and versement.devis is not None:
+        for retrait in demandes:
+            if retrait.demande_le is None:
+                continue
+            jours = (timezone.now() - retrait.demande_le).days
+            if jours >= 3:
                 alertes.append(
                     {
-                        "id": f"versement-{versement.pk}",
+                        "id": f"retrait-{retrait.pk}",
                         "gravite": "danger",
                         "texte": (
-                            f"{versement.campagne.groupeur.pseudonyme} attend "
-                            f"son virement depuis {jours} jours — "
-                            f"{int(versement.verse):,} F".replace(",", " ")
+                            f"{retrait.campagne.groupeur.pseudonyme} attend "
+                            f"son retrait depuis {jours} jours — "
+                            f"{int(retrait.net):,} F".replace(",", " ")
                         ),
-                        "destination": "versements",
+                        "destination": "retraits",
                     }
                 )
 
-        # Le signal d'alerte numéro un du §10.5 : un compte de versement qui
+        # Le signal d'alerte numéro un du §10.5 : un compte de retrait qui
         # n'est plus au nom du groupeur.
         from . import domaine
 
@@ -453,15 +473,21 @@ class AdministrationViewSet(viewsets.GenericViewSet):
         """Ce qui s'est passé. **En dernier, et c'est voulu** : ça n'engage rien."""
         lignes = []
 
-        for versement in Versement.objects.select_related("campagne")[:6]:
+        for retrait in Retrait.objects.select_related("campagne")[:6]:
+            # Deux libellés, et la différence compte : un solde devenu
+            # retirable n'est pas de l'argent parti.
+            if retrait.etat == Retrait.Etat.EFFECTUE:
+                texte = f"{retrait.campagne.titre} — retrait exécuté, {{montant}} F"
+            elif retrait.etat == Retrait.Etat.DEMANDE:
+                texte = f"{retrait.campagne.titre} — retrait demandé, {{montant}} F"
+            else:
+                texte = f"{retrait.campagne.titre} — clôturé, {{montant}} F retirables"
+
             lignes.append(
                 {
-                    "date": versement.effectue_le.date().isoformat(),
-                    "texte": (
-                        f"{versement.campagne.titre} — clôturé, "
-                        f"{int(versement.verse):,} F à verser".replace(
-                            ",", " "
-                        )
+                    "date": retrait.effectue_le.date().isoformat(),
+                    "texte": texte.format(
+                        montant=f"{int(retrait.net):,}".replace(",", " ")
                     ),
                 }
             )
@@ -489,7 +515,7 @@ class AdministrationViewSet(viewsets.GenericViewSet):
         seul filtre ``statut`` distingue.
         """
         campagnes = (
-            Campagne.objects.select_related("groupeur", "versement")
+            Campagne.objects.select_related("groupeur", "retrait")
             .prefetch_related("commandes")
             .order_by("-cree_le")
         )
@@ -500,42 +526,47 @@ class AdministrationViewSet(viewsets.GenericViewSet):
 
         return Response(CampagneAdminSerializer(campagnes, many=True).data)
 
-    # ── Les virements ───────────────────────────────────────────────────────
+    # ── Les retraits ────────────────────────────────────────────────────────
 
-    @action(detail=False, methods=["get"], url_path="versements")
-    def versements(self, request):
-        """Les versements, du plus ancien au plus récent.
+    @action(detail=False, methods=["get"], url_path="retraits")
+    def retraits(self, request):
+        """Les retraits, du plus ancien au plus récent.
 
         **Du plus ancien**, parce qu'un groupeur qui attend depuis cinq jours
         ne peut pas acheter la marchandise qu'il a vendue, et que ce sont ses
         acheteurs qui attendront ensuite.
         """
-        versements = Versement.objects.select_related(
+        retraits = Retrait.objects.select_related(
             "campagne", "campagne__groupeur"
         ).order_by("effectue_le")
 
         etat = request.query_params.get("etat")
         if etat:
-            versements = versements.filter(etat=etat)
+            retraits = retraits.filter(etat=etat)
 
-        return Response(VersementSerializer(versements, many=True).data)
+        return Response(RetraitSerializer(retraits, many=True).data)
 
-    @action(detail=True, methods=["post"], url_path="liberer")
-    def liberer(self, request, pk=None):
-        """Fait partir l'argent. **Refuse sans devis** (§10.3).
+    @action(detail=True, methods=["post"], url_path="executer")
+    def executer(self, request, pk=None):
+        """Fait partir l'argent que le groupeur a demandé.
+
+        ⚠️ **Refuse ce qu'il n'a pas demandé**, et rien d'autre. Le devis
+        fournisseur n'entre plus dans ce contrôle : son solde est à lui, et le
+        §9.1 du cahier des charges assume cette perte de levier au lieu de la
+        masquer derrière un refus qu'on ne pourrait pas justifier.
 
         ⚠️ Aucun virement réel n'est émis : le paiement est simulé jusqu'à
         l'agrément d'un agrégateur (§18.2). Cette route note que l'argent
-        **doit** partir, et qui l'a décidé.
+        **doit** partir, et qui l'a exécuté.
         """
-        versement = Versement.objects.filter(pk=pk).first()
-        if versement is None:
-            raise NotFound("Versement introuvable.")
+        retrait = Retrait.objects.filter(pk=pk).first()
+        if retrait is None:
+            raise NotFound("Retrait introuvable.")
 
         par = (request.data.get("decide_par") or "Administration").strip()
         try:
-            liberer_le_versement(versement, par=par)
+            executer_le_retrait(retrait, par=par)
         except DjangoValidationError as erreur:
             raise ValidationError({"detail": erreur.messages}) from erreur
 
-        return Response(VersementSerializer(versement).data)
+        return Response(RetraitSerializer(retrait).data)

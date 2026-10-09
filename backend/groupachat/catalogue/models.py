@@ -185,7 +185,7 @@ class Campagne(models.Model):
     def collecte_sur_les_parts(self) -> Decimal:
         """La collecte **hors frais de livraison**.
 
-        C'est l'assiette de la commission, et c'est pour ça qu'elle exclut les
+        C'est l'assiette du retrait du groupeur, et c'est pour ça qu'elle exclut les
         frais : ceux-ci vont au transporteur et ne passent pas par le groupeur.
         """
         total = self.commandes.filter(statut__in=Statut_PAYANTS).aggregate(

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { formaterFrancs } from "../../domaine/format";
-import { LIBELLE_QUARTIER } from "../../domaine/groupage";
+import { LIBELLE_QUARTIER, type Quartier } from "../../domaine/groupage";
 import { useEspaceGroupeur } from "../../api/EspaceGroupeurContexte";
 import type { Statistiques } from "../../domaine/groupeur";
 import { EnTeteGroupeur } from "../mise-en-page/ChromeGroupeur";
@@ -22,7 +22,7 @@ import EtatVide from "../../ui/EtatVide";
  * **La carte maitresse montre le VERSE, pas le collecte.** Le collecte inclut
  * l'argent qui n'est pas encore a lui ; mettre en avant un chiffre plus
  * flatteur que la realite detruit la credibilite du tableau de bord au premier
- * versement.
+ * retrait.
  *
  * **L'histogramme est horizontal**, pour que les noms de campagne restent
  * lisibles sur 390 px. **La campagne annulee reste visible**, sans barre : un
@@ -87,6 +87,49 @@ export default function Statistiques({
     0,
   );
 
+  /**
+   * Les constats — **des faits relus des chiffres ci-dessus**, rien d'autre.
+   *
+   * Chacun est conditionne : un groupeur sans groupage annule ne lit pas
+   * « 0 annule », il ne lit simplement pas cette ligne. Une section de
+   * constats toujours pleine finit par n'etre plus lue.
+   */
+  function constater(): Statistiques["constats"] {
+    const lignes: Statistiques["constats"] = [];
+
+    if (CAMPAGNES.length > 0) {
+      lignes.push({
+        ton: abouties >= CAMPAGNES.length / 2 ? "succes" : "info",
+        texte:
+          `${abouties} de vos ${CAMPAGNES.length} groupages sont allés ` +
+          `jusqu'à la commande ou la livraison.`,
+      });
+    }
+
+    const annulees = CAMPAGNES.filter((c) => c.statut === "annulee").length;
+    if (annulees > 0) {
+      lignes.push({
+        ton: "attention",
+        texte:
+          `${annulees} groupage${annulees > 1 ? "s" : ""} annulé` +
+          `${annulees > 1 ? "s" : ""} : les participants ont été remboursés ` +
+          `intégralement.`,
+      });
+    }
+
+    const premier = espace.tableauDeBord?.par_quartier?.[0];
+    if (premier && premier.part > 0) {
+      lignes.push({
+        ton: "info",
+        texte:
+          `${LIBELLE_QUARTIER[premier.quartier as Quartier] ?? premier.quartier} ` +
+          `concentre ${premier.part} % de vos commandes.`,
+      });
+    }
+
+    return lignes;
+  }
+
   /* ⚠️ Le type est **annote** : sans lui, `parQuartier: []` et
      `constats: []` s'inferent en `never[]`, et tout usage de leurs elements
      devient une erreur. L'annotation garantit aussi que la forme reste celle
@@ -131,23 +174,36 @@ export default function Statistiques({
       part: collecteTotale > 0 ? Math.round((montant / collecteTotale) * 100) : 0,
     })),
     /**
-     * ⚠️ **Vide, et assume.** La repartition par quartier demanderait de lire
-     * les commandes de chaque campagne — donc une requete par campagne — pour
-     * un ecran de statistiques consulte rarement. Elle reviendra avec une
-     * route dediee qui l'agrege cote serveur, pas avec quinze appels depuis le
-     * telephone d'un commercant sur un forfait limite (§5).
+     * D'ou viennent ses commandes — **la donnee la plus actionnable de
+     * l'ecran**, et il ne l'a nulle part ailleurs.
+     *
+     * ⚠️ **Agregee par le serveur**, en une requete, et non en lisant les
+     * commandes de chaque campagne depuis le telephone : ca aurait fait
+     * quinze appels sur un forfait limite (§5), et c'est pour cette raison
+     * que la table restait vide avec ses seuls en-tetes.
+     *
+     * Des quartiers et des nombres, jamais un nom ni un repere (§1.7).
      */
-    parQuartier: [],
+    parQuartier: (espace.tableauDeBord?.par_quartier ?? []).map((ligne) => ({
+      quartier: ligne.quartier as Quartier,
+      commandes: ligne.commandes,
+      part: ligne.part,
+    })),
     /**
      * Les constats de « Ce que ca vous dit ».
      *
-     * **Un constat, jamais un conseil.** « Votre taux de livraison est de
-     * 80 % » est un fait ; « baissez vos prix » est un conseil commercial dont
-     * nous ne sommes pas responsables, et qui nous rendrait comptables de ses
-     * pertes. Ils restent donc vides tant qu'on n'a pas d'historique a
-     * comparer — un constat invente serait pire qu'aucun constat.
+     * ⚠️ **Un constat, jamais un conseil.** « Deux de vos six groupages sont
+     * alles jusqu'a la livraison » est un fait ; « baissez vos prix » est un
+     * conseil commercial dont nous ne sommes pas responsables, et qui nous
+     * rendrait comptables de ses pertes.
+     *
+     * ⚠️ **Et jamais un chiffre invente.** Chacune de ces lignes se lit
+     * directement dans les donnees affichees juste au-dessus : si l'une
+     * d'elles ne peut pas se calculer, elle ne s'affiche pas. C'est la regle
+     * du cahier des charges — quand un chiffre n'est pas connu, on ecrit
+     * qu'on ne le connait pas.
      */
-    constats: [],
+    constats: constater(),
   };
 
   /* Ne jamais dessiner un tableau de bord rempli de zeros : c'est
@@ -212,7 +268,7 @@ export default function Statistiques({
               onClick={() => setPeriode(cle)}
               className={`min-h-10 flex-1 rounded-lg text-sm font-medium ${
                 periode === cle
-                  ? "bg-white text-confiance shadow-[0_1px_2px_rgba(20,24,31,0.08)]"
+                  ? "bg-white text-confiance shadow-[0_1px_2px_rgba(29,25,22,0.08)]"
                   : "text-texte-secondaire"
               }`}
             >

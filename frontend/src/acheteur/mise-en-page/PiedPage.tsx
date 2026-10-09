@@ -43,7 +43,7 @@ export default function PiedPage() {
           <Colonne titre="Vendre">
             <Lien>Devenir groupeur</Lien>
             <Lien>Comment ça marche</Lien>
-            <Lien>Commission et versements</Lien>
+            <Lien>Frais et retraits</Lien>
           </Colonne>
 
           <Colonne titre="Group Achat">
@@ -54,7 +54,7 @@ export default function PiedPage() {
           </Colonne>
         </div>
 
-        <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-bordure pt-6 text-sm text-texte-secondaire">
+        <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-bordure pt-6 text-sm text-texte-mention">
           <p>© 2026 Group Achat — Lomé, Togo</p>
           {/* Dit au meme endroit que partout ailleurs : le paiement n'est pas
               reel tant que l'agregateur n'est pas agree (§18.2 du cahier des

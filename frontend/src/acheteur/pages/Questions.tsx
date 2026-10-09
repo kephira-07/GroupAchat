@@ -84,7 +84,7 @@ export default function Questions({
    *
    * Celui-ci desactive « Envoyer » des la saisie, pour que personne n'ait a
    * echouer pour comprendre (§15). Mais c'est **le serveur qui decide** : un
-   * filtre d'interface se contourne en une requete, et c'est la commission de
+   * filtre d'interface se contourne en une requete, et c'est le modele de
    * la plateforme qu'il protege. Un refus du serveur s'affiche donc aussi,
    * juste en dessous.
    */
@@ -113,9 +113,7 @@ export default function Questions({
     <div className="space-y-6">
       {/* Rappel du groupage : on sait toujours sur quoi on pose la question. */}
       <div className="flex items-center gap-3">
-        <div className="size-12 shrink-0">
-          <Vignette photo={groupage.photo} alt={groupage.photoAlt} />
-        </div>
+        <Vignette photo={groupage.photo} alt={groupage.photoAlt} taille={48} />
         <p className="min-w-0 font-medium text-texte">{groupage.produit}</p>
       </div>
 

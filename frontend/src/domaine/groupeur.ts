@@ -6,34 +6,45 @@ import type { Categorie, Quartier } from "./groupage";
  * **La regle d'anonymat tient ici aussi, et c'est elle qui protege le modele
  * economique** (§1.7). Le groupeur voit des **codes et des quartiers**, jamais
  * un nom, un numero ou une adresse. Un groupeur qui pourrait se constituer un
- * fichier de clients les servirait hors plateforme, au meme prix, sans
- * commission. Aucun type de ce fichier ne porte donc d'identite d'acheteur —
- * et ce n'est pas un oubli a combler.
+ * fichier de clients les servirait hors plateforme, au meme prix, et sans
+ * nous. Aucun type de ce fichier ne porte donc d'identite d'acheteur — et ce
+ * n'est pas un oubli a combler.
  *
  * Les identites ne sortent qu'une fois, vers le livreur, le jour de la tournee
  * (`domaine/livreur.ts`).
  */
 
-/** La commission de la plateforme : 5 %, a la charge du groupeur. */
-export const TAUX_COMMISSION = 0.05;
+/**
+ * Les frais de la plateforme : **1 500 F par groupage abouti**.
+ *
+ * ⚠️ **Un montant fixe, pas un taux.** L'argent de l'acheteur est inscrit au
+ * portefeuille du groupeur des son paiement ; la plateforme ne verse plus rien
+ * et ne prend plus de pourcentage — elle retient 1 500 F sur chaque groupage
+ * abouti, au moment du retrait. Voir §9.2 du cahier des charges.
+ */
+export const FRAIS_PLATEFORME = 1500;
 
 /**
- * Ce que le groupeur touche sur un montant collecte.
+ * Ce que le groupeur retire sur un montant collecte.
  *
- * **La commission ne porte jamais sur les frais de livraison** : ceux-ci sont
+ * **Les frais ne portent jamais sur les frais de livraison** : ceux-ci sont
  * payes par l'acheteur et vont au transporteur. Les melanger ferait payer au
- * groupeur une commission sur de l'argent qui ne passe pas par lui.
+ * groupeur des frais sur de l'argent qui ne passe pas par lui.
+ *
+ * ⚠️ **Jamais de net negatif** : sur un groupage plus petit que les frais, les
+ * frais sont ramenes a la collecte. Le serveur applique la meme regle, et
+ * **c'est lui qui fait foi** — ce calcul-ci ne sert qu'a afficher.
  */
-export function calculerVersement(collecteSurLesParts: number): {
+export function calculerRetrait(collecteSurLesParts: number): {
   collecte: number;
-  commission: number;
-  verse: number;
+  frais: number;
+  net: number;
 } {
-  const commission = Math.round(collecteSurLesParts * TAUX_COMMISSION);
+  const frais = Math.min(FRAIS_PLATEFORME, collecteSurLesParts);
   return {
     collecte: collecteSurLesParts,
-    commission,
-    verse: collecteSurLesParts - commission,
+    frais,
+    net: collecteSurLesParts - frais,
   };
 }
 
@@ -95,7 +106,7 @@ export interface MouvementPortefeuille {
   id: string;
   date: string;
   libelle: string;
-  /** Positif pour un versement, negatif pour une retenue. */
+  /** Positif pour une entree, negatif pour une retenue. */
   montant?: number;
   /** Remplace le montant quand la ligne n'en porte pas. */
   mention?: string;

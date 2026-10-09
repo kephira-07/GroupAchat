@@ -133,7 +133,7 @@ class GroupeurAdmin(admin.ModelAdmin):
             },
         ),
         (
-            "Compte de versement — contrôle n° 2",
+            "Compte de retrait — contrôle n° 2",
             {
                 "fields": (
                     "titulaire_mobile_money",

@@ -22,7 +22,7 @@ from groupachat.tests.aides import connecter
 from groupachat.catalogue.models import Campagne
 from groupachat.commandes.models import (
     Commande,
-    Versement,
+    Retrait,
     annuler_campagne,
     cloturer_campagne,
     enregistrer_paiement,
@@ -226,7 +226,7 @@ def _groupeur_secondaire() -> Groupeur:
 
 
 class ClotureTest(TestCase):
-    """La clôture, le versement et l'annulation."""
+    """La clôture, le retrait et l'annulation."""
 
     def setUp(self) -> None:
         self.campagne = _campagne(_groupeur())
@@ -243,21 +243,21 @@ class ClotureTest(TestCase):
             )
 
     def test_le_portefeuille_du_fil_rouge_tombe_juste(self):
-        """32 commandes : 128 000 collectés, 6 400 de commission, 121 600 versés."""
+        """32 commandes : 128 000 collectés, 1 500 de frais, 126 500 retirables."""
         self.assertEqual(self.campagne.acheteurs_confirmes, 32)
         self.assertEqual(self.campagne.collecte_sur_les_parts, Decimal("128000"))
 
-        versement = cloturer_campagne(self.campagne)
-        self.assertEqual(versement.collecte, Decimal("128000"))
-        self.assertEqual(versement.commission, Decimal("6400"))
-        self.assertEqual(versement.verse, Decimal("121600"))
+        retrait = cloturer_campagne(self.campagne)
+        self.assertEqual(retrait.collecte, Decimal("128000"))
+        self.assertEqual(retrait.frais_plateforme, Decimal("1500"))
+        self.assertEqual(retrait.net, Decimal("126500"))
 
     def test_les_frais_collectes_sont_comptes_a_part(self):
-        """32 × 1 000 = 32 000 F, reversés au transporteur, hors commission."""
-        versement = cloturer_campagne(self.campagne)
-        self.assertEqual(versement.frais_livraison_collectes, Decimal("32000"))
-        # Ils n'entrent ni dans la collecte ni dans l'assiette de la commission.
-        self.assertEqual(versement.collecte, Decimal("128000"))
+        """32 × 1 000 = 32 000 F, reversés au transporteur, jamais touchés."""
+        retrait = cloturer_campagne(self.campagne)
+        self.assertEqual(retrait.frais_livraison_collectes, Decimal("32000"))
+        # Ils n'entrent ni dans la collecte ni dans le net du groupeur.
+        self.assertEqual(retrait.collecte, Decimal("128000"))
 
     def test_la_cloture_fait_passer_les_commandes_en_cloturee(self):
         cloturer_campagne(self.campagne)
@@ -268,11 +268,11 @@ class ClotureTest(TestCase):
             32,
         )
 
-    def test_aucune_commission_sur_une_campagne_annulee(self):
+    def test_aucun_frais_sur_un_groupage_annule(self):
         """§7 du cahier des charges, et c'est montré à l'écran 18."""
         annuler_campagne(self.campagne)
 
-        self.assertFalse(Versement.objects.filter(campagne=self.campagne).exists())
+        self.assertFalse(Retrait.objects.filter(campagne=self.campagne).exists())
         self.assertEqual(
             self.campagne.commandes.filter(
                 statut=Commande.Statut.REMBOURSEE

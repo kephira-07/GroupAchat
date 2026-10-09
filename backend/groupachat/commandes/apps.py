@@ -3,7 +3,7 @@ from django.apps import AppConfig
 
 
 class CommandesConfig(AppConfig):
-    """Commandes, paiements et versements."""
+    """Commandes, paiements et retraits."""
 
     default_auto_field = "django.db.models.BigAutoField"
     name = "groupachat.commandes"

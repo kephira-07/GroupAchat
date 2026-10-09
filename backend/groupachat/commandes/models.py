@@ -234,36 +234,50 @@ class PlafondAtteint(Exception):
     """
 
 
-class Versement(models.Model):
-    """Le versement d'une campagne à son groupeur, à la clôture.
+class Retrait(models.Model):
+    """Le retrait d'un groupage par son groupeur, ouvert à la clôture.
 
-    **Le groupeur est payé intégralement à la clôture**, pas à la livraison. Il
-    n'y a donc pas de solde retenu après livraison, et aucun écran ne doit
-    écrire « votre argent est bloqué jusqu'à la livraison » : la formulation
-    exacte est « détenu jusqu'à la clôture ».
+    ## ⚠️ Ce n'est plus un versement, et le mot a disparu exprès
 
-    ## ⚠️ « Payé à la clôture » et « libéré après le devis » ne se contredisent pas
+    L'argent de l'acheteur est inscrit au **portefeuille du groupeur** dès son
+    paiement (§9 du cahier des charges). La plateforme ne détient plus les
+    fonds pour son compte et ne « verse » donc plus rien : elle tient le
+    compte, et elle **exécute des retraits**. Écrire « nous vous versons »
+    laisserait croire que nous pourrions ne pas le faire.
 
-    Les deux viennent du cahier des charges, et il faut les lire ensemble :
+    **Le solde est détenu jusqu'à la clôture**, puis retirable intégralement,
+    avant la livraison. Aucun écran ne doit écrire « votre argent est bloqué
+    jusqu'à la livraison » : la formulation exacte est « détenu jusqu'à la
+    clôture ».
 
-    - le **montant** est arrêté à la clôture. Rien n'est retenu « en attendant
-      de voir », rien ne dépend de la livraison. C'est la règle du §7, et c'est
-      elle qui interdit la formulation « bloqué jusqu'à la livraison » ;
-    - le **décaissement** suit le devis fournisseur. Le §10.3 est explicite :
-      « il dépose son devis fournisseur **avant tout versement** ».
+    ## Trois états, et un seul nous appelle à agir
 
-    Autrement dit : le groupeur sait **le jour de la clôture** combien il
-    touche, et il le touche dès qu'il a montré chez qui il achète. Ce n'est pas
-    une retenue de garantie, c'est le contrôle qui se joue **avant** que
-    l'argent ne sorte — le seul moment où il protège encore de quelque chose.
+    | État | Ce que ça veut dire | Qui agit |
+    |---|---|---|
+    | ``retirable`` | Groupage clôturé et maintenu, le solde est à lui | Lui |
+    | ``demande`` | Il a appuyé sur « Retirer mes fonds » | **Nous** |
+    | ``effectue`` | L'argent est parti, 1 500 F retenus | Personne |
 
-    D'où ``etat`` : un versement existe dès la clôture, avec son montant, et il
-    passe à ``effectue`` quand un administrateur le libère.
+    ⚠️ **Le devis fournisseur ne conditionne plus rien.** Il est demandé, lu et
+    archivé, mais son absence ne bloque aucun retrait : un portefeuille dont le
+    titulaire ne peut pas retirer son propre argent sans l'accord d'un tiers
+    n'est pas un portefeuille. Le §9.1 du cahier des charges dit ce que cette
+    perte nous coûte, et le §10.2 ce qui la remplace partiellement.
+
+    ## Pourquoi le montant est calculé dès la clôture
+
+    Les frais sont un montant fixe (§9.2), donc connus d'avance : rien
+    n'oblige à attendre le retrait pour les calculer. Le groupeur voit donc à
+    la clôture **le chiffre exact** qu'il touchera, et c'est ce chiffre qui le
+    fait décider à l'écran 16. « Retenus au retrait » dit *quand l'argent sort
+    de son solde*, pas *quand on sait combien*.
     """
 
     class Etat(models.TextChoices):
-        #: Montant arrêté, en attente du devis fournisseur (§10.3).
-        EN_ATTENTE = "en-attente", "En attente du devis"
+        #: Clôturé et maintenu : le solde est à lui, il retire quand il veut.
+        RETIRABLE = "retirable", "Retirable"
+        #: Il a demandé son retrait ; c'est à nous d'exécuter le transfert.
+        DEMANDE = "demande", "Retrait demandé"
         EFFECTUE = "effectue", "Effectué"
         #: Le groupage a échoué après la clôture : rien ne part.
         ANNULE = "annule", "Annulé"
@@ -271,69 +285,94 @@ class Versement(models.Model):
     campagne = models.OneToOneField(
         "catalogue.Campagne",
         on_delete=models.PROTECT,
-        related_name="versement",
+        related_name="retrait",
         verbose_name="campagne",
     )
     collecte = models.DecimalField("collecté sur les parts", max_digits=12, decimal_places=0)
-    commission = models.DecimalField("commission", max_digits=12, decimal_places=0)
-    verse = models.DecimalField("versé au groupeur", max_digits=12, decimal_places=0)
+    frais_plateforme = models.DecimalField(
+        "frais de plateforme", max_digits=12, decimal_places=0
+    )
+    net = models.DecimalField("net pour le groupeur", max_digits=12, decimal_places=0)
     #: Collectés auprès des acheteurs, reversés au transporteur.
-    #: ⚠️ **Hors commission** : ce n'est pas l'argent du groupeur.
+    #: ⚠️ **Jamais touchés par les frais** : ce n'est pas l'argent du groupeur.
     frais_livraison_collectes = models.DecimalField(
         "frais de livraison collectés", max_digits=12, decimal_places=0
     )
     etat = models.CharField(
-        "état", max_length=20, choices=Etat.choices, default=Etat.EN_ATTENTE
+        "état", max_length=20, choices=Etat.choices, default=Etat.RETIRABLE
     )
 
-    #: Quand l'argent est réellement parti. ``None`` tant qu'il n'est pas libéré.
-    libere_le = models.DateTimeField("libéré le", null=True, blank=True)
-    #: Qui l'a libéré. ⚠️ Un nom en clair faute d'authentification côté
-    #: administration — voir ``api_kyc.JetonAdmin``. Le jour où les comptes
-    #: existent, ce champ devient une clé étrangère.
-    libere_par = models.CharField("libéré par", max_length=120, blank=True)
+    #: Quand le groupeur a demandé son retrait. ``None`` s'il ne l'a pas fait.
+    demande_le = models.DateTimeField("demandé le", null=True, blank=True)
 
-    effectue_le = models.DateTimeField("calculé le", auto_now_add=True)
+    #: Quand l'argent est réellement parti. ``None`` tant qu'il est là.
+    libere_le = models.DateTimeField("exécuté le", null=True, blank=True)
+    #: Qui a exécuté le transfert. ⚠️ Un nom en clair faute d'authentification
+    #: côté administration — voir ``api_kyc.JetonAdmin``. Le jour où les
+    #: comptes existent, ce champ devient une clé étrangère.
+    libere_par = models.CharField("exécuté par", max_length=120, blank=True)
+
+    effectue_le = models.DateTimeField("ouvert le", auto_now_add=True)
 
     class Meta:
-        verbose_name = "versement"
-        verbose_name_plural = "versements"
+        verbose_name = "retrait"
+        verbose_name_plural = "retraits"
         ordering = ("-effectue_le",)
 
     def __str__(self) -> str:
-        return f"{self.campagne.titre} — {self.verse} F"
+        return f"{self.campagne.titre} — {self.net} F"
 
     @property
     def devis(self):
         """Le devis fournisseur déposé pour cette campagne, s'il y en a un.
 
-        C'est lui que l'administrateur regarde avant de libérer : chez qui le
-        groupeur achète, et pour combien.
+        C'est ce que l'administrateur lit : chez qui le groupeur achète, et
+        pour combien.
+
+        ⚠️ **Il ne commande plus le retrait.** Rien ici ne l'empêche d'être
+        ``None`` au moment où l'argent part — voir ``Retrait.retirable``.
         """
         return self.campagne.justificatifs.filter(
             nature=Justificatif.Nature.DEVIS
         ).first()
 
     @property
-    def liberable(self) -> bool:
-        """Peut-on faire partir l'argent ?
+    def retirable(self) -> bool:
+        """Le groupeur peut-il demander son retrait ?
 
-        ⚠️ **Non sans devis.** C'est le seul contrôle qui s'exerce encore à ce
-        stade : une fois l'argent parti, il n'y a plus de levier sur le
-        groupeur. Le §10.3 construit tout le dispositif autour de ce moment.
+        ⚠️ **La clôture suffit, et le devis n'entre pas dans ce calcul.** C'est
+        la décision du §10.1 : son solde est à lui dès que le groupage est
+        clôturé et maintenu. Le contrôle qui s'exerçait ici — refuser tant que
+        le devis manquait — a disparu avec le portefeuille, et le §9.1 dit
+        franchement ce que ça coûte.
         """
-        return self.etat == self.Etat.EN_ATTENTE and self.devis is not None
+        return self.etat == self.Etat.RETIRABLE
+
+    @property
+    def executable(self) -> bool:
+        """Y a-t-il un transfert à faire partir, de notre côté ?
+
+        **Seulement s'il l'a demandé.** Nous n'exécutons jamais un retrait que
+        le groupeur n'a pas déclenché : ce serait décider à sa place de sortir
+        son argent de la plateforme.
+        """
+        return self.etat == self.Etat.DEMANDE
 
 
 @transaction.atomic
-def cloturer_campagne(campagne) -> Versement:
-    """Clôture une campagne et calcule le versement du groupeur.
+def cloturer_campagne(campagne) -> Retrait:
+    """Clôture un groupage et ouvre le retrait de son groupeur.
 
-    La commission porte sur les parts seules ; les frais de livraison sont
-    comptés à part et ne sont **jamais** amputés de 5 %.
+    Les frais portent sur les parts seules ; les frais de livraison sont
+    comptés à part et ne sont **jamais** amputés.
+
+    ⚠️ **Rien ne part ici.** La fonction ouvre un retrait à l'état
+    ``retirable`` : c'est le groupeur qui décidera de retirer, et nous qui
+    exécuterons. Elle ne fait donc bouger aucun argent, elle rend un solde
+    disponible.
     """
     collecte = campagne.collecte_sur_les_parts
-    resultat = domaine.calculer_versement(collecte)
+    resultat = domaine.calculer_retrait(collecte)
 
     frais_collectes = campagne.commandes.filter(
         statut__in=Commande.STATUTS_PAYANTS
@@ -345,11 +384,11 @@ def cloturer_campagne(campagne) -> Versement:
         statut=Commande.Statut.CLOTUREE
     )
 
-    return Versement.objects.create(
+    return Retrait.objects.create(
         campagne=campagne,
         collecte=resultat.collecte,
-        commission=resultat.commission,
-        verse=resultat.verse,
+        frais_plateforme=resultat.frais,
+        net=resultat.net,
         frais_livraison_collectes=domaine.arrondir(frais_collectes),
     )
 
@@ -361,8 +400,10 @@ class Justificatif(models.Model):
 
     | | Quand | Ce qu'elle sert à faire |
     |---|---|---|
-    | **Devis** | Après la clôture, avant le versement | Savoir **chez qui** il achète, et pour combien. C'est ce qui débloque l'argent |
-    | **Reçu** | Après l'achat | Vérifier qu'il a bien acheté. Son absence entraîne l'annulation de la campagne |
+    | **Devis** | Après la clôture, avant le retrait | Savoir **chez qui** il achète, et pour combien. ⚠️ Il **constate**, il ne débloque plus rien |
+    | **Reçu** | Après l'achat | Vérifier qu'il a bien acheté. Son absence entraîne l'annulation du groupage |
+
+    ⚠️ **Le devis a perdu son levier** en passant au portefeuille du groupeur : son solde est retirable dès la clôture, sans qu'on puisse l'exiger. Ce qui le remplace partiellement est le **délai de dépôt du reçu** du point 4 du §10.2 — une sanction différée au lieu d'un contrôle préventif.
 
     ⚠️ **Aucun fichier n'est stocké ici**, pour la même raison que les pièces
     d'identité : ``reference`` est une clé dans un stockage à accès restreint,
@@ -419,40 +460,56 @@ class Justificatif(models.Model):
 
 
 @transaction.atomic
-def liberer_le_versement(versement: Versement, par: str) -> Versement:
-    """Fait partir l'argent vers le groupeur.
+def demander_le_retrait(retrait: Retrait) -> Retrait:
+    """Le groupeur demande son argent.
 
-    ⚠️ **Refuse sans devis.** C'est le dernier moment où un contrôle sert
-    encore à quelque chose : après, il n'y a plus de levier. Le §10.3 construit
-    tout le dispositif autour de ce point.
+    ⚠️ **Nous ne pouvons pas le lui refuser.** Ce solde est le sien depuis le
+    paiement de ses acheteurs (§9) ; la seule condition est que le groupage soit
+    clôturé et maintenu, c'est-à-dire que le retrait soit à l'état
+    ``retirable``. L'absence de devis fournisseur **ne bloque rien** — voir le
+    §9.1, qui assume cette perte de levier plutôt que de la masquer.
     """
-    if versement.etat != Versement.Etat.EN_ATTENTE:
-        raise ValidationError("Ce versement a déjà été traité.")
-    if versement.devis is None:
+    if retrait.etat != Retrait.Etat.RETIRABLE:
+        raise ValidationError("Ce retrait a déjà été demandé ou traité.")
+
+    retrait.etat = Retrait.Etat.DEMANDE
+    retrait.demande_le = timezone.now()
+    retrait.save(update_fields=["etat", "demande_le"])
+    return retrait
+
+
+@transaction.atomic
+def executer_le_retrait(retrait: Retrait, par: str) -> Retrait:
+    """Fait partir l'argent vers le groupeur, les 1 500 F retenus.
+
+    ⚠️ **Seulement s'il l'a demandé.** Exécuter un retrait qu'il n'a pas
+    déclenché reviendrait à sortir son argent de la plateforme à sa place.
+    """
+    if retrait.etat != Retrait.Etat.DEMANDE:
         raise ValidationError(
-            "Aucun devis fournisseur n'a été déposé pour cette campagne : "
-            "l'argent ne peut pas être libéré."
+            "Ce retrait n'a pas été demandé par le groupeur, ou il est déjà "
+            "parti."
         )
 
-    versement.etat = Versement.Etat.EFFECTUE
-    versement.libere_le = timezone.now()
-    versement.libere_par = par
-    versement.save(update_fields=["etat", "libere_le", "libere_par"])
+    retrait.etat = Retrait.Etat.EFFECTUE
+    retrait.libere_le = timezone.now()
+    retrait.libere_par = par
+    retrait.save(update_fields=["etat", "libere_le", "libere_par"])
 
     # ⚠️ **Aucun virement réel n'est émis.** Le paiement est simulé jusqu'à
     # l'agrément d'un agrégateur (§18.2) : cette ligne note que l'argent *doit*
     # partir, elle ne le fait pas partir. C'est ici que l'appel au prestataire
     # viendra.
-    return versement
+    return retrait
 
 
 @transaction.atomic
 def annuler_campagne(campagne) -> None:
-    """Annule une campagne et rembourse les acheteurs.
+    """Annule un groupage et rembourse les acheteurs.
 
-    **Aucune commission n'est prélevée sur une campagne annulée** (§7 du cahier
-    des charges) : la fonction ne crée donc aucun ``Versement``, et c'est
-    volontaire — pas de ligne à zéro à expliquer plus tard.
+    **Aucun frais n'est prélevé sur un groupage annulé** (§7 du cahier des
+    charges) : la fonction ne crée donc aucun ``Retrait``, et c'est volontaire
+    — pas de ligne à zéro à expliquer plus tard.
     """
     campagne.statut = campagne.Statut.ANNULEE
     campagne.save(update_fields=["statut"])
@@ -460,10 +517,14 @@ def annuler_campagne(campagne) -> None:
         statut=Commande.Statut.REMBOURSEE
     )
 
-    # Si la campagne avait déjà été clôturée, son versement est annulé avec
-    # elle — mais **seulement s'il n'est pas déjà parti**. De l'argent versé ne
-    # se reprend pas d'un `update` : ce serait un remboursement à réclamer, et
-    # il doit se voir dans le journal plutôt que de disparaître.
-    Versement.objects.filter(
-        campagne=campagne, etat=Versement.Etat.EN_ATTENTE
-    ).update(etat=Versement.Etat.ANNULE)
+    # Si le groupage avait déjà été clôturé, son retrait est annulé avec lui —
+    # mais **seulement s'il n'est pas déjà parti**. De l'argent retiré ne se
+    # reprend pas d'un `update` : ce serait un remboursement à réclamer, et il
+    # doit se voir dans le journal plutôt que de disparaître.
+    #
+    # ⚠️ Un retrait **demandé** s'annule encore : l'argent n'a pas bougé, c'est
+    # un ordre en attente d'exécution. Seul `effectue` est irréversible.
+    Retrait.objects.filter(
+        campagne=campagne,
+        etat__in=(Retrait.Etat.RETIRABLE, Retrait.Etat.DEMANDE),
+    ).update(etat=Retrait.Etat.ANNULE)

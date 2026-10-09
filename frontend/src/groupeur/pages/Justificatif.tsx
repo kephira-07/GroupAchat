@@ -12,11 +12,22 @@ import { IconeCoche, IconeDepot } from "../../ui/Icones";
  *
  * **La piece maitresse du dispositif de securisation** (§10 du cahier des
  * charges). A traiter avec autant de soin que le paiement : c'est le seul
- * moment ou l'on verifie que l'argent verse a servi a acheter la marchandise.
+ * moment ou l'on verifie que l'argent retire a servi a acheter la marchandise.
  *
- * **Deux depots successifs, dans cet ordre** : le devis avant de recevoir le
- * versement, le recu apres l'achat. L'ordre n'est pas administratif, il est
- * protecteur — un devis valide conditionne le deblocage.
+ * **Deux depots successifs, dans cet ordre** : le devis avant de retirer, le
+ * recu apres l'achat.
+ *
+ * ## ⚠️ Le devis ne debloque plus rien
+ *
+ * Il conditionnait le versement ; il ne conditionne plus le retrait. Le solde
+ * du groupeur est a lui des la cloture (§10.1), et le lui refuser serait
+ * indefendable. **Cet ecran ne doit donc pas promettre un controle qui
+ * n'existe plus** : ecrire « vos 126 500 F sont verses apres verification »
+ * rassurerait a tort, et le §10.2 du cahier des charges dit franchement ce que
+ * cette perte coute.
+ *
+ * Ce qui reste protecteur est le **recu**, et son delai : sans recu dans les
+ * temps, le groupage est annule et les acheteurs rembourses.
  *
  * **Le delai du recu est une date et une heure, pas « sous 72 h ».** Un delai
  * relatif oblige a calculer, et on se trompe.
@@ -33,10 +44,10 @@ import { IconeCoche, IconeDepot } from "../../ui/Icones";
 type Etat = "a-deposer" | "en-verification" | "refuse" | "valide";
 
 export default function Justificatif({
-  montantVerse = 121600,
+  montantRetirable = 126500,
   onRetour,
 }: {
-  montantVerse?: number;
+  montantRetirable?: number;
   onRetour: () => void;
 }) {
   const [phase, setPhase] = useState<"devis" | "recu">("devis");
@@ -59,17 +70,21 @@ export default function Justificatif({
       <div className="space-y-5 px-4 pt-5">
         {estDevis ? (
           paiementDirect ? (
+            /* ⚠️ Variante mise de côté : le portefeuille du groupeur
+               rend le paiement direct au fournisseur inapplicable dans le cas
+               général (§10.3). Elle reste branchée pour le jour où un seuil de
+               montant la rétablirait. */
             <Encart variante="info" role="groupeur">
               Group Achat règle directement votre fournisseur sur la base de ce
               devis. Vous recevrez la confirmation du paiement.
             </Encart>
           ) : (
             <p className="text-texte-secondaire">
-              Déposez le devis ou la facture. Vos{" "}
+              Déposez le devis ou la facture de votre fournisseur. Vos{" "}
               <strong className="font-semibold text-texte">
-                {formaterFrancs(montantVerse)}
+                {formaterFrancs(montantRetirable)}
               </strong>{" "}
-              sont versés après vérification.
+              sont déjà retirables : le devis nous dit chez qui vous achetez.
             </p>
           )
         ) : (
@@ -90,7 +105,7 @@ export default function Justificatif({
           <div className="flex items-start gap-2 rounded-xl bg-succes-fond px-3 py-3 text-succes">
             <IconeCoche taille={20} className="mt-0.5 shrink-0" />
             <p className="text-sm font-semibold">
-              {formaterFrancs(montantVerse)} versés le 7 octobre
+              Devis vérifié le 7 octobre
             </p>
           </div>
         ) : null}
@@ -107,9 +122,9 @@ export default function Justificatif({
                   { libelle: "Document déposé", detail: "il y a quelques instants" },
                   { libelle: "Vérification", detail: "sous 4 h ouvrées" },
                   {
-                    libelle: estDevis ? "Versement" : "Campagne confirmée",
+                    libelle: estDevis ? "Devis au dossier" : "Groupage confirmé",
                     detail: estDevis
-                      ? formaterFrancs(montantVerse)
+                      ? "votre solde reste retirable"
                       : "les acheteurs sont prévenus",
                   },
                 ]}
@@ -166,7 +181,7 @@ export default function Justificatif({
       </div>
 
       {etat === "a-deposer" || etat === "refuse" ? (
-        <div className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[430px] bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(20,24,31,0.06)]">
+        <div className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[430px] bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(29,25,22,0.06)]">
           <Bouton
             role="groupeur"
             desactive={montant === ""}
@@ -178,7 +193,7 @@ export default function Justificatif({
       ) : null}
 
       {etat === "valide" && estDevis ? (
-        <div className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[430px] bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(20,24,31,0.06)]">
+        <div className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[430px] bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(29,25,22,0.06)]">
           <Bouton
             role="groupeur"
             onClick={() => {

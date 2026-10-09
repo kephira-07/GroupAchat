@@ -6,7 +6,7 @@ spec des écrans). Un acheteur a un nom et un numéro ; un groupeur a un
 pseudonyme. Aucune relation ne permet à un groupeur de remonter d'une commande
 vers l'acheteur qui l'a passée : il ne voit que le code de livraison et le
 quartier, et c'est ce qui l'empêche de se constituer un fichier de clients à
-servir hors plateforme, au même prix, sans commission.
+servir hors plateforme, au même prix, et sans nous.
 """
 
 from __future__ import annotations
@@ -124,7 +124,7 @@ class Groupeur(models.Model):
         default=StatutKyc.A_COMPLETER,
     )
 
-    #: Le compte qui recevra les versements. Son titulaire doit porter le même
+    #: Le compte qui recevra les retraits. Son titulaire doit porter le même
     #: nom que la pièce d'identité — c'est le contrôle n° 2 du §10.5.
     titulaire_mobile_money = models.CharField(
         "titulaire du compte Mobile Money", max_length=120, blank=True

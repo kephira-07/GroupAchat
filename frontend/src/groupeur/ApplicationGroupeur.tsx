@@ -11,11 +11,13 @@ import type { Campagne, DemandeAgregee } from "../domaine/groupeur";
 import {
   BarreNavGroupeur,
   type OngletGroupeur,
+  RailGroupeur,
 } from "./mise-en-page/ChromeGroupeur";
 import CreerCampagne from "./pages/CreerCampagne";
 import Decision from "./pages/Decision";
 import FilDemandes from "./pages/FilDemandes";
 import GererCampagne from "./pages/GererCampagne";
+import MesCampagnes from "./pages/MesCampagnes";
 import Justificatif from "./pages/Justificatif";
 import Portefeuille from "./pages/Portefeuille";
 import QuestionsRecues from "./pages/QuestionsRecues";
@@ -45,17 +47,35 @@ import TableauDeBord from "./pages/TableauDeBord";
  * | 20 | Questions recues | `pages/groupeur/QuestionsRecues` |
  * | 21 | Statistiques | `pages/groupeur/Statistiques` |
  *
- * **Cote groupeur, la mise en page ne change pas avec la largeur.** Ces ecrans
- * sont faits pour le telephone d'un commercant qui travaille debout dans son
- * magasin ; les etaler sur 1 280 px n'apporterait rien et doublerait le code.
- * Ils restent donc dans une colonne de 430 px centree, comme le cote acheteur
- * sur telephone. Le jour ou un groupeur demandera une version bureau, c'est
- * l'ecran 21 qu'il faudra elargir en premier — un tableau de bord gagne a
- * l'espace, un formulaire non.
+ * ## Deux largeurs, une seule arborescence d'ecrans
+ *
+ * Ces ecrans restent **penses pour le telephone** : un commercant qui
+ * travaille debout dans son magasin. Mais un groupeur suit aussi ses
+ * groupages depuis un ordinateur, et une colonne de 430 px flottant au milieu
+ * d'un ecran de 1 400 px donne le pire des deux mondes.
+ *
+ * Au-dela de 768 px, on passe donc :
+ *
+ * - de la **barre du bas** a une **colonne laterale** bleue. Une barre
+ *   d'onglets collee en bas d'un grand ecran est un reflexe mobile applique
+ *   au mauvais appareil ;
+ * - d'une colonne de 430 px a une zone de contenu large, bornee a 1 100 px —
+ *   au-dela, les lignes de texte deviennent illisibles.
+ *
+ * ⚠️ **Aucun ecran n'est dedouble.** Les memes composants sont montes dans
+ * les deux cas ; seules la largeur et la navigation changent. Ecrire une
+ * version bureau separee doublerait le travail a chaque correction, et les
+ * deux divergeraient en quelques semaines.
+ *
+ * Les formulaires, eux, **gardent leur colonne etroite** meme sur grand
+ * ecran : un champ de 1 000 px de large ne se remplit pas mieux, il se lit
+ * moins bien.
  */
 type EcranGroupeur =
   | { nom: "tableau-de-bord" }
   | { nom: "creer"; depuis?: DemandeAgregee }
+  //: La **liste** de ses groupages — l'ecran 15 porte un seul groupage.
+  | { nom: "campagnes" }
   | { nom: "campagne"; campagne: Campagne }
   | { nom: "decision"; campagne: Campagne }
   | { nom: "justificatif" }
@@ -67,6 +87,7 @@ type EcranGroupeur =
 /** Les ecrans de premier niveau, ceux qui gardent la barre du bas. */
 const AVEC_BARRE_NAV: EcranGroupeur["nom"][] = [
   "tableau-de-bord",
+  "campagnes",
   "portefeuille",
   "statistiques",
 ];
@@ -174,9 +195,19 @@ function RouteurGroupeur({
      avait rien a decider. Avec de vraies donnees, un groupeur neuf n'a aucune
      campagne, et ouvrir un ecran de decision vide serait pire que de ne pas
      l'ouvrir. */
+  /* ⚠️ **`statut === "ouverte"` est indispensable dans le repli.** Sans lui,
+     `heuresRestantes === 0` attrapait aussi les groupages **annules et
+     livres**, dont le compteur vaut zero lui aussi — et c'est l'annule qui
+     arrivait en tete de liste. L'ecran 16 s'ouvrait donc sur « 0 commande,
+     0 F CFA » alors que la tache annoncait « Eau de javel, 14 commandes ».
+
+     La condition est maintenant celle que le serveur applique pour fabriquer
+     la tache (`_taches` dans `api_groupeur.py`) : ouverte, et le temps
+     ecoule. Les deux doivent dire la meme chose, sinon on clique sur une
+     ligne et on arrive ailleurs. */
   const campagneADecider =
     campagnes.find((c) => c.statut === "a-decider") ??
-    campagnes.find((c) => c.heuresRestantes === 0);
+    campagnes.find((c) => c.statut === "ouverte" && c.heuresRestantes === 0);
 
   /** Les quatre entrees de « A faire aujourd'hui » de l'ecran 13. */
   const ouvrirTache = (destination: string) => {
@@ -206,8 +237,59 @@ function RouteurGroupeur({
     setEcran({ nom: "statistiques" });
   };
 
+  const navigation = AVEC_BARRE_NAV.includes(ecran.nom);
+
+  const changerDOnglet = (nouvelOnglet: OngletGroupeur) => {
+    setOnglet(nouvelOnglet);
+    switch (nouvelOnglet) {
+      case "tableau-de-bord":
+        return setEcran({ nom: "tableau-de-bord" });
+      case "campagnes":
+        /* ⚠️ **La liste, pas le premier groupage.** Cet onglet ouvrait
+           directement l'ecran 15 sur `campagnes[0]`, c'est-a-dire sur le plus
+           recent — qui se trouvait etre le groupage annule. On arrivait donc
+           sur « 0 commande, 0 F CFA », et l'application avait l'air vide
+           alors qu'elle portait six groupages pleins. */
+        return setEcran({ nom: "campagnes" });
+      case "statistiques":
+        return setEcran({ nom: "statistiques" });
+      case "portefeuille":
+        return setEcran({ nom: "portefeuille" });
+    }
+  };
+
   return (
-    <div className="relative mx-auto min-h-dvh max-w-[430px] bg-white">
+    <div className="flex min-h-dvh bg-white">
+      {navigation ? (
+        <RailGroupeur
+          actif={onglet}
+          onChanger={changerDOnglet}
+          pseudonyme={dossierApi?.pseudonyme}
+        />
+      ) : null}
+
+      {/* ⚠️ **Deux boites, et les deux servent.** `flex-1` prend la largeur
+          restante a cote du rail ; `mx-auto` **centre le contenu dedans**.
+          Sans la seconde, la colonne de 1 100 px se collait au rail et
+          laissait tout le vide a droite — ce qui donne l'impression que la
+          page a mal charge plutot qu'une mise en page.
+          `min-w-0` evite qu'un tableau large pousse le rail hors de l'ecran. */}
+      <div className="min-w-0 flex-1">
+        {/* ⚠️ **Deux largeurs, selon ce que l'ecran fait.**
+
+            Les ecrans de premier niveau — tableau de bord, statistiques,
+            portefeuille — gagnent a l'espace : ce sont des vues d'ensemble, et
+            deux colonnes y valent mieux qu'un ruban.
+
+            Les ecrans de travail — un formulaire, une decision, une file de
+            demandes — gardent une colonne etroite. Un champ de 1 000 px ne se
+            remplit pas mieux, un bouton de 1 000 px de large n'est pas plus
+            facile a viser, et une ligne de texte aussi longue se relit mal. */}
+        <div
+          className={`relative mx-auto min-h-dvh w-full max-w-[430px] bg-white ${
+            navigation ? "md:max-w-[1180px]" : "md:max-w-[760px]"
+          }`}
+        >
       {ecran.nom === "tableau-de-bord" ? (
         <TableauDeBord
           onStatistiques={ouvrirStatistiques}
@@ -216,6 +298,13 @@ function RouteurGroupeur({
           onCreer={() => setEcran({ nom: "creer" })}
           dossier={dossier}
           onReprendreLeDossier={onReprendreLeDossier}
+        />
+      ) : null}
+
+      {ecran.nom === "campagnes" ? (
+        <MesCampagnes
+          onCampagne={(campagne) => setEcran({ nom: "campagne", campagne })}
+          onCreer={peutCreer ? () => setEcran({ nom: "creer" }) : undefined}
         />
       ) : null}
 
@@ -299,26 +388,11 @@ function RouteurGroupeur({
         />
       ) : null}
 
-      {AVEC_BARRE_NAV.includes(ecran.nom) ? (
-        <BarreNavGroupeur
-          actif={onglet}
-          onChanger={(nouvelOnglet) => {
-            setOnglet(nouvelOnglet);
-            switch (nouvelOnglet) {
-              case "tableau-de-bord":
-                return setEcran({ nom: "tableau-de-bord" });
-              case "campagnes":
-                return campagnes[0]
-                  ? setEcran({ nom: "campagne", campagne: campagnes[0] })
-                  : setEcran({ nom: "tableau-de-bord" });
-              case "statistiques":
-                return setEcran({ nom: "statistiques" });
-              case "portefeuille":
-                return setEcran({ nom: "portefeuille" });
-            }
-          }}
-        />
-      ) : null}
+          {navigation ? (
+            <BarreNavGroupeur actif={onglet} onChanger={changerDOnglet} />
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { formaterFrancs } from "../../domaine/format";
-import { calculerVersement, type Campagne } from "../../domaine/groupeur";
+import { calculerRetrait, type Campagne } from "../../domaine/groupeur";
 import { FRAIS_PROVISOIRES } from "../../domaine/livraison";
 import { EnTeteGroupeur } from "../mise-en-page/ChromeGroupeur";
 import { cloturerUneCampagne } from "../../api/espaceGroupeur";
@@ -32,7 +32,7 @@ import { IconeHorloge } from "../../ui/Icones";
  *
  * La ligne des frais de livraison est en retrait et en `texte-secondaire` :
  * **ce n'est pas son argent**, et il doit comprendre pourquoi elle n'entre pas
- * dans son versement.
+ * dans son solde.
  */
 export default function Decision({
   campagne,
@@ -56,22 +56,26 @@ export default function Decision({
   >();
 
   /**
-   * La clôture : **c'est le moment où l'argent change de mains.**
+   * La clôture : **c'est le moment où son solde cesse d'être détenu.**
    *
-   * Le serveur recalcule tout — collecte, commission de 5 % sur les parts
-   * seules, montant versé — et crée le ``Versement``. Les chiffres affichés
-   * ci-dessous sont un **aperçu** calculé localement pour que le groupeur
-   * sache ce qu'il accepte ; ceux qui font foi sont ceux que l'appel renvoie.
+   * ⚠️ **Aucun argent ne change de mains ici.** La somme était déjà la sienne
+   * depuis le paiement de ses acheteurs (§9) ; la clôture la rend retirable,
+   * et c'est lui qui décidera de la prendre, à l'écran 18.
+   *
+   * Le serveur recalcule tout — collecte, 1 500 F de frais, net — et crée le
+   * ``Retrait``. Les chiffres affichés ci-dessous sont un **aperçu** calculé
+   * localement pour que le groupeur sache ce qu'il accepte ; ceux qui font foi
+   * sont ceux que l'appel renvoie.
    *
    * ⚠️ Si l'appel échoue, **on ne ferme pas l'écran**. Fermer donnerait à
-   * croire que la clôture a eu lieu, et le groupeur attendrait un versement
-   * qui ne viendrait pas.
+   * croire que la clôture a eu lieu, et le groupeur attendrait un solde qui ne
+   * viendrait pas.
    */
   const cloture = useAction((identifiant: string) =>
     cloturerUneCampagne(telephone, identifiant),
   );
 
-  const { collecte, commission, verse } = calculerVersement(campagne.collecte);
+  const { collecte, frais, net } = calculerRetrait(campagne.collecte);
   const fraisCollectes = campagne.commandes * FRAIS_PROVISOIRES;
 
   return (
@@ -111,7 +115,7 @@ export default function Decision({
         </div>
 
         <section>
-          <h2 className="text-lg font-semibold text-texte">Votre versement</h2>
+          <h2 className="text-lg font-semibold text-texte">Votre solde</h2>
           <dl className="mt-3">
             <div className="flex justify-between gap-4 py-1.5">
               <dt className="text-texte">Collecté sur les parts</dt>
@@ -120,16 +124,16 @@ export default function Decision({
               </dd>
             </div>
             <div className="flex justify-between gap-4 py-1.5">
-              <dt className="text-texte">Commission Group Achat (5 %)</dt>
+              <dt className="text-texte">Frais Group Achat</dt>
               <dd className="font-medium text-texte">
-                − {formaterFrancs(commission)}
+                − {formaterFrancs(frais)}
               </dd>
             </div>
             <div className="mt-2 flex items-baseline justify-between gap-4 border-t border-bordure pt-3">
-              <dt className="font-semibold text-texte">Versé maintenant</dt>
+              <dt className="font-semibold text-texte">Retirable maintenant</dt>
               {/* Le chiffre qui decide. */}
               <dd className="text-[22px] font-bold text-confiance">
-                {formaterFrancs(verse)}
+                {formaterFrancs(net)}
               </dd>
             </div>
           </dl>
@@ -137,17 +141,17 @@ export default function Decision({
           {/* En retrait : ce n'est pas son argent. */}
           <p className="mt-3 border-l-2 border-bordure pl-3 text-xs text-texte-secondaire">
             Frais de livraison collectés : {formaterFrancs(fraisCollectes)} —
-            gérés par Group Achat avec son transporteur. Ils n&apos;entrent pas
-            dans votre versement.
+            gérés par Group Achat avec son transporteur. Ils n&apos;entrent
+            jamais dans votre solde.
           </p>
         </section>
 
         {/* Il doit savoir, a l'instant ou il decide, ce qu'on attendra de lui
             juste apres. */}
         <Encart variante="info" role="groupeur">
-          Ce montant vous est versé immédiatement pour acheter la marchandise.
-          Déposez ensuite le devis de votre fournisseur, puis votre reçu de
-          paiement.
+          Ce montant devient retirable dès maintenant, pour que vous puissiez
+          acheter la marchandise. Déposez ensuite le devis de votre
+          fournisseur, puis votre reçu de paiement.
         </Encart>
 
         <div className="space-y-3">
@@ -169,12 +173,11 @@ export default function Decision({
             {confirmation === "commander" ? (
               <>
                 <h2 className="text-xl font-semibold text-texte">
-                  Vous recevez {formaterFrancs(verse)}
+                  Vous pourrez retirer {formaterFrancs(net)}
                 </h2>
                 <p className="text-texte-secondaire">
                   Vous vous engagez à livrer les {campagne.commandes}{" "}
-                  commandes. Déposez le devis de votre fournisseur pour
-                  débloquer le versement.
+                  commandes. Déposez le devis de votre fournisseur.
                 </p>
                 <Bouton
                   role="groupeur"
@@ -204,7 +207,7 @@ export default function Decision({
                   Les {campagne.commandes} acheteurs seront remboursés
                   intégralement.{" "}
                   <strong className="font-semibold text-texte">
-                    Aucune commission ne vous sera prélevée.
+                    Aucun frais ne vous sera prélevé.
                   </strong>
                 </p>
                 <Bouton style="danger-texte" onClick={onFermer}>

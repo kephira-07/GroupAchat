@@ -11,6 +11,11 @@ import {
 import { deposerUnDossier, type MonDossierApi } from "../../api/dossiers";
 import { useAction } from "../../api/useRequete";
 import { DELAI_ANNONCE } from "../../domaine/recrutement";
+import {
+  DEMONSTRATION,
+  GROUPEUR_DEMO,
+  valeurDemo,
+} from "../../domaine/demonstration";
 import { EnTeteGroupeur } from "../mise-en-page/ChromeGroupeur";
 import Bouton from "../../ui/Bouton";
 import Champ from "../../ui/Champ";
@@ -98,18 +103,30 @@ export default function Inscription({
 }) {
   const [etape, setEtape] = useState<Etape>(1);
 
-  const [pseudonyme, setPseudonyme] = useState("");
-  const [nomComplet, setNomComplet] = useState("");
-  const [telephone, setTelephone] = useState("");
-  const [courriel, setCourriel] = useState("");
+  /* ⚠️ **En demonstration, le dossier part rempli.** Les champs restent a
+     l'ecran et restent modifiables : ce qui disparait, c'est la saisie au
+     clavier devant quelqu'un qui regarde, pas les ecrans. Voir
+     `domaine/demonstration.ts` pour rallumer. */
+  const [pseudonyme, setPseudonyme] = useState(
+    valeurDemo(GROUPEUR_DEMO.pseudonyme),
+  );
+  const [nomComplet, setNomComplet] = useState(
+    valeurDemo(GROUPEUR_DEMO.nomComplet),
+  );
+  const [telephone, setTelephone] = useState(valeurDemo(GROUPEUR_DEMO.telephone));
+  const [courriel, setCourriel] = useState(valeurDemo(GROUPEUR_DEMO.courriel));
   const [typePiece, setTypePiece] = useState<TypePiece>("cni");
-  const [numeroPiece, setNumeroPiece] = useState("");
-  const [pieceDeposee, setPieceDeposee] = useState(false);
-  const [selfieDepose, setSelfieDepose] = useState(false);
+  const [numeroPiece, setNumeroPiece] = useState(
+    valeurDemo(GROUPEUR_DEMO.numeroPiece),
+  );
+  const [pieceDeposee, setPieceDeposee] = useState(DEMONSTRATION);
+  const [selfieDepose, setSelfieDepose] = useState(DEMONSTRATION);
   const [operateur, setOperateur] = useState<Operateur>("t-money");
-  const [titulaire, setTitulaire] = useState("");
-  const [numeroMobileMoney, setNumeroMobileMoney] = useState("");
-  const [code, setCode] = useState("");
+  const [titulaire, setTitulaire] = useState(valeurDemo(GROUPEUR_DEMO.titulaire));
+  const [numeroMobileMoney, setNumeroMobileMoney] = useState(
+    valeurDemo(GROUPEUR_DEMO.telephone),
+  );
+  const [code, setCode] = useState(valeurDemo(GROUPEUR_DEMO.code));
   const [dossierDepose, setDossierDepose] = useState<MonDossierApi>();
 
   /**
@@ -158,12 +175,36 @@ export default function Inscription({
 
     if (resultat) {
       setDossierDepose(resultat);
+
+      /* ⚠️ **En demonstration, on ne passe pas par l'ecran d'attente.**
+         Le serveur vient de valider le dossier (reglage `DEMONSTRATION`), donc
+         « un administrateur l'examine, reponse sous 48 h » serait faux — et
+         le tableau de bord derriere ne serait pas celui de l'attente. On entre
+         directement dans l'espace groupeur, qui est ce qu'on venait voir. */
+      if (DEMONSTRATION) {
+        onTermine({
+          courriel,
+          pseudonyme,
+          telephone: `+228${telephone.replace(/\D/g, "")}`,
+          dossier: resultat,
+        });
+        return;
+      }
+
       setEtape("depose");
       return;
     }
   };
 
+  /**
+   * ⚠️ **En demonstration, le bouton ne retient jamais.**
+   *
+   * Hors demonstration il retient comme avant : ces quatre controles
+   * correspondent a ce que le serveur exigera, et le prevenir ici evite un
+   * aller-retour pour rien.
+   */
   const etapeComplete =
+    DEMONSTRATION ||
     etape === 1
       ? pseudonyme.trim() !== "" &&
         nomComplet.trim() !== "" &&
@@ -403,7 +444,7 @@ export default function Inscription({
         {etape === 3 ? (
           <>
             <h2 className="text-lg font-semibold text-texte">
-              Où recevoir vos versements
+              Où recevoir vos retraits
             </h2>
             <p className="text-texte-secondaire">
               C&apos;est sur ce compte que partira l&apos;argent collecté par
@@ -520,7 +561,7 @@ export default function Inscription({
         ) : null}
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[430px] bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(20,24,31,0.06)]">
+      <div className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[430px] bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(29,25,22,0.06)]">
         {/* L'erreur se place **au-dessus du bouton**, dans le bandeau fixe :
             c'est le seul endroit toujours visible quand on vient d'appuyer.
             Plus haut dans le formulaire, elle serait hors de l'ecran. */}

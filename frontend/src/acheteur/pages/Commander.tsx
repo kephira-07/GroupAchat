@@ -158,9 +158,7 @@ export default function Commander({
       <div className="space-y-6 px-4 pt-5">
         {/* 2 — Rappel compact */}
         <div className="flex items-center gap-3">
-          <div className="size-16 shrink-0">
-            <Vignette photo={groupage.photo} alt={groupage.photoAlt} />
-          </div>
+          <Vignette photo={groupage.photo} alt={groupage.photoAlt} taille={64} />
           <div className="min-w-0">
             <p className="font-semibold text-texte">{groupage.produit}</p>
             <p className="text-texte-secondaire">

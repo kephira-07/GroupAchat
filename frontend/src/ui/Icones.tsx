@@ -169,7 +169,7 @@ export function IconePortefeuille(proprietes: ProprietesIcone) {
   );
 }
 
-/** Fleche entrante : un versement recu. */
+/** Fleche entrante : de l'argent recu. */
 export function IconeEntree(proprietes: ProprietesIcone) {
   return (
     <Svg {...proprietes}>
@@ -179,13 +179,19 @@ export function IconeEntree(proprietes: ProprietesIcone) {
   );
 }
 
-/** Pourcentage : la commission. */
-export function IconePourcent(proprietes: ProprietesIcone) {
+/**
+ * Recu : les frais de plateforme.
+ *
+ * ⚠️ **Elle remplace l'icone de pourcentage** a l'ecran 18. Les frais sont un
+ * montant fixe de 1 500 F par groupage abouti (§9.2), pas un taux : un symbole
+ * de pourcentage a cote du chiffre faisait mentir l'ecran avant meme qu'on ait
+ * lu la ligne.
+ */
+export function IconeRecu(proprietes: ProprietesIcone) {
   return (
     <Svg {...proprietes}>
-      <path d="M6.5 17.5l11-11" />
-      <circle cx="7.5" cy="7.5" r="2.2" />
-      <circle cx="16.5" cy="16.5" r="2.2" />
+      <path d="M6 3.5h12v17l-3-1.8-3 1.8-3-1.8-3 1.8z" />
+      <path d="M9 8.5h6M9 12.5h6" />
     </Svg>
   );
 }

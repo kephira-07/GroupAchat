@@ -18,6 +18,7 @@ essai rapide hors ligne — mettre ``DJANGO_FORCER_SQLITE=1``.
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -221,7 +222,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # développement : on relit la formulation exacte qu'un groupeur recevrait, sans
 # risquer d'écrire à quelqu'un depuis un jeu de démonstration.
 #
-# Pour envoyer réellement, renseigner ``SMTP_HOTE`` dans ``backend/.env`` —
+# Pour envoyer réellement, renseigner ``SMTP_HOTE`` dans le ``.env`` de la
+# racine — le seul que ce fichier lise, voir plus haut —
 # avec l'identifiant, le mot de passe et le port du fournisseur. Group Achat
 # n'en a pas encore : c'est un des manques listés dans ``backend/README.md``.
 if os.environ.get("SMTP_HOTE"):
@@ -316,6 +318,37 @@ CORS_ALLOW_HEADERS = (
     "user-agent",
     "x-jeton-admin",
 )
+
+#: **Le mode démonstration.** Il suspend l'examen des dossiers de groupeur.
+#:
+#: Quand il est allumé, un dossier déposé est **validé sur-le-champ** : on
+#: traverse l'inscription et on arrive dans l'espace groupeur, sans attendre
+#: qu'un administrateur se connecte. C'est ce qu'il faut pour montrer le
+#: produit à quelqu'un ; ce n'est pas ce qu'il faut en ligne.
+#:
+#: ⚠️ **Ce qu'il suspend est le contrôle central du modèle.** Le §10.5 pose
+#: trois vérifications, et la phrase « groupeurs sélectionnés par Group Achat »
+#: s'affiche à l'acheteur sur presque chaque écran. Allumé en production, ce
+#: réglage transformerait cette phrase en mensonge — et c'est sur elle que
+#: repose l'acceptation de payer d'avance.
+#:
+#: D'où le défaut : **éteint, et il faut l'écrire pour l'allumer**. Le faire
+#: suivre ``DEBUG`` semblait pratique et c'était un piège — la suite de tests
+#: aurait tourné avec la validation automatique, c'est-à-dire sans jamais
+#: exercer l'examen des dossiers, qui est précisément ce qu'elle protège.
+#: Six tests sont tombés en une fois, et ils avaient raison.
+#:
+#: C'est le même choix que ``SMS_FOURNISSEUR`` : on demande la démonstration,
+#: elle ne s'invite pas.
+#:
+#: ⚠️ **Et elle ne s'applique jamais à la suite de tests**, quoi que dise le
+#: ``.env`` de la machine. Sans cette condition, allumer la démonstration pour
+#: montrer le produit éteindrait du même coup sept tests du recrutement — ils
+#: passeraient au vert sans rien vérifier, ce qui est pire que de les voir
+#: tomber. Un test qui veut ce mode l'obtient par ``override_settings``, et
+#: c'est écrit dans ``test_recrutement.py``.
+_EN_TEST = "test" in sys.argv
+DEMONSTRATION = not _EN_TEST and os.environ.get("DEMONSTRATION", "") == "1"
 
 #: Le jeton de l'administration des dossiers KYC (en-tete `X-Jeton-Admin`).
 #:

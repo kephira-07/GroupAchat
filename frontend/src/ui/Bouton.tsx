@@ -94,7 +94,7 @@ export function BoutonAncre({
        `lg:static` le rend au flux, et il perd son ombre avec son flottement —
        le §1.0 ne tolere l'ombre que sur ce qui flotte vraiment. */
     <div
-      className={`fixed inset-x-0 z-20 mx-auto max-w-[430px] bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(20,24,31,0.06)] lg:static lg:max-w-none lg:px-0 lg:shadow-none ${
+      className={`fixed inset-x-0 z-20 mx-auto max-w-[430px] bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(29,25,22,0.06)] lg:static lg:max-w-none lg:px-0 lg:shadow-none ${
         auDessusDeLaBarreNav ? "bottom-18" : "bottom-0"
       }`}
     >

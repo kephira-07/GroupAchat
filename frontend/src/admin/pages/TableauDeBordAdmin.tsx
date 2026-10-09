@@ -281,8 +281,8 @@ function TuileFile({
   /* Les deux files d'argent mènent à l'écran des virements ; le reste suit
      son identifiant quand un écran existe. */
   const destination: EcranAdmin =
-    file.id === "versements" || file.id === "devis-attendus" || file.id === "recus"
-      ? "versements"
+    file.id === "retraits" || file.id === "devis-manquants" || file.id === "recus"
+      ? "retraits"
       : file.id === "kyc"
         ? "dossiers"
         : "groupages";

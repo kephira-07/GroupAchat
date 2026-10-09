@@ -85,6 +85,22 @@ Non traité dans le MVP. Les couleurs étant définies en variables Figma (§1.2
 
 Prévois aussi une **frame de présentation** : le téléphone centré sur fond neutre, pour la projection devant le jury.
 
+#### Les trois largeurs
+
+Le téléphone reste la référence — on dessine à 390 px et on monte. Mais l'application s'adapte au-delà, et chaque palier change l'**architecture**, pas seulement la mise en page :
+
+| Largeur | Côté acheteur | Côté groupeur |
+|---|---|---|
+| **< 768 px** | Le fil plein écran, barre de navigation en bas, colonne de 430 px | Colonne de 430 px, barre de navigation en bas |
+| **768 à 1023 px** | Le catalogue en grille à 2 colonnes, filtres en puces | Colonne latérale bleue, contenu large |
+| **≥ 1024 px** | Catalogue, colonne de filtres latérale, fiche sur 2 colonnes | Colonne latérale bleue, contenu borné à 1 100 px |
+
+⚠️ **Aucun écran n'est dédoublé.** Ce sont les mêmes composants dans les trois cas ; seules la largeur et la navigation changent. Écrire une version bureau séparée doublerait le travail à chaque correction, et les deux divergeraient en quelques semaines.
+
+⚠️ **Le contenu est borné à 1 100 px** même sur un écran de 1 920. Au-delà, les lignes de texte deviennent trop longues pour être lues confortablement, et un tableau étalé sur toute la largeur oblige à balayer l'écran des yeux pour relier une ligne à sa colonne.
+
+**Les formulaires gardent leur colonne étroite** quelle que soit la largeur : un champ de 1 000 px ne se remplit pas mieux, il se lit moins bien.
+
 ### 1.2 Couleurs
 
 **L'orange domine. Le bleu reste, mais sur un seul rôle.** Les deux couleurs de marque sont conservées ; ce qui change, c'est leur répartition.
@@ -93,20 +109,32 @@ Prévois aussi une **frame de présentation** : le téléphone centré sur fond 
 
 L'application sert **deux publics qui ne font pas la même chose** : l'acheteur fait ses courses, le groupeur gère son affaire. Chacun a sa couleur dominante, et le chrome dit immédiatement de quel côté on se trouve.
 
-| | **Côté acheteur** — écrans 1 à 12 | **Côté groupeur** — écrans 13 à 20 |
+| | **Côté acheteur** — écrans 1 à 12 | **Côté groupeur** — écrans 13 à 21 |
 |---|---|---|
 | **Dominante** | **Orange** `#CC4A00` | **Bleu** `#1E3A8A` |
-| Boutons pleins, liens, onglet actif | Orange | Bleu |
-| Rôle de la seconde couleur | Le bleu = **la garantie**, et rien d'autre | L'orange = **l'urgence**, et rien d'autre |
-| Où la seconde apparaît | Bandeau de confiance, statuts « argent détenu » | Compte à rebours, « à faire aujourd'hui », bouton flottant |
+| Aplats, en-tête, cartes de chiffres | Orange | Bleu |
+| Rôle de la seconde couleur | Le bleu = **la garantie**, et rien d'autre | L'orange = **le repère et l'urgence** |
+| Où la seconde apparaît | Bandeau de confiance, statuts « argent détenu » | Onglet actif, liseré de l'en-tête, compte à rebours, « à faire aujourd'hui », bouton flottant |
 
-**La règle de dominance, dans les deux cas :** une seule couleur porte l'action, l'autre est un signal rare. **Au plus un élément de la seconde couleur par écran** — si tu en comptes deux, l'un des deux est de trop.
+**La règle de dominance tient dans les deux cas :** c'est le bleu qui porte les aplats côté groupeur, l'orange qui les ponctue. On sait donc toujours d'un coup d'œil de quel côté on se trouve — et c'est cela, et non la rareté de l'orange, qui distingue les deux chromes.
+
+⚠️ **L'orange côté groupeur ne se limite plus à l'alerte.** Il marque aussi l'onglet actif et souligne l'en-tête : un espace professionnel entièrement bleu est exact mais morne, et la marque doit rester lisible des deux côtés de l'application. Ce qui reste interdit, c'est **l'inversion** — un chrome groupeur à dominante orange le rendrait indiscernable de la boutique.
+
+**Les contrastes, calculés et non estimés :**
+
+| Usage | Rapport | Verdict |
+|---|---|---|
+| `primaire` `#CC4A00` sur blanc | 4,62:1 | texte autorisé |
+| `marque` `#FF6A00` sur `confiance` | 3,61:1 | **aplats pleins seulement** |
+| `marque` avec texte blanc | 2,87:1 | **interdit partout** |
+
+D'où le détail du chrome groupeur : le libellé de l'onglet actif est en `primaire` sur blanc, jamais en `marque` ; le liseré de l'en-tête est une **bande pleine**, pas du texte ; et dans la colonne latérale bleue, l'onglet actif est un aplat blanc à texte `primaire` — un libellé orange posé sur le bleu tomberait à 3,61:1, ce qui ne passe pas pour du texte.
 
 #### Pourquoi ce renversement fonctionne
 
 Côté acheteur, le bleu gagne à être rare : une couleur qui ne sert qu'à dire « vous êtes livré ou remboursé » dit cette chose beaucoup plus fort qu'une couleur employée partout.
 
-Côté groupeur, **l'orange change de métier**. Il n'est plus la marque, il devient l'alarme — et les écrans du groupeur sont pleins de choses qui pressent : « décidez sous 41 h », « déposez le reçu avant le 9 octobre », « 3 questions sans réponse ». Un orange qui ne sort que pour ça se remarque. Noyé dans un chrome orange, il ne se remarquerait pas.
+Côté groupeur, **l'orange change de métier**. Il n'est plus la couleur de l'action — c'est le bleu qui la porte — mais celle du repère et de l'urgence : où je suis dans la navigation, et ce qui presse. Les écrans du groupeur sont pleins de choses qui pressent : « décidez sous 41 h », « déposez le reçu avant le 9 octobre », « 3 questions sans réponse ». Posé sur un fond bleu plutôt que dans un chrome orange, il continue de se voir.
 
 Le bleu a aussi un avantage mesurable comme couleur d'action : **10,36:1** avec du texte blanc, contre 4,62:1 pour l'orange. Les écrans du groupeur, qui portent des chiffres et des décisions sur de l'argent, y gagnent en lisibilité.
 
@@ -139,7 +167,7 @@ D'où **deux oranges, deux rôles** — c'est ce que font tous les systèmes con
 
 | Jeton | Hex | Rôle | Règle absolue |
 |---|---|---|---|
-| **`marque`** | **`#FF6A00`** | L'orange qu'on **voit**. Aplats, logo, remplissage des compteurs, bouton flottant, indicateur d'onglet | **Uniquement avec du texte ou une icône sombre** (`#14181F`, 6,20:1). Jamais de blanc dessus |
+| **`marque`** | **`#FF6A00`** | L'orange qu'on **voit**. Aplats, logo, remplissage des compteurs, bouton flottant, indicateur d'onglet | **Uniquement avec du texte ou une icône sombre** (`#1D1916`, 6,08:1). Jamais de blanc dessus |
 | **`primaire`** | **`#CC4A00`** | L'orange qui **se lit**. Boutons pleins, liens, texte orange, états actifs | Texte blanc dessus : **4,62:1** ✅. En texte sur blanc : **4,62:1** ✅ |
 
 Même orange perçu, deux valeurs.
@@ -160,13 +188,26 @@ Même orange perçu, deux valeurs.
 | `succes-fond` | `#E6F4EC` | Fond des confirmations |
 | `danger` | `#C0392B` | Erreurs, annulation, litige, refus |
 | `danger-fond` | `#FBEAE8` | Fond des erreurs |
-| `texte` | `#14181F` | Texte principal — et texte sur `marque` |
-| `texte-secondaire` | `#5A6472` | Libellés, métadonnées (6,0:1 sur blanc) |
-| `bordure` | `#E4E7EC` | Filets de séparation, contours de champs |
+| `texte` | `#1D1916` | Texte principal — et texte sur `marque` (17,5:1 sur blanc) |
+| `texte-secondaire` | `#5C544D` | Texte courant secondaire (**7,5:1** sur blanc) |
+| `texte-mention` | `#7A7066` | Mentions et horodatages (4,9:1 sur blanc) — **jamais un paragraphe** |
+| `bordure` | `#EBE8E5` | Filets de séparation, contours de champs |
 | **`fond`** | **`#FFFFFF`** | **Fond de tous les écrans** (§1.0) |
 | `surface` | `#FFFFFF` | Identique à `fond` : un seul niveau de surface |
-| `surface-douce` | `#F7F8FA` | La seule nuance de gris, dans ses trois usages du §1.0 |
+| `surface-douce` | `#FAF8F7` | La seule nuance de gris, dans ses trois usages du §1.0 |
 | `voile` | `#000000` à 45 % | Dégradé sur les médias du fil |
+
+> **Les neutres sont chauds, et ce n'est pas un détail d'esthète.** Ils étaient
+> auparavant bleutés — `#14181F`, `#5A6472`, `#E4E7EC`, `#F7F8FA`, tous entre
+> **215° et 220°** de teinte. Or la marque acheteur est à **22-26°**, et ces
+> quatre jetons portent **85 % des pixels** d'un écran. L'ensemble lisait donc
+> froid, et l'orange y était posé comme un corps étranger.
+>
+> Les valeurs actuelles tournent la teinte à **28°** à saturation très basse :
+> ce sont des gris chauds, pas des beiges. **La clarté n'a pas bougé**, donc
+> aucun contraste ne se dégrade — `texte-secondaire` y gagne même, de 6,0:1 à
+> 7,5:1. Et le bleu du chrome groupeur s'y pose sans heurt : `confiance` tient
+> **9,8:1** sur `surface-douce`.
 
 #### Côté acheteur — où le bleu a le droit d'apparaître
 
@@ -203,7 +244,7 @@ Attention à un contraste : **l'orange sur un aplat bleu ne tient qu'à 3,61:1**
 | Blanc sur `primaire` `#CC4A00` | **4,62:1** ✅ |
 | `primaire` en texte sur blanc | **4,62:1** ✅ |
 | Blanc sur `primaire-presse` `#A64200` | 6,18:1 ✅ |
-| `#14181F` sur `marque` `#FF6A00` | 6,20:1 ✅ |
+| `#1D1916` sur `marque` `#FF6A00` | 6,08:1 ✅ |
 | Blanc sur `marque` `#FF6A00` | **2,87:1** ❌ **interdit** |
 | `primaire-texte-sur-fond` sur `primaire-fond` | 4,87:1 ✅ |
 | Blanc sur `confiance` `#1E3A8A` | 10,36:1 ✅ |
@@ -222,7 +263,7 @@ La couleur se lit sans lire. C'est le bleu qui dit « Group Achat tient votre ar
 |---|---|---|
 | **Argent détenu** | `confiance` sur `confiance-fond` | Payée — en attente de clôture · Campagne clôturée |
 | **En mouvement** | `primaire-texte-sur-fond` sur `primaire-fond` | Commande en cours chez le groupeur |
-| **En cours maintenant** | `marque` plein, texte `#14181F` | En cours de livraison |
+| **En cours maintenant** | `marque` plein, texte `#1D1916` | En cours de livraison |
 | **Terminé** | `succes` sur `succes-fond` | Livrée |
 | **Problème** | `danger` sur `danger-fond` | Litige · Campagne annulée |
 | **Clos sans suite** | `texte-secondaire` sur `surface-douce` | Remboursée |
@@ -300,7 +341,7 @@ Six règles à matérialiser dans la maquette :
 
 ### 1.7 Anonymat des deux côtés
 
-**L'anonymat va dans les deux sens, et c'est le second sens qui protège la commission.**
+**L'anonymat va dans les deux sens, et c'est le second sens qui protège le modèle.**
 
 #### Le groupeur, vu de l'acheteur
 
@@ -325,7 +366,7 @@ Symétrique, et tout aussi strict. Le groupeur gère une campagne, pas un carnet
 | Les **questions** posées, sous pseudonyme | Qui a commandé quoi, et combien de fois |
 | Les **codes de livraison** sur son bordereau de colisage | — |
 
-C'est cette moitié-là qui ferme la fuite réelle. Un groupeur qui connaît les gros acheteurs et leurs numéros peut leur proposer la même marchandise hors plateforme, au même prix, sans commission. **L'étiquette de colis est le dernier endroit par où cette information pouvait s'échapper** : elle ne porte donc qu'un code, un quartier et un produit. Les identités ne sortent qu'à l'enlèvement, vers le transporteur — voir [LIVRAISON.md §4](LIVRAISON.md) étapes 2 et 3.
+C'est cette moitié-là qui ferme la fuite réelle. Un groupeur qui connaît les gros acheteurs et leurs numéros peut leur proposer la même marchandise hors plateforme, au même prix, et sans nous. **L'étiquette de colis est le dernier endroit par où cette information pouvait s'échapper** : elle ne porte donc qu'un code, un quartier et un produit. Les identités ne sortent qu'à l'enlèvement, vers le transporteur — voir [LIVRAISON.md §4](LIVRAISON.md) étapes 2 et 3.
 
 Appliqué : l'écran 15 liste les commandes **par code de livraison**, pas par nom. L'écran 22 — la page du livreur — est le seul endroit du produit où nom, adresse et téléphone apparaissent ensemble.
 
@@ -336,7 +377,7 @@ Ce qui porte la confiance à la place, et qui doit être visible sur le fil comm
 
 C'est le seul signal de confiance de l'application : il doit être présent, court, et répété.
 
-**Un point de rédaction qui n'est pas négociable.** Le groupeur reçoit son argent **à la clôture de la campagne, avant la livraison** (§10.1 du cahier des charges). Il ne faut donc **jamais** écrire « votre argent est bloqué jusqu'à la livraison » ni « le groupeur ne sera payé qu'après votre livraison » : ce serait faux.
+**Un point de rédaction qui n'est pas négociable.** Le groupeur peut retirer son argent **dès la clôture du groupage, avant la livraison** (§10.1 du cahier des charges). Il ne faut donc **jamais** écrire « votre argent est bloqué jusqu'à la livraison » ni « le groupeur ne sera payé qu'après votre livraison » : ce serait faux.
 
 Ce qui est vrai, et qui suffit :
 
@@ -344,8 +385,17 @@ Ce qui est vrai, et qui suffit :
 |---|---|
 | « Vous êtes livré, ou remboursé » | « Votre argent est bloqué jusqu'à la livraison » |
 | « Groupeurs vérifiés par Group Achat » | « Le groupeur n'est payé qu'après votre livraison » |
-| « Si la campagne n'aboutit pas, vous êtes remboursé intégralement » | « Votre paiement est protégé jusqu'à la remise » |
-| « Votre paiement est détenu par Group Achat **jusqu'à la clôture** » | « …jusqu'à la livraison » |
+| « Si le groupage n'aboutit pas, vous êtes remboursé intégralement » | « Votre paiement est protégé jusqu'à la remise » |
+| « Votre paiement est détenu **jusqu'à la clôture** » | « …jusqu'à la livraison » |
+
+⚠️ **Deux formulations s'ajoutent depuis le passage au portefeuille du groupeur** (§9 du cahier des charges) :
+
+| ✅ À écrire | ❌ À ne jamais écrire |
+|---|---|
+| « Group Achat retient **1 500 F par groupage abouti** » | « 5 % de commission », « notre commission » |
+| « Votre solde est **détenu jusqu'à la clôture**, puis retirable » | « Nous vous versons votre argent à la clôture » |
+
+Le premier est une question d'exactitude : il n'y a plus de pourcentage, et un écran qui en affiche un est faux. Le second est plus subtil, et c'est pour ça qu'il mérite sa ligne — **nous ne versons plus rien**. L'argent est au groupeur depuis le paiement de ses acheteurs ; nous tenons son compte et nous exécutons ses retraits. Écrire « nous vous versons » laisserait croire que nous pourrions ne pas le faire.
 
 Sur un produit dont l'argument est la sécurité de l'argent, une promesse inexacte sur le circuit de l'argent est la faute la plus coûteuse possible. La garantie réelle est un **engagement de Group Achat** — et c'est déjà un argument fort, qui n'a pas besoin d'être exagéré.
 
@@ -462,7 +512,7 @@ Variantes :
 - `derniere-heure` — « Plus que 4 h », `danger` sur `danger-fond`
 - `terminee` — « Campagne clôturée », `texte-secondaire` sur `surface-douce`
 
-Sur le fil, où le compteur est posé sur un média sombre, il devient un aplat **`marque` avec texte `#14181F`** : c'est son usage le plus visible dans toute l'application, et celui où l'orange de la marque travaille le mieux.
+Sur le fil, où le compteur est posé sur un média sombre, il devient un aplat **`marque` avec texte `#1D1916`** : c'est son usage le plus visible dans toute l'application, et celui où l'orange de la marque travaille le mieux.
 
 ### 2.5 `CompteurParticipants`
 « 32 personnes ont commandé ». Jamais de fraction ni de jauge : **il n'y a pas de plafond ni de minimum**, donc rien à remplir. Un nombre qui monte suffit, et il rassure.
@@ -491,7 +541,7 @@ Plus un état `chargement` pour chacune.
 
 Le bouton groupeur est nettement plus lisible que le bouton acheteur — 10,36:1 contre 4,62:1. Ce n'est pas un hasard qu'on s'en satisfasse : ses écrans portent des décisions sur des sommes à cinq chiffres.
 
-**Jamais `marque` `#FF6A00` en fond de bouton avec un texte blanc** : 2,87:1, illisible (§1.2). Si tu veux absolument un bouton dans l'orange vif de la marque, son texte doit être `#14181F` — c'est lisible, mais réserve-le au bouton flottant du groupeur, pour qu'un seul élément de l'application ait ce traitement.
+**Jamais `marque` `#FF6A00` en fond de bouton avec un texte blanc** : 2,87:1, illisible (§1.2). Si tu veux absolument un bouton dans l'orange vif de la marque, son texte doit être `#1D1916` — c'est lisible, mais réserve-le au bouton flottant du groupeur, pour qu'un seul élément de l'application ait ce traitement.
 Les boutons principaux sont **ancrés en bas** sur fond blanc, avec une **ombre haute très légère** — le bouton ancré est l'un des trois seuls éléments de l'application autorisés à porter une ombre (§1.0), parce qu'il flotte réellement au-dessus du contenu qui défile dessous.
 
 ### 2.8 `Statut`
@@ -502,7 +552,7 @@ Hauteur 24, coins complets, texte 12 Medium.
 | Payée — en attente de clôture | `confiance` sur `confiance-fond` |
 | Campagne clôturée | `confiance` sur `confiance-fond` |
 | Commande en cours chez le groupeur | `primaire-texte-sur-fond` sur `primaire-fond` |
-| **En cours de livraison** | **`marque` plein, texte `#14181F`** — le seul statut en aplat vif : c'est celui qui demande de l'attention aujourd'hui |
+| **En cours de livraison** | **`marque` plein, texte `#1D1916`** — le seul statut en aplat vif : c'est celui qui demande de l'attention aujourd'hui |
 | Livrée | `succes` sur `succes-fond` |
 | Litige | `danger` sur `danger-fond` |
 | Remboursée | `texte-secondaire` sur `surface-douce` |
@@ -628,10 +678,14 @@ C'est contre-intuitif pour qui vient du e-commerce, et c'est pourtant le bon cho
 | Ligne | Montant | Calcul |
 |---|---|---|
 | Collecté sur les parts | **128 000 F** | 32 × 4 000 |
-| Commission Group Achat (5 %) | **− 6 400 F** | 5 % de 128 000 |
-| **Versé au groupeur à la clôture** | **121 600 F** | 128 000 − 6 400 |
-| Frais de livraison collectés | 32 000 F | 32 × 1 000, **reversés au transporteur, hors commission** |
-| Disponible sur son portefeuille | 86 450 F | après ses retraits |
+| Frais Group Achat | **− 1 500 F** | **un montant fixe par groupage abouti**, pas un pourcentage |
+| **Retirable par le groupeur à la clôture** | **126 500 F** | 128 000 − 1 500 |
+| Frais de livraison collectés | 32 000 F | 32 × 1 000, **reversés au transporteur, jamais touchés** |
+| Disponible sur son portefeuille | **126 500 F** | le groupage des écouteurs est clôturé, il n'a pas encore retiré |
+
+⚠️ **Plus de pourcentage nulle part.** Le frais est de **1 500 F par groupage abouti**, retenus au moment où le groupeur retire son argent (§9.2 du cahier des charges). Un écran qui affiche « 5 % » ou « commission » est un écran à corriger.
+
+**Le second groupage du portefeuille**, celui des baskets, sert à montrer un retrait déjà exécuté : 41 × 9 800 = 401 800 F, moins 1 500 F = **400 300 F retirés le 28 septembre**.
 
 Les additions doivent tomber juste à l'écran : un jury vérifie ce genre de calcul.
 
@@ -885,7 +939,9 @@ Le lien doit ouvrir **directement la campagne, consultable sans rien installer n
 4. **Sous-titre :** « Vous êtes la 33ᵉ personne à commander cette campagne. »
 5. **`BandeauConfiance` en version développée** — le plus grand de l'application :
    > 🛡️ **Vos 5 000 F sont détenus par Group Achat**
-   > Ils ne sont versés au groupeur qu'à la clôture de la campagne. **Si elle n'aboutit pas, vous êtes remboursée intégralement.**
+   > Ils sont détenus jusqu'à la clôture du groupage. **S'il n'aboutit pas, vous êtes remboursée intégralement.**
+
+   ⚠️ **Ne pas écrire à l'acheteur que l'argent est « versé au groupeur à la clôture ».** C'est désormais inexact — la somme est inscrite à son portefeuille dès le paiement (§9 du cahier des charges) — et surtout cette phrase ne lui dit pas ce qu'il veut savoir. Ce qui le rassure, c'est que **rien n'est retirable avant la clôture** et que l'annulation le rembourse.
 
    Exact et suffisant. Ne va pas au-delà : le groupeur est payé à la clôture, donc rien n'est « bloqué jusqu'à la livraison » (§1.7).
 6. **`FriseEtapes`**, première étape active :
@@ -1071,7 +1127,7 @@ La première ligne ferme la boucle du produit : une demande devient une campagne
    - **3** campagnes ouvertes
    - **74** commandes
    - **128 000 F** collectés
-   - **86 450 F** disponibles
+   - **126 500 F** disponibles
 
    Sous la grille, un lien discret : « **Voir toutes mes statistiques** » → écran 21.
 3. **« À faire aujourd'hui »** — la section qui donne une raison d'ouvrir l'application, et **le seul bloc orange de l'écran**. C'est ce qui la fait ressortir sur le bleu :
@@ -1080,7 +1136,7 @@ La première ligne ferme la boucle du produit : une demande devient une campagne
    - 🟣 « **3 questions sans réponse** » → écran 20
    - 🔵 « 4 nouvelles demandes dans votre quartier » → écran 19
 4. **« Mes campagnes »** : liste compacte avec compteur de commandes, temps restant et statut.
-5. **Bouton flottant** « + Créer une campagne », 56 × 56, en bas à droite, fond `marque` `#FF6A00` avec icône `#14181F` (6,20:1). Sur un écran bleu, c'est l'élément le plus repérable de toute l'interface groupeur — et c'est voulu : créer une campagne est l'action qui fait vivre la plateforme.
+5. **Bouton flottant** « + Créer une campagne », 56 × 56, en bas à droite, fond `marque` `#FF6A00` avec icône `#1D1916` (6,08:1). Sur un écran bleu, c'est l'élément le plus repérable de toute l'interface groupeur — et c'est voulu : créer une campagne est l'action qui fait vivre la plateforme.
 6. `BarreNav` version groupeur — quatre onglets : **Tableau de bord · Mes campagnes · Statistiques · Portefeuille**. C'est l'arrivée de l'écran 21 qui fixe ce quatrième onglet ; sans lui, les statistiques resteraient un écran qu'on ne retrouve pas.
 
 ## Écran 14 — Créer une campagne
@@ -1140,8 +1196,11 @@ Sur le média, une consigne à afficher dans le formulaire : « Une vidéo verti
 
 4. **Sa marge, affichée pour lui seul.** Un champ optionnel « Ce que ça vous coûte à la pièce », qui ne sort jamais de son interface et n'est **jamais visible de l'acheteur**. En échange, il obtient le calcul qu'il refait aujourd'hui de tête :
 
-   > Prix de vente 4 000 F · votre coût 2 800 F · commission 200 F
-   > **Votre marge : 1 000 F par pièce, soit 32 000 F sur 32 commandes**
+   > Prix de vente 4 000 F · votre coût 2 800 F
+   > **Votre marge : 1 200 F par pièce, soit 38 400 F sur 32 commandes**
+   > Moins 1 500 F de frais Group Achat au retrait : **36 900 F**
+
+   **La marge est désormais entière à la pièce**, parce que le frais ne se calcule plus par part : il se retient une seule fois, sur le groupage. C'est plus simple à comprendre pour lui, et c'est une des raisons du changement.
 
    C'est l'écran qui transforme le formulaire en outil de gestion. Et c'est ce qui alimente les statistiques de l'écran 21 — sans ce champ, aucune marge ne peut y être calculée.
 
@@ -1152,14 +1211,14 @@ Sur le média, une consigne à afficher dans le formulaire : « Une vidéo verti
 
 **Un aperçu en direct de la `CarteFil`** telle que les acheteurs la verront, mis à jour à la saisie. Il évite les erreurs de prix et rend le formulaire moins aride.
 
-Sous le prix, le calcul affiché : « Sur 4 000 F, vous recevrez **3 800 F** par part. Commission Group Achat : 200 F (5 %). » La commission se dit au moment de fixer le prix, pas au moment de verser.
+Sous le prix, le calcul affiché : « Sur 4 000 F, **vous recevez 4 000 F par part**. Group Achat retient **1 500 F une seule fois**, au retrait, si le groupage aboutit. » Le frais se dit au moment de fixer le prix, pas au moment de retirer.
 
 **Étape 3 — la livraison**
 Délai de livraison annoncé · zones couvertes · et un choix en deux cartes :
 - « **J'utilise le service partenaire de Group Achat** » — l'option par défaut
 - « **J'ai mon propre livreur** » — il gère alors ses livraisons lui-même
 
-Sous ce choix, une mention qui évite un malentendu : « Les frais de livraison (1 000 F dans Lomé) sont payés par l'acheteur et vont au transporteur. Ils n'entrent pas dans votre versement. »
+Sous ce choix, une mention qui évite un malentendu : « Les frais de livraison (1 000 F dans Lomé) sont payés par l'acheteur et vont au transporteur. Ils n'entrent jamais dans votre solde. »
 
 **Écran de fin :** récapitulatif + « Publier la campagne ». Puis une confirmation avec **« Partager sur WhatsApp »** bien visible : c'est par là que les groupeurs amènent leurs contacts existants, et l'ignorer serait ignorer comment ce marché fonctionne.
 
@@ -1188,15 +1247,15 @@ Sous ce choix, une mention qui évite un malentendu : « Les frais de livraison 
    > Sans décision, les acheteurs seront remboursés automatiquement.
 3. **Récapitulatif de la décision :**
    - Collecté sur les parts : `128 000 F`
-   - Commission Group Achat (5 %) : `− 6 400 F`
-   - **Versé maintenant : `121 600 F`** — en style `Prix`, c'est le chiffre qui décide
+   - Frais Group Achat : `− 1 500 F`
+   - **Retirable maintenant : `126 500 F`** — en style `Prix`, c'est le chiffre qui décide
    - *Frais de livraison collectés : 32 000 F — gérés par Group Achat avec son transporteur*
 
-   La dernière ligne est en retrait et en `texte-secondaire` : ce n'est pas son argent, et il doit comprendre pourquoi elle n'entre pas dans son versement.
-4. **`Encart` `info`** : « Ce montant vous est versé immédiatement pour acheter la marchandise. Déposez ensuite le devis de votre fournisseur, puis votre reçu de paiement. » Le groupeur doit savoir, à l'instant où il décide, ce qu'on attendra de lui juste après.
+   La dernière ligne est en retrait et en `texte-secondaire` : ce n'est pas son argent, et il doit comprendre pourquoi elle n'entre pas dans son solde.
+4. **`Encart` `info`** : « Ce montant devient retirable dès maintenant, pour que vous puissiez acheter la marchandise. Déposez ensuite le devis de votre fournisseur, puis votre reçu de paiement. » Le groupeur doit savoir, à l'instant où il décide, ce qu'on attendra de lui juste après.
 5. **Deux boutons :**
-   - « **Je passe la commande** » (primaire) → confirmation : « Vous recevez 121 600 F et vous vous engagez à livrer les 32 commandes. Déposez le devis de votre fournisseur pour débloquer le versement. » → écran 17
-   - « J'annule la campagne » (`danger-texte`) → confirmation : « Les 32 acheteurs seront remboursés intégralement. Aucune commission ne vous sera prélevée. »
+   - « **Je passe la commande** » (primaire) → confirmation : « Vous pourrez retirer 126 500 F et vous vous engagez à livrer les 32 commandes. Déposez le devis de votre fournisseur. » → écran 17
+   - « J'annule la campagne » (`danger-texte`) → confirmation : « Les 32 acheteurs seront remboursés intégralement. Aucun frais ne vous sera prélevé. »
 
 **Le compte à rebours n'est pas décoratif** : passé 48 h, la plateforme annule et rembourse (§8.2 du cahier des charges). L'afficher en heures, pas en date.
 
@@ -1206,9 +1265,11 @@ Sous ce choix, une mention qui évite un malentendu : « Les frais de livraison 
 
 **Deux dépôts successifs, dans cet ordre.**
 
-**A — Le devis, avant de recevoir le versement**
+**A — Le devis, avant de retirer**
 1. Titre : « Devis de votre fournisseur »
-2. Phrase : « Déposez le devis ou la facture. Vos 121 600 F sont versés après vérification. »
+2. Phrase : « Déposez le devis ou la facture de votre fournisseur. »
+
+   ⚠️ **Ne pas écrire que le devis débloque l'argent.** Il ne le débloque plus : le solde est retirable dès la clôture, et le devis constate au lieu de conditionner (§10.2 du cahier des charges). La phrase d'origine — « Vos 121 600 F sont versés après vérification » — promettait un contrôle qui n'existe plus, et il vaut mieux un écran moins rassurant qu'un écran faux.
 3. Champs : montant du devis · nom du fournisseur · **photo ou PDF du document** (zone de dépôt).
 4. Bouton « Envoyer pour vérification ».
 5. **État d'attente :** « En cours de vérification — réponse sous 4 h ouvrées » avec `FriseEtapes`.
@@ -1219,9 +1280,9 @@ Sous ce choix, une mention qui évite un malentendu : « Les frais de livraison 
 3. Champs : montant payé · date · photo du reçu.
 4. Bouton « Envoyer ».
 
-**États à dessiner :** à déposer · en vérification · **refusé** (`Encart` `danger` : « Document illisible. Déposez une photo plus nette. » + bouton « Déposer à nouveau ») · validé (coche `succes` + « **121 600 F versés le 7 octobre** »).
+**États à dessiner :** à déposer · en vérification · **refusé** (`Encart` `danger` : « Document illisible. Déposez une photo plus nette. » + bouton « Déposer à nouveau ») · validé (coche `succes` + « **Devis vérifié le 7 octobre** »).
 
-**Variante à prévoir — le paiement direct au fournisseur.** Au-delà d'un certain montant, Group Achat règle le fournisseur elle-même et le groupeur ne reçoit rien en main (§10.3 du cahier des charges). L'écran devient alors : « Group Achat règle directement votre fournisseur sur la base de ce devis. Vous recevrez la confirmation du paiement. » Le seuil n'est pas encore fixé, mais **cette variante existera** : autant la dessiner maintenant.
+**Variante mise de côté — le paiement direct au fournisseur.** Le portefeuille du groupeur la rend inapplicable dans le cas général : l'argent est sur son compte avant que l'achat ne se décide. Elle reste écrite au §10.3 du cahier des charges, comme recours au-dessus d'un seuil de montant si le taux de non-livraison l'impose. **Il n'y a donc rien à dessiner pour l'instant.**
 
 L'état *refusé* est celui qu'on oublie et celui qui arrivera le plus souvent : une photo de reçu prise à la va-vite dans un marché est rarement nette du premier coup.
 
@@ -1230,28 +1291,32 @@ L'état *refusé* est celui qu'on oublie et celui qui arrivera le plus souvent :
 **Objectif :** montrer où est l'argent et à quel titre. C'est l'écran qui explique le modèle économique sans un mot de pitch.
 
 1. En-tête « Portefeuille ».
-2. **Carte principale**, fond `confiance` (`#1E3A8A`), texte blanc (10,36:1) : « Disponible » / **`86 450 F`** / bouton blanc « Retirer mes fonds ».
+2. **Carte principale**, fond `confiance` (`#1E3A8A`), texte blanc (10,36:1) : « Disponible » / **`126 500 F`** / bouton blanc « Retirer mes fonds ».
+
+   ⚠️ **Ce bouton agit réellement, et c'est nouveau.** C'est le geste qui déclenche la retenue des 1 500 F par groupage abouti : la confirmation doit donc l'annoncer — « Vous retirez **126 500 F**. Group Achat retient 1 500 F pour 1 groupage abouti. » Un retrait qui solde trois groupages annonce 4 500 F.
 3. **Trois tuiles :**
    - **135 000 F** — « En cours de collecte » — « Campagnes pas encore clôturées » — icône horloge
-   - **121 600 F** — « Versé » — « Écouteurs filaires, le 7 octobre » — icône flèche entrante
-   - **6 400 F** — « Commission Group Achat » — « 5 % sur les campagnes abouties » — icône pourcentage
-4. **`Encart` explicatif**, à ne pas omettre : « Vous recevez l'intégralité du montant collecté à la clôture de chaque campagne, moins 5 % de commission. Aucune commission sur une campagne annulée. Les frais de livraison payés par vos acheteurs ne vous sont pas versés : ils vont au transporteur. »
+   - **400 300 F** — « Retiré » — « Baskets homme, le 28 septembre » — icône flèche entrante
+   - **3 000 F** — « Frais Group Achat » — « 1 500 F par groupage abouti · 2 groupages » — icône reçu, **plus l'icône pourcentage** : il n'y a plus de pourcentage
+4. **`Encart` explicatif**, à ne pas omettre : « L'argent de vos acheteurs est à vous dès leur paiement. Il est détenu jusqu'à la clôture du groupage, puis vous pouvez le retirer en entier. Group Achat retient 1 500 F par groupage abouti, au moment du retrait. Aucun frais sur un groupage annulé. Les frais de livraison payés par vos acheteurs ne vous reviennent pas : ils vont au transporteur. »
 
-   Un groupeur qui découvre la retenue au moment du versement se sent trompé. Elle est dite ici, à l'écran 14 au moment de fixer le prix, et à l'écran 16 au moment de décider : trois fois, et c'est volontaire.
+   Un groupeur qui découvre la retenue au moment de retirer se sent trompé. Elle est dite ici, à l'écran 14 au moment de fixer le prix, et à l'écran 16 au moment de décider : trois fois, et c'est volontaire.
 5. **Historique**, lignes datées :
 
 | Date | Libellé | Montant |
 |---|---|---|
-| 7 oct. | **Versement — Écouteurs filaires** (32 commandes) | **+121 600 F** |
-| 7 oct. | Commission Group Achat (5 %) | −6 400 F |
-| 7 oct. | Devis fournisseur validé | — |
-| 28 sept. | Versement — Baskets homme (41 commandes) | +381 710 F |
-| 28 sept. | Commission Group Achat (5 %) | −20 090 F |
-| 20 sept. | Campagne annulée — Savon de Marseille | **Aucune commission** |
+| 7 oct. | **Groupage clôturé — Écouteurs filaires** (32 commandes) | **+128 000 F** |
+| 7 oct. | Frais Group Achat — à retenir au retrait | −1 500 F |
+| 7 oct. | Devis fournisseur reçu | — |
+| 28 sept. | **Retrait — Baskets homme** (41 commandes) | **+400 300 F** |
+| 28 sept. | Frais Group Achat — retenus | −1 500 F |
+| 20 sept. | Groupage annulé — Savon de Marseille | **Aucun frais** |
 
-Les chiffres des baskets doivent tomber juste aussi : 41 × 9 800 = 401 800 F, moins 5 % (20 090 F) = **381 710 F**.
+Les chiffres des baskets doivent tomber juste aussi : 41 × 9 800 = 401 800 F, moins 1 500 F = **400 300 F**.
 
-La dernière ligne vaut d'être montrée : elle prouve qu'aucune commission n'est prélevée sur une campagne annulée, comme l'annonce le §7 du cahier des charges.
+**Deux libellés différents, et la différence compte** : « groupage clôturé » pour un solde devenu retirable mais pas encore retiré, « retrait » pour de l'argent réellement parti. Le groupeur doit pouvoir distinguer les deux d'un coup d'œil, sinon il croit avoir été payé deux fois.
+
+La dernière ligne vaut d'être montrée : elle prouve qu'aucun frais n'est prélevé sur un groupage annulé, comme l'annonce le §7 du cahier des charges.
 
 6. **Lien** « Voir mes statistiques » → écran 21. Le portefeuille dit *combien*, les statistiques disent *pourquoi*.
 7. **Bandeau de démonstration** en bas : « Démonstration — aucun mouvement de fonds réel. »
@@ -1337,10 +1402,10 @@ Un tableau de bord qui donne un chiffre sans point de comparaison ne sert à rie
 2. **La carte maîtresse** — fond `confiance`, texte blanc, coins 16. Une seule chose dedans, et c'est **ce qu'il a gagné**, pas ce qu'il a encaissé :
 
    > **Vos revenus — 30 jours**
-   > **121 600 F** versés
+   > **668 100 F** nets
    > *+ 18 % par rapport aux 30 jours précédents* — flèche montante
 
-   **Pourquoi « versé » et pas « collecté » :** le collecté inclut l'argent qui n'est pas encore à lui. Un tableau de bord qui met en avant un chiffre plus flatteur que la réalité détruit sa propre crédibilité au premier versement.
+   **Pourquoi « net » et pas « collecté » :** le collecté inclut l'argent qui n'est pas encore retirable, et il inclut les frais de plateforme. Un tableau de bord qui met en avant un chiffre plus flatteur que la réalité détruit sa propre crédibilité au premier retrait. **Le chiffre de la carte est la somme des barres de l'histogramme** — 126 500 + 400 300 + 141 300 : un total qu'on ne peut pas recalculer depuis l'écran est un total qu'on ne croit pas.
 
 3. **Quatre tuiles**, en grille 2 × 2, fond blanc, filet 1 px `bordure`, coins 12. Chacune : un libellé en `Libelle`, le chiffre en `Prix`, la variation en `Petit`.
 
@@ -1356,9 +1421,9 @@ Un tableau de bord qui donne un chiffre sans point de comparaison ne sert à rie
 4. **Graphique : revenus par campagne** — un **histogramme horizontal**, une barre par campagne, en `confiance`. Horizontal et non vertical, pour que les noms de campagne restent lisibles sur 390 px de large. Au bout de chaque barre, le montant.
 
    ```
-   Écouteurs filaires     ████████████████████  121 600 F
-   Baskets homme          ██████████████████████████  381 710 F
-   Huile de palme         ███████████  142 800 F
+   Écouteurs filaires     ████████████████████  126 500 F
+   Baskets homme          ██████████████████████████  400 300 F
+   Huile de palme         ███████████  141 300 F
    Savon de Marseille     ▏ annulée
    ```
 
@@ -1396,7 +1461,7 @@ Un tableau de bord qui donne un chiffre sans point de comparaison ne sert à rie
 
 ### Ce qui ne doit surtout pas y figurer
 
-- **Aucun nom, aucun numéro, aucune adresse d'acheteur.** Des quartiers, des nombres, des montants. C'est la même règle qu'à l'écran 15, et c'est elle qui protège la commission (§1.7).
+- **Aucun nom, aucun numéro, aucune adresse d'acheteur.** Des quartiers, des nombres, des montants. C'est la même règle qu'à l'écran 15, et c'est elle qui protège le modèle (§1.7).
 - **Aucune comparaison avec les autres groupeurs.** Pas de classement, pas de « vous êtes dans les 20 % les meilleurs ». Les groupeurs ne se voient pas entre eux, et nous ne les mettons pas en concurrence — ce serait les pousser à baisser leurs prix jusqu'à ne plus pouvoir livrer.
 - **Aucune projection.** « Vous gagnerez X le mois prochain » est une promesse. On montre le passé.
 
@@ -1406,7 +1471,7 @@ Un tableau de bord qui donne un chiffre sans point de comparaison ne sert à rie
 
 ## Écran 22 — Tournée du livreur (page web)
 
-**Ce n'est pas un écran de l'application mobile.** C'est une **page web** que le livreur ouvre depuis un lien reçu, sans rien installer et sans compte — le livreur est un prestataire partenaire, pas un utilisateur de Group Achat (§6 du cahier des charges). À dessiner quand même : c'est là que se fabrique la **preuve de livraison**. Elle ne conditionne aucun versement — le groupeur a déjà été payé à la clôture (§10.1 du cahier des charges) — mais elle construit **son historique de fiabilité**, qui détermine son plafond d'exposition. C'est le seul levier qui nous reste sur lui, donc il vaut cet écran.
+**Ce n'est pas un écran de l'application mobile.** C'est une **page web** que le livreur ouvre depuis un lien reçu, sans rien installer et sans compte — le livreur est un prestataire partenaire, pas un utilisateur de Group Achat (§6 du cahier des charges). À dessiner quand même : c'est là que se fabrique la **preuve de livraison**. Elle ne conditionne aucun retrait — le solde du groupeur est retirable depuis la clôture (§10.1 du cahier des charges) — mais elle construit **son historique de fiabilité**, qui détermine son plafond d'exposition. C'est le seul levier qui nous reste sur lui, donc il vaut cet écran.
 
 **À dessiner en 390 × 844 comme les autres**, puisqu'elle sera ouverte sur un téléphone, mais sans `BarreNav` : c'est une page isolée.
 
@@ -1478,14 +1543,14 @@ Un tableau de bord qui donne un chiffre sans point de comparaison ne sert à rie
 
 | Indicateur | Démonstration |
 |---|---|
-| **Argent détenu en ce moment** | **1 284 000 F** |
+| **Argent détenu pour les groupeurs** | **1 284 000 F** |
 | Campagnes en cours | **11** · dont 3 à échéance sous 48 h |
 | Taux de livraison (30 j) | **94 %** |
-| Commission encaissée (30 j) | **72 400 F** |
+| Frais encaissés (30 j) | **18 000 F** · 12 groupages aboutis |
 
 Sous le premier, une ligne qui n'est pas décorative : « **Rapprochement : écart de 0 F** » en `succes`, ou l'écart en `danger` s'il y en a un. **C'est la ligne la plus sérieuse de l'écran** — le jour où l'argent détenu calculé et le solde réel divergent, quelque chose ne va pas, et il faut le voir tout de suite.
 
-**4. Activité récente**, en bas : dix lignes datées — campagne clôturée, versement effectué, dossier validé, litige tranché. C'est le seul bloc du tableau de bord qui regarde le passé, et c'est pour ça qu'il est en dernier.
+**4. Activité récente**, en bas : dix lignes datées — groupage clôturé, retrait exécuté, dossier validé, litige tranché. C'est le seul bloc du tableau de bord qui regarde le passé, et c'est pour ça qu'il est en dernier.
 
 ### Ce qui ne doit pas y figurer
 
@@ -1720,7 +1785,7 @@ Vide : Vous n'avez encore rien demandé.
 ```
 Bonjour Mama Gro
 3 groupages ouverts    74 commandes
-128 000 F CFA collectés    86 450 F CFA disponibles
+128 000 F CFA collectés    126 500 F CFA disponibles
 Voir toutes mes statistiques
 À faire aujourd'hui
 Écouteurs filaires — groupage clôturé, décidez sous 41 h
@@ -1751,9 +1816,10 @@ Ce que contient une part : 1 pièce
    3 pièces   11 000 F CFA   (3 667 F CFA la pièce)
    5 pièces   17 500 F CFA   (3 500 F CFA la pièce)
 Ce que ça vous coûte à la pièce (visible de vous seul)
-   Prix de vente 4 000 · votre coût 2 800 · commission 200
-   Votre marge : 1 000 F CFA par pièce, soit 32 000 F CFA sur 32 commandes
-Sur 4 000 F CFA, vous recevrez 3 800 F CFA par part. Commission Group Achat : 200 F CFA (5 %).
+   Prix de vente 4 000 · votre coût 2 800
+   Votre marge : 1 200 F CFA par pièce, soit 38 400 F CFA sur 32 commandes
+   Moins 1 500 F CFA de frais Group Achat au retrait : 36 900 F CFA
+Sur 4 000 F CFA, vous recevez 4 000 F CFA par part. Group Achat retient 1 500 F CFA une seule fois, au retrait, si le groupage aboutit.
 Durée : 3 jours — 7 jours — 14 jours — une date
 Variantes (tailles, pointures, coloris)
 
@@ -1761,7 +1827,7 @@ Variantes (tailles, pointures, coloris)
 Délai annoncé · Zones couvertes
 J'utilise le service partenaire de Group Achat
 J'ai mon propre livreur
-Les frais de livraison sont payés par l'acheteur et vont au transporteur. Ils n'entrent pas dans votre versement.
+Les frais de livraison sont payés par l'acheteur et vont au transporteur. Ils n'entrent jamais dans votre solde.
 Publier le groupage
 Partager sur WhatsApp
 ```
@@ -1786,7 +1852,7 @@ Agoè 38 %   Tokoin 23 %   Bè 19 %
 Le groupage est clôturé
 Décidez sous 41 h
 32 commandes · 128 000 F CFA collectés
-Vous recevrez 121 600 F CFA (commission 5 % : 6 400 F CFA)
+Vous pourrez retirer 126 500 F CFA (frais Group Achat : 1 500 F CFA)
 Je maintiens le groupage
 J'annule — tous les acheteurs sont remboursés
 Sans décision sous 48 h, le groupage est annulé et les acheteurs remboursés.
@@ -1808,18 +1874,19 @@ Sans reçu avant le 9 octobre, le groupage est annulé et les acheteurs rembours
 ```
 Portefeuille
 Disponible
-86 450 F CFA
+126 500 F CFA
 Retirer mes fonds
-135 000 F CFA  En cours de collecte
-121 600 F CFA  Versé — Écouteurs filaires, le 7 octobre
-6 400 F CFA    Commission Group Achat
-Vous recevez l'intégralité du montant collecté à la clôture de chaque groupage, moins 5 % de commission.
-Aucune commission sur un groupage annulé. Les frais de livraison vont au transporteur.
+135 000 F CFA  En cours de collecte — détenu jusqu'à la clôture
+400 300 F CFA  Retiré — Baskets homme, le 28 septembre
+3 000 F CFA    Frais Group Achat — 1 500 F CFA par groupage abouti · 2 groupages
+L'argent de vos acheteurs est à vous dès leur paiement. Il est détenu jusqu'à la clôture du groupage, puis vous pouvez le retirer en entier.
+Group Achat retient 1 500 F CFA par groupage abouti, au moment du retrait. Aucun frais sur un groupage annulé. Les frais de livraison vont au transporteur.
 Historique
-7 oct.   Versement — Écouteurs filaires (32 commandes)   +121 600 F CFA
-7 oct.   Commission Group Achat (5 %)                     −6 400 F CFA
-28 sept. Versement — Baskets homme (41 commandes)        +381 710 F CFA
-20 sept. Groupage annulé — Savon de Marseille            Aucune commission
+7 oct.   Groupage clôturé — Écouteurs filaires (32 commandes)   +128 000 F CFA
+7 oct.   Frais Group Achat — à retenir au retrait                −1 500 F CFA
+28 sept. Retrait — Baskets homme (41 commandes)                 +400 300 F CFA
+28 sept. Frais Group Achat — retenus                             −1 500 F CFA
+20 sept. Groupage annulé — Savon de Marseille                   Aucun frais
 Voir mes statistiques
 Démonstration — aucun mouvement de fonds réel.
 ```
@@ -1856,16 +1923,16 @@ J'ai compris
 Mes statistiques
 30 jours   3 mois   Tout
 Vos revenus — 30 jours
-121 600 F CFA versés
+668 100 F CFA nets
 + 18 % par rapport aux 30 jours précédents
 Groupages aboutis   4 sur 5
 Participants        127        + 31 %
 Panier moyen        4 150 F CFA   − 4 %
 Taux de réussite    80 %
 Revenus par groupage
-Baskets homme        381 710 F CFA
-Huile de palme       142 800 F CFA
-Écouteurs filaires   121 600 F CFA
+Baskets homme        400 300 F CFA
+Huile de palme       141 300 F CFA
+Écouteurs filaires   126 500 F CFA
 Savon de Marseille   annulé
 D'où viennent vos commandes
 Agoè 38 (30 %)   Tokoin 29 (23 %)   Bè 24 (19 %)
@@ -1906,11 +1973,11 @@ Contestations à arbitrer            1   le plus ancien : 4 jours
 Livraisons non confirmées (7 j)     3   le plus ancien : 9 jours
 Messages signalés                   6   le plus ancien : 1 jour
 Retours de colis                    0
-Argent détenu en ce moment     1 284 000 F CFA
+Argent détenu pour les groupeurs  1 284 000 F CFA
    Rapprochement : écart de 0 F
 Groupages en cours             11   dont 3 à échéance sous 48 h
 Taux de livraison (30 j)       94 %
-Commission encaissée (30 j)    72 400 F CFA
+Frais encaissés (30 j)         18 000 F CFA   12 groupages aboutis
 Activité récente
 ```
 
@@ -1932,14 +1999,14 @@ Six détails qui font la différence devant un jury :
 - le **parcours libre jusqu'au paiement**, sans jamais demander de compte ;
 - la **reprise de l'action après connexion** : la feuille redescend, le paiement continue ;
 - l'**attente de validation Mobile Money**, qui est l'étape réelle du paiement ;
-- l'**écran de décision du groupeur** (16), avec son compte à rebours et le montant qui lui sera versé ;
+- l'**écran de décision du groupeur** (16), avec son compte à rebours et le montant qu'il pourra retirer ;
 - la **validation d'un code par le livreur** (écran 22), qui est la preuve de livraison et ce qui alimente l'historique de fiabilité du groupeur ;
 - au moins un **cas d'erreur** cliquable — le reçu refusé à l'écran 17 est le plus parlant.
 
 ## 5. À vérifier avant de présenter
 
 - [ ] Aucun *Lorem ipsum*, aucun « Produit 1 » sur aucun écran.
-- [ ] Les montants concordent : **4 000 F la part, 1 000 F de livraison, 5 000 F payés**, 128 000 F collectés, 6 400 F de commission, **121 600 F versés au groupeur**.
+- [ ] Les montants concordent : **4 000 F la part, 1 000 F de livraison, 5 000 F payés**, 128 000 F collectés, 1 500 F de frais Group Achat, **126 500 F retirables par le groupeur**.
 - [ ] Le **total payé** (5 000 F) apparaît partout à partir du récapitulatif, et le **prix de la part** (4 000 F) seulement avant.
 - [ ] La ligne de frais de livraison est **distincte**, jamais fondue dans le prix de la part.
 - [ ] **Aucun écran ne promet que l'argent est bloqué jusqu'à la livraison** (§1.7) — le groupeur est payé à la clôture.
@@ -1974,6 +2041,6 @@ Six détails qui font la différence devant un jury :
 - [ ] Chaque écran répond en une seconde à : où suis-je, que puis-je faire, combien ça coûte.
 - [ ] Tous les textes de bouton sont des verbes d'action, pas « OK » ni « Valider » seul.
 - [ ] **Aucun prix barré, aucune pastille de pourcentage, aucun « au lieu de »** nulle part (§3).
-- [ ] L'article de démonstration est l'**écouteur filaire à 4 000 F**, et les additions tombent juste : 32 × 4 000 = 128 000 F, moins 5 % (6 400 F) = **121 600 F versés**.
+- [ ] L'article de démonstration est l'**écouteur filaire à 4 000 F**, et les additions tombent juste : 32 × 4 000 = 128 000 F, moins 1 500 F de frais = **126 500 F retirables**.
 - [ ] L'écran 21 a son **état vide dessiné**, et il ne montre **ni nom d'acheteur, ni classement entre groupeurs**.
 - [ ] L'écran 14 saisit le **prix pour 1 pièce**, et les paliers de quantité affichent leur prix unitaire calculé.

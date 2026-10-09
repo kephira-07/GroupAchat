@@ -155,6 +155,23 @@ export default defineConfig({
 
   server: {
     port: 5173,
+    /**
+     * ⚠️ **Ne pas surveiller les paquets construits.**
+     *
+     * `dist/` et `dist-admin/` sont **sous la racine du projet**, donc le
+     * surveillant de Vite les regarde par defaut. Lancer `npm run build`
+     * pendant que le serveur tourne reecrit alors des centaines de fichiers
+     * d'un coup : le journal se remplit de « page reload dist/index.html », et
+     * le serveur finit par s'arreter — code 1, sans message d'erreur.
+     *
+     * C'est ce qui a fait tomber les deux serveurs deux fois, et le symptome
+     * ressemblait a tout sauf a sa cause : les pages mouraient ensemble,
+     * quelques secondes apres une construction, sans rien dire.
+     *
+     * Ces dossiers ne contiennent de toute facon aucune source : les
+     * recharger ne sert a rien.
+     */
+    watch: { ignored: ["**/dist/**", "**/dist-admin/**"] },
     /* S'arreter plutot que de glisser silencieusement sur 5174 — ou vit
        l'administration. Sans `strictPort`, un 5173 deja occupe ferait demarrer
        la boutique sur le port de l'administration, et on passerait un moment a

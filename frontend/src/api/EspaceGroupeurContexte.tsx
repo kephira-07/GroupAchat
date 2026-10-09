@@ -44,7 +44,9 @@ interface EspaceGroupeur {
   telephone: string;
   tableauDeBord: TableauDeBordApi | undefined;
   campagnes: readonly Campagne[];
-  portefeuille: { disponible: number; mouvements: MouvementPortefeuille[] } | undefined;
+  portefeuille:
+    | { disponible: number; retire: number; mouvements: MouvementPortefeuille[] }
+    | undefined;
   demandes: readonly DemandeAgregee[];
   questions: readonly QuestionRecueApi[];
   chargement: boolean;

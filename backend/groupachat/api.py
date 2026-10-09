@@ -246,7 +246,7 @@ class CommandeGroupeurSerializer(serializers.ModelSerializer):
     quartier sert à organiser les tournées ; c'est tout ce dont il a besoin
     pour emballer et compter. Ajouter ``acheteur``, ``repere`` ou ``telephone``
     ici lui permettrait de se constituer un fichier de clients et de les servir
-    hors plateforme — autrement dit de supprimer notre commission.
+    hors plateforme — autrement dit de nous supprimer du circuit.
     """
 
     class Meta:

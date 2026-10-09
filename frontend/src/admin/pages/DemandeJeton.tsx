@@ -62,8 +62,8 @@ export default function DemandeJeton({
           className="mt-1.5 h-12 w-full rounded-[10px] border border-bordure bg-white px-3 text-texte outline-none focus:border-2 focus:border-texte"
         />
         <p className="mt-2 text-xs text-texte-secondaire">
-          C&apos;est la valeur de <code>JETON_ADMIN</code> dans{" "}
-          <code>backend/.env</code>.
+          C&apos;est la valeur de <code>JETON_ADMIN</code> dans le{" "}
+          <code>.env</code> à la racine du dépôt.
         </p>
 
         {erreur ? (

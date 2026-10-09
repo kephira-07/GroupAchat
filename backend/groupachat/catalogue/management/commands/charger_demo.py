@@ -5,7 +5,7 @@
 
 **Les additions doivent tomber juste : un jury vérifie.** Cette commande monte
 exactement le fil rouge — C1, 32 commandes à 4 000 F, 128 000 F collectés,
-6 400 F de commission, 121 600 F versés — pour qu'on puisse interroger l'API et
+1 500 F de frais, 126 500 F retirables — pour qu'on puisse interroger l'API et
 retrouver les chiffres de la maquette.
 
 Elle est **idempotente** : on peut la relancer sans créer de doublons, ce qui
@@ -42,14 +42,15 @@ from groupachat.catalogue.models import Campagne
 from groupachat.commandes.models import (
     Commande,
     Justificatif,
-    Versement,
+    Retrait,
     annuler_campagne,
     cloturer_campagne,
     enregistrer_paiement,
-    liberer_le_versement,
+    demander_le_retrait,
+    executer_le_retrait,
 )
 from groupachat.comptes.models import Acheteur, Groupeur, PieceKyc
-from groupachat.echanges.models import Question
+from groupachat.echanges.models import Demande, Question
 
 #: Le catalogue, à côté du code qui le charge.
 CATALOGUE = (
@@ -85,7 +86,7 @@ DOSSIERS_EN_ATTENTE = [
         "pieces": ("piece-recto", "piece-verso", "selfie"),
     },
     {
-        # Le cas qui **arrête tout** : le compte de versement n'est pas à son
+        # Le cas qui **arrête tout** : le compte de retrait n'est pas à son
         # nom (contrôle n° 2 du §10.5). Le formulaire le refuse à la saisie —
         # ce dossier représente donc un compte modifié après le dépôt, qui est
         # le signal d'alerte numéro un.
@@ -227,6 +228,7 @@ class Command(BaseCommand):
             par_identifiant[donnees["id"]] = campagne
 
         self._charger_les_questions(catalogue, par_identifiant)
+        self._charger_les_demandes()
         self._creer_les_etats_de_fin(par_identifiant)
 
         self.stdout.write(
@@ -241,16 +243,21 @@ class Command(BaseCommand):
         """Crée une campagne et les commandes payées qui vont avec.
 
         Les commandes ne sont pas décoratives : ``acheteurs_confirmes``,
-        ``collecte_sur_les_parts`` et le versement du groupeur en découlent.
+        ``collecte_sur_les_parts`` et le retrait du groupeur en découlent.
         Une campagne sans commande afficherait « 0 acheteur confirmé », ce qui
         est exact mais ne démontre rien.
         """
         variante = donnees.get("variante") or {}
 
+        # ⚠️ **Le groupeur fait partie de la cle de recherche.** Le titre seul
+        # ne suffit pas : rien ne l'impose unique, et un groupage de
+        # demonstration portant le meme nom faisait echouer tout le chargement
+        # sur « get() returned more than one Campagne ». La campagne d'un
+        # groupeur, elle, est bien identifiee par son titre.
         campagne, creee = Campagne.objects.get_or_create(
             titre=donnees["produit"],
+            groupeur=groupeurs[donnees["groupeur"]],
             defaults={
-                "groupeur": groupeurs[donnees["groupeur"]],
                 "description": donnees["description"],
                 "contenu_part": donnees["contenuPart"],
                 "categorie": donnees["categorie"],
@@ -432,22 +439,39 @@ class Command(BaseCommand):
 
         for identifiant, (fournisseur, montant, avec_devis) in a_cloturer.items():
             campagne = par_identifiant.get(identifiant)
-            if campagne is None or hasattr(campagne, "versement"):
+            if campagne is None:
                 continue
 
-            versement = cloturer_campagne(campagne)
+            # ⚠️ **Rejouer la commande ne doit pas laisser l'ecran A1 vide.**
+            # Le garde-fou se contentait de sauter un groupage qui portait deja
+            # un retrait, et la file « Retraits a executer » restait a zero sur
+            # une base rechargee : le retrait existait, mais personne ne
+            # l'avait demande. On reprend donc celui qui est la.
+            retrait = getattr(campagne, "retrait", None)
+            if retrait is None:
+                retrait = cloturer_campagne(campagne)
             if avec_devis:
-                Justificatif.objects.create(
+                Justificatif.objects.get_or_create(
                     campagne=campagne,
                     nature=Justificatif.Nature.DEVIS,
-                    fournisseur=fournisseur,
-                    montant=Decimal(str(montant)),
-                    reference=f"coffre/devis/{campagne.pk}",
+                    defaults={
+                        "fournisseur": fournisseur,
+                        "montant": Decimal(str(montant)),
+                        "reference": f"coffre/devis/{campagne.pk}",
+                    },
                 )
+            # Celui qui a son devis **demande** son retrait : sans ça, la
+            # file « Retraits à exécuter » de l'écran A1 reste vide et
+            # l'administration n'a rien à montrer.
+            if avec_devis and retrait.etat == Retrait.Etat.RETIRABLE:
+                demander_le_retrait(retrait)
+
             # Reculé de quelques jours : sans ça, « attend depuis 0 jour » et
             # la colonne d'ancienneté de l'écran ne démontre rien.
-            Versement.objects.filter(pk=versement.pk).update(
-                effectue_le=timezone.now() - timedelta(days=4 if avec_devis else 2)
+            jours = timedelta(days=4 if avec_devis else 2)
+            Retrait.objects.filter(pk=retrait.pk).update(
+                effectue_le=timezone.now() - jours,
+                demande_le=(timezone.now() - jours) if avec_devis else None,
             )
 
         annule = par_identifiant.get("C9")
@@ -455,8 +479,8 @@ class Command(BaseCommand):
             annuler_campagne(annule)
 
         livre = par_identifiant.get("C14")
-        if livre is not None and not hasattr(livre, "versement"):
-            versement = cloturer_campagne(livre)
+        if livre is not None and not hasattr(livre, "retrait"):
+            retrait = cloturer_campagne(livre)
             Justificatif.objects.create(
                 campagne=livre,
                 nature=Justificatif.Nature.DEVIS,
@@ -464,12 +488,71 @@ class Command(BaseCommand):
                 montant=Decimal("60000"),
                 reference=f"coffre/devis/{livre.pk}",
             )
-            liberer_le_versement(versement, par="Administration")
+            demander_le_retrait(retrait)
+            executer_le_retrait(retrait, par="Administration")
             livre.statut = Campagne.Statut.LIVREE
             livre.save(update_fields=["statut"])
             livre.commandes.update(statut="livree")
 
     # ── Les dossiers KYC en attente ─────────────────────────────────────────
+
+    def _charger_les_demandes(self) -> None:
+        """Ce que les acheteurs réclament — écrans 11, 12 et 19.
+
+        **Un échec de recherche n'est jamais un cul-de-sac** : il mène à
+        l'écran 11, et le fil du groupeur (écran 19) lui montre ces demandes
+        **agrégées** — « 14 personnes à Agoè veulent du riz ». C'est sa
+        matière première : ce que des gens ont dit vouloir, avant même qu'il
+        ait acheté quoi que ce soit.
+
+        ⚠️ **Plusieurs demandes sur le même produit et le même quartier**, et
+        c'est tout l'intérêt : l'écran les regroupe, et un fil où chaque ligne
+        dirait « 1 personne » ne démontrerait pas l'agrégation — il ne
+        montrerait pas non plus ce qui fait décider de lancer un groupage.
+
+        ⚠️ **Le groupeur ne voit jamais qui a demandé.** Les comptes créés ici
+        portent des numéros, et c'est précisément ce que la route agrégée
+        refuse de laisser sortir (§1.7).
+        """
+        souhaits = [
+            ("Riz parfumé 25 kg", "Agoe", "1 sac", 22000, 14),
+            ("Couches bébé taille 4", "Tokoin", "1 carton", 13000, 9),
+            ("Gaz butane 6 kg, recharge", "Be", "1 bouteille", 5500, 7),
+            ("Cahiers 200 pages, lot de 10", "Adidogome", "1 lot", 4000, 6),
+            ("Ventilateur sur pied", "Hedzranawoe", "1 pièce", 14000, 4),
+            ("Ciment 50 kg", "Nyekonakpoe", "5 sacs", 32000, 3),
+            ("Huile de palme 20 L", "Agoe", "1 bidon", 19000, 2),
+        ]
+
+        if Demande.objects.exists():
+            return
+
+        for rang, (produit, quartier, quantite, budget, personnes) in enumerate(
+            souhaits
+        ):
+            for numero in range(personnes):
+                acheteur, _ = Acheteur.objects.get_or_create(
+                    telephone=f"+22871{rang:02d}{numero:04d}",
+                    defaults={"nom": f"Demandeur {numero + 1}"},
+                )
+                demande = Demande.objects.create(
+                    acheteur=acheteur,
+                    produit=produit,
+                    quantite=quantite,
+                    quartier=quartier,
+                    budget_maximum=Decimal(str(budget)),
+                )
+                # Étalées : le fil se trie par ancienneté, et une liste dont
+                # toutes les lignes datent de la même seconde ne le montre pas.
+                Demande.objects.filter(pk=demande.pk).update(
+                    deposee_le=timezone.now()
+                    - timedelta(days=rang * 2 + numero % 3, hours=numero)
+                )
+
+        self.stdout.write(
+            f"  {Demande.objects.count()} demandes d'acheteurs, "
+            f"sur {len(souhaits)} produits"
+        )
 
     def _charger_les_dossiers_en_attente(self) -> None:
         """Les dossiers que l'administrateur trouvera dans sa file.

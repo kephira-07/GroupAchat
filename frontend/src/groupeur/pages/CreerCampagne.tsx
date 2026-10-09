@@ -9,7 +9,7 @@ import {
   type MediaProduit,
 } from "../../domaine/groupage";
 import DepotMedias from "../composants/DepotMedias";
-import { TAUX_COMMISSION, calculerVersement } from "../../domaine/groupeur";
+import { FRAIS_PLATEFORME } from "../../domaine/groupeur";
 import { FRAIS_PROVISOIRES } from "../../domaine/livraison";
 import { EnTeteGroupeur } from "../mise-en-page/ChromeGroupeur";
 import Bouton from "../../ui/Bouton";
@@ -43,8 +43,14 @@ import { IconeCoche } from "../../ui/Icones";
  * l'application (§3). Un groupeur qui le reclame s'entend repondre que son
  * prix de groupe est l'argument.
  *
- * **La commission se dit ici**, au moment de fixer le prix — c'est le premier
+ * **Les frais se disent ici**, au moment de fixer le prix — c'est le premier
  * des trois rappels, avant l'ecran 16 et l'ecran 18.
+ *
+ * ⚠️ **Et ils ne se disent pas par part.** 1 500 F sont retenus une seule fois,
+ * sur le groupage, au moment du retrait (§9.2). Ecrire « vous recevrez 3 800 F
+ * par part » reviendrait a repartir le frais sur chaque part : c'etait vrai du
+ * pourcentage, c'est faux d'un montant fixe, et ca ferait croire au groupeur
+ * qu'il perd d'autant plus qu'il vend.
  */
 
 interface Palier {
@@ -84,7 +90,6 @@ export default function CreerCampagne({
 
   const prix = Number(prixPiece) || 0;
   const cout = Number(coutPiece) || 0;
-  const { commission, verse } = calculerVersement(prix);
 
   /**
    * Publie le groupage. **C'est le moment ou il devient visible des acheteurs.**
@@ -267,13 +272,15 @@ export default function CreerCampagne({
             />
 
             {prix > 0 ? (
-              /* La commission se dit au moment de fixer le prix, pas au moment
-                 de verser. */
+              /* Les frais se disent au moment de fixer le prix, pas au moment
+                 de retirer. */
               <Encart variante="info" role="groupeur">
-                Sur {formaterFrancs(prix)}, vous recevrez{" "}
-                <strong className="font-semibold">{formaterFrancs(verse)}</strong>{" "}
-                par part. Commission Group Achat : {formaterFrancs(commission)} (
-                {TAUX_COMMISSION * 100} %).
+                Sur {formaterFrancs(prix)},{" "}
+                <strong className="font-semibold">
+                  vous recevez {formaterFrancs(prix)} par part
+                </strong>
+                . Group Achat retient {formaterFrancs(FRAIS_PLATEFORME)} une
+                seule fois, au retrait, si le groupage aboutit.
               </Encart>
             ) : null}
 
@@ -366,11 +373,18 @@ export default function CreerCampagne({
               {prix > 0 && cout > 0 ? (
                 <p className="mt-3 text-sm text-texte">
                   Prix de vente {formaterFrancs(prix)} · votre coût{" "}
-                  {formaterFrancs(cout)} · commission {formaterFrancs(commission)}
+                  {formaterFrancs(cout)}
                   <br />
                   <strong className="font-semibold">
-                    Votre marge : {formaterFrancs(verse - cout)} par pièce
+                    Votre marge : {formaterFrancs(prix - cout)} par pièce
                   </strong>
+                  <br />
+                  {/* ⚠️ La marge est entiere a la piece : le frais ne se
+                      calcule plus par part, il se retient une fois sur le
+                      groupage. C'est plus simple a comprendre pour lui, et
+                      c'est une des raisons du changement. */}
+                  Moins {formaterFrancs(FRAIS_PLATEFORME)} de frais Group Achat
+                  au retrait.
                 </p>
               ) : null}
             </section>
@@ -430,7 +444,7 @@ export default function CreerCampagne({
             <p className="text-sm text-texte-secondaire">
               Les frais de livraison ({formaterFrancs(FRAIS_PROVISOIRES)} dans
               Lomé) sont payés par l&apos;acheteur et vont au transporteur. Ils
-              n&apos;entrent pas dans votre versement.
+              n&apos;entrent jamais dans votre solde.
             </p>
 
             <section className="rounded-xl bg-surface-douce p-4">
@@ -443,8 +457,8 @@ export default function CreerCampagne({
                 />
                 <Ligne cle="Durée" valeur={`${duree} jours`} />
                 <Ligne
-                  cle="Vous recevrez"
-                  valeur={prix ? `${formaterFrancs(verse)} par part` : "—"}
+                  cle="Vous recevez"
+                  valeur={prix ? `${formaterFrancs(prix)} par part` : "—"}
                 />
               </dl>
             </section>
@@ -452,7 +466,7 @@ export default function CreerCampagne({
         ) : null}
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[430px] bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(20,24,31,0.06)]">
+      <div className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[430px] bg-white px-4 py-3 shadow-[0_-2px_12px_rgba(29,25,22,0.06)]">
         {etape < 3 ? (
           <Bouton
             role="groupeur"

@@ -27,6 +27,7 @@ from decimal import Decimal
 
 from django.core import mail
 from django.core.exceptions import ValidationError
+from django.conf import settings
 from django.test import TestCase, override_settings
 from django.utils import timezone
 from rest_framework.test import APIClient
@@ -37,10 +38,10 @@ from groupachat.comptes.models import DecisionKyc, Groupeur, PieceKyc
 
 #: Le jeton d'administration utilisé par les tests.
 #:
-#: Posé par ``override_settings`` ? Non : la permission le lit dans
-#: l'environnement, pas dans les réglages — c'est un secret, et les secrets de
-#: ce projet vivent dans ``backend/.env``. Les tests le posent donc dans
-#: ``os.environ`` et le retirent après, ce que fait ``SocleAdmin``.
+#: Posé par ``override_settings``, et non dans ``os.environ``. La permission
+#: lisait l'environnement directement ; elle lit désormais les réglages, qui
+#: chargent le ``.env`` de la racine une fois pour toutes. Un test qui poserait
+#: encore la variable d'environnement passerait à côté.
 JETON = "jeton-de-test"
 
 
@@ -195,7 +196,7 @@ class TextesDesAnnonces(TestCase):
         """Il l'apprend au téléphone comme par courriel, pas seulement à l'écran."""
         script = notifications.script_appel("Chez Sika", "valide", None, 150000)
         self.assertIn("pseudonyme", script)
-        self.assertIn("5 %", script)
+        self.assertIn("1 500 F", script)
 
 
 # ── Le cycle de vie du dossier ──────────────────────────────────────────────
@@ -500,7 +501,7 @@ class AnnonceDeLaDecision(TestCase):
         EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"
     )
     def test_le_courriel_de_validation_porte_les_regles_du_produit(self) -> None:
-        """Il apprend l'anonymat, la commission et le devis — avant de commencer.
+        """Il apprend l'anonymat, les frais et le devis — avant de commencer.
 
         Un groupeur qui découvre à la clôture qu'il doit déposer un devis
         appelle le support ; celui qui l'a lu à la validation ne le fait pas.
@@ -515,8 +516,10 @@ class AnnonceDeLaDecision(TestCase):
         corps = mail.outbox[0].body
 
         self.assertIn("pseudonyme", corps)
-        self.assertIn("5 %", corps)
+        self.assertIn("1 500 F", corps)
         self.assertIn("devis", corps)
+        # ⚠️ Plus aucun pourcentage : ce n'est plus une commission.
+        self.assertNotIn("5 %", corps)
         # ⚠️ §1.7 : jamais « bloqué jusqu'à la livraison ».
         self.assertNotIn("bloqué", corps)
         self.assertIn("à la clôture", corps)
@@ -565,6 +568,51 @@ class InscriptionParApi(SocleApi):
 
         groupeur = Groupeur.objects.get(pseudonyme="Chez Sika")
         self.assertEqual(groupeur.pieces.count(), 3)
+
+    def test_le_mode_demonstration_est_eteint_par_defaut(self) -> None:
+        """⚠️ **Le test qui garde le défaut fermé.**
+
+        Le mode démonstration valide les dossiers sur-le-champ. Un réglage
+        qui s'allumerait tout seul — en suivant ``DEBUG``, par exemple —
+        ferait tourner toute cette suite sans jamais exercer l'examen des
+        dossiers, c'est-à-dire sans protéger ce qu'elle est là pour protéger.
+
+        Il a d'abord été écrit ainsi, et six tests sont tombés d'un coup.
+        Celui-ci est là pour que cette erreur ne se refasse pas en silence.
+        """
+        self.assertFalse(
+            settings.DEMONSTRATION,
+            "La démonstration doit se demander, jamais s'inviter.",
+        )
+
+        reponse = self.client.post(
+            "/api/groupeurs/", dossier_complet(), format="json"
+        )
+        self.assertEqual(reponse.data["etat"], "en-verification")
+
+    @override_settings(DEMONSTRATION=True)
+    def test_en_demonstration_le_dossier_est_valide_sur_le_champ(self) -> None:
+        """Allumé, il ouvre l'espace groupeur immédiatement.
+
+        C'est ce qu'on veut pour montrer le produit : on traverse
+        l'inscription et on arrive dans l'espace groupeur, sans attendre qu'un
+        administrateur se connecte.
+
+        ⚠️ **La décision reste tracée, et son auteur est écrit en clair.** Une
+        validation anonyme en base serait indiscernable d'un vrai examen —
+        c'est exactement ce qu'il ne faut pas laisser derrière soi.
+        """
+        reponse = self.client.post(
+            "/api/groupeurs/", dossier_complet(), format="json"
+        )
+        self.assertEqual(reponse.status_code, 201, reponse.data)
+        self.assertEqual(reponse.data["etat"], "valide")
+        self.assertTrue(reponse.data["peut_lancer_une_campagne"])
+
+        groupeur = Groupeur.objects.get(pseudonyme="Chez Sika")
+        decision = groupeur.decisions_kyc.latest("decide_le")
+        self.assertEqual(decision.issue, "valide")
+        self.assertEqual(decision.decide_par, "Mode démonstration")
 
     def test_le_depot_ne_renvoie_pas_le_dossier_relu(self) -> None:
         """Pas de nom, pas de numéro de pièce dans la réponse.

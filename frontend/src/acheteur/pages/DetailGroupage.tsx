@@ -419,7 +419,7 @@ export default function DetailGroupage({
           une messagerie privee. */}
       <button
         type="button"
-        className="fixed right-4 bottom-24 z-10 inline-flex h-11 items-center gap-1.5 rounded-full bg-primaire px-4 text-sm font-semibold text-white shadow-[0_2px_10px_rgba(20,24,31,0.2)]"
+        className="fixed right-4 bottom-24 z-10 inline-flex h-11 items-center gap-1.5 rounded-full bg-primaire px-4 text-sm font-semibold text-white shadow-[0_2px_10px_rgba(29,25,22,0.2)]"
       >
         <IconeQuestion taille={16} />
         Posez une question

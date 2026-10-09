@@ -171,13 +171,14 @@ function Ligne({ groupage }: { groupage: GroupageAdmin }) {
         </span>
       </td>
       <td className="px-5 py-3 text-texte-secondaire">
-        {groupage.versement_etat === "en-attente" ? (
+        {groupage.retrait_etat === "retirable" ||
+        groupage.retrait_etat === "demande" ? (
           <span className="font-semibold text-primaire-texte-sur-fond">
             à faire
           </span>
-        ) : groupage.versement_etat === "effectue" ? (
+        ) : groupage.retrait_etat === "effectue" ? (
           "versé"
-        ) : groupage.versement_etat === "annule" ? (
+        ) : groupage.retrait_etat === "annule" ? (
           "annulé"
         ) : (
           "—"

@@ -19,7 +19,7 @@ import Statut from "../../ui/Statut";
  * **Aucun contact du groupeur** (§1.7) : ni numero, ni bouton d'appel, nulle
  * part. A la place, « Une question ? » renvoie vers les questions publiques de
  * l'ecran 10. C'est cette absence qui rend l'anonymat tenable des deux cotes,
- * et c'est elle qui protege la commission.
+ * et c'est elle qui protege le modele.
  *
  * **Les six etats racontent tout le circuit**, et chacun change ce que l'ecran
  * promet. Deux formulations a ne pas melanger :

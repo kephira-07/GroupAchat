@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """L'anonymat dans les deux sens — §1.7 de la spec des écrans.
 
-**C'est ce qui protège la commission contre la désintermédiation.** Un groupeur
+**C'est ce qui protège le modèle contre la désintermédiation.** Un groupeur
 qui connaît les gros acheteurs et leurs numéros peut leur proposer la même
-marchandise hors plateforme, au même prix, sans commission.
+marchandise hors plateforme, au même prix, et sans nous.
 
 Ces tests sont volontairement **méfiants** : ils ne vérifient pas que l'API
 renvoie les bons champs, ils vérifient qu'elle ne renvoie **aucun** des champs

@@ -107,12 +107,16 @@ export default function FilDemandes({
                   {formaterFrancs(demande.budgetMoyen)}
                 </dd>
               </div>
-              <div className="flex justify-between gap-4">
-                <dt className="text-texte-secondaire">Volume estimé</dt>
-                <dd className="font-medium text-texte">
-                  {demande.volumeEstime}
-                </dd>
-              </div>
+              {/* La ligne ne s'affiche que s'il y a quelque chose a dire :
+                  un libelle suivi d'une case vide laisse croire a une panne. */}
+              {demande.volumeEstime ? (
+                <div className="flex justify-between gap-4">
+                  <dt className="text-texte-secondaire">Quantité demandée</dt>
+                  <dd className="font-medium text-texte">
+                    le plus souvent {demande.volumeEstime}
+                  </dd>
+                </div>
+              ) : null}
             </dl>
 
             <div className="mt-4">

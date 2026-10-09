@@ -30,7 +30,7 @@ import Logo from "../../ui/Logo";
  * **Le montant paye n'y figure jamais.** Le livreur n'a pas a le connaitre, et
  * l'afficher creerait une tentation inutile.
  *
- * La preuve de livraison ne conditionne **aucun versement** — le groupeur a
+ * La preuve de livraison ne conditionne **aucun retrait** — le groupeur a
  * deja ete paye a la cloture (§10.1). Elle construit son historique de
  * fiabilite, qui determine son plafond d'exposition : c'est le seul levier qui
  * nous reste sur lui, et c'est ce qui justifie cet ecran.

@@ -21,11 +21,13 @@ Place de marché d'achat groupé pour Lomé, Togo. **Projet de conception, pas e
 
 Ce sont des décisions tranchées par l'utilisateur, pas des préférences. Ne pas les rouvrir sans qu'il le demande.
 
-- **Anonymat dans les deux sens.** L'acheteur ne voit qu'un pseudonyme de groupeur ; le groupeur ne voit que des **codes et des quartiers**, jamais un nom, un numéro ou une adresse. C'est ce qui protège la commission contre la désintermédiation. Seule la page du livreur (écran 22) réunit nom, adresse et téléphone.
+- **Anonymat dans les deux sens.** L'acheteur ne voit qu'un pseudonyme de groupeur ; le groupeur ne voit que des **codes et des quartiers**, jamais un nom, un numéro ou une adresse. C'est ce qui protège le modèle contre la désintermédiation. Seule la page du livreur (écran 22) réunit nom, adresse et téléphone.
 - **Pas de mur d'authentification.** On navigue librement ; le compte est demandé **au moment de payer**.
 - **Aucun prix barré, aucun badge de réduction, aucun « au lieu de ».** Nulle part.
-- **Le groupeur est payé intégralement à la clôture**, pas à la livraison. Conséquence : **aucun écran ne doit écrire « votre argent est bloqué jusqu'à la livraison »** — la formulation autorisée est « détenu jusqu'à la clôture ». Tableau des formulations interdites au §1.7 de la spec des écrans.
-- **Commission 5 %**, à la charge du groupeur, retenue à la clôture, jamais sur les frais de livraison.
+- **L'argent de l'acheteur va au portefeuille du groupeur**, tenu par la plateforme, dès le paiement. Nous ne détenons plus les fonds pour notre compte : **nous ne versons rien, nous exécutons des retraits.**
+- **Le solde est détenu jusqu'à la clôture**, puis **retirable intégralement**, avant la livraison. Conséquence : **aucun écran ne doit écrire « votre argent est bloqué jusqu'à la livraison »** — la formulation autorisée est « détenu jusqu'à la clôture ». Tableau des formulations interdites au §1.7 de la spec des écrans.
+- **1 500 F par groupage abouti**, à la charge du groupeur, **retenus au retrait**, jamais sur les frais de livraison. **Ce n'est plus un pourcentage** : un écran qui affiche « 5 % » ou « commission » est un écran à corriger.
+- **Le devis fournisseur ne débloque plus l'argent.** Il constate, il ne conditionne pas — §10.2 du cahier des charges, et §9.1 pour ce que ça coûte.
 - **Frais de livraison calculés selon la position** de l'acheteur ; la fonction renvoie **1 000 F** pour l'instant. La position est **conservée sur la commande**.
 - **Pas de messagerie privée.** Questions publiques uniquement, filtrées avant publication.
 - **Web React d'abord** (mobile d'abord, 390 px), mobile Android/iOS ensuite. Django + DRF + PostgreSQL. **Paiement simulé** jusqu'à l'agrément d'un agrégateur.
@@ -36,7 +38,8 @@ Les additions doivent tomber juste — un jury vérifie.
 
 - Campagne C1 : **Écouteurs filaires avec micro**, **4 000 F** la part, **32 commandes**
 - Total payé par l'acheteur : 4 000 + 1 000 de livraison = **5 000 F**
-- Collecté **128 000 F** − commission **6 400 F** = **121 600 F versés**
+- Collecté **128 000 F** − frais Group Achat **1 500 F** = **126 500 F retirables**
+- Second groupage du portefeuille : baskets, 41 × 9 800 = 401 800 F − 1 500 = **400 300 F retirés**
 - Code de livraison : `K7M-4PQ` · Acheteuse : Akosua Doe, Tokoin · Groupeuse : Mama Gro
 
 ## Chromes
